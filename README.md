@@ -78,6 +78,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | [构建指南](docs/BUILD.md) | 固定工具链、构建、开发运行、配置与 EULA 边界 |
 | [M0 运行与安装验收](docs/validation/0005-runtime-installation.md) | 双端客户端、普通专服与最终 JAR 独立安装证据 |
 | [M0 收尾记录](docs/validation/0006-m0-closeout.md) | 阶段交付、证据复核、已知限制与 M1 入口 |
+| [伙伴生命周期验证](docs/validation/0007-companion-lifecycle.md) | Issue #4 身份/归属生命周期结果、普通专服启动及未完成的验收项 |
 | [项目统筹](docs/COORDINATION.md) | 近期交付、依赖、职责、状态与推进节奏 |
 | [开发规范](docs/DEVELOPMENT.md) | 编码、线程、动作、配置、日志与依赖约定 |
 | [架构草案](docs/ARCHITECTURE.md) | 分层、数据流、公共接口与待决事项 |
@@ -90,7 +91,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | [ADR 0002](docs/decisions/0002-multiloader-layout.md) | 公共源码加双加载器发行 JAR 的取舍 |
 | [架构决策模板](docs/decisions/0000-template.md) | 技术选择的背景、证据、代价与结论 |
 
-M0 的 #1、#2、#3 已关闭。下一步优先认领 #4 伙伴生命周期或 #5 模型异步接入，先对齐归属、会话和取消接口，再推进 #6 聊天。根目录命令 `./gradlew checkAll --no-daemon` 会运行公共测试并生成两个 JAR；独立玩家控制实验按 [探针说明](experiments/player-control/README.md) 运行。实验目录用于验证，不能作为已发布的陪伴模组安装到真实存档。
+M0 的 #1、#2、#3 已关闭；#4 正由 Y-fyan 推进，当前验收与限制见 [生命周期记录](docs/validation/0007-companion-lifecycle.md)。#5 模型异步接入可并行开展；#6 聊天需使用已对齐的主人 UUID、伙伴 UUID 与生命周期接口。根目录命令 `./gradlew checkAll --no-daemon` 会运行公共测试并生成两个 JAR；独立玩家控制实验按 [探针说明](experiments/player-control/README.md) 运行。实验目录用于验证，不能作为已发布的陪伴模组安装到真实存档。
 
 ## 原创与许可
 

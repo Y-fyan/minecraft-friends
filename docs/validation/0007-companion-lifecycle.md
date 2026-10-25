@@ -1,6 +1,6 @@
 # 伙伴身份与生命周期验收
 
-日期：2026-10-25。关联 [Issue #4](https://github.com/Y-fyan/minecraft-friends/issues/4)。实现提交：[`dbcc713ed953b9febe4e5d1eb21ba68f2f68e28f`](https://github.com/Y-fyan/minecraft-friends/commit/dbcc713ed953b9febe4e5d1eb21ba68f2f68e28f)。本记录只覆盖服务端伙伴身份、归属与生命周期；聊天、记忆、模型调用和移动 AI 不在范围。
+日期：2026-10-25。关联 [Issue #4](https://github.com/Y-fyan/minecraft-friends/issues/4)。实现提交：[`dc1c9c0c5cedf9d91c3ab340cc2f15573915b7cf`](https://github.com/Y-fyan/minecraft-friends/commit/dc1c9c0c5cedf9d91c3ab340cc2f15573915b7cf)。本记录只覆盖服务端伙伴身份、归属与生命周期；聊天、记忆、模型调用和移动 AI 不在范围。
 
 ## 固定环境
 
@@ -26,8 +26,8 @@ JAVA_HOME=/tmp/codex-mf-jdk21-213 PATH=/tmp/codex-mf-jdk21-213/bin:$PATH ./gradl
 
 | 产物 | SHA-256 |
 | --- | --- |
-| Fabric 1.21.1 | `245996f97470c7fce7a7028b1d1bb3a95fe283d0d9b8978cd5d02366676face1` |
-| Forge 1.21.1 | `7a8c72096a6e5c29b16a7631937540bb79037e5eb464883d22d39ecfd0072230` |
+| Fabric 1.21.1 | `15cac3581672116bf99f70ef626d37909c59cb000144b0f11cca3e9c67699cb1` |
+| Forge 1.21.1 | `9e4c9424dbf2c6515d8503a10785c1cc354e289253e42a4098fe729d102c80a9` |
 
 从仓库 `experiments/` 目录执行：
 
