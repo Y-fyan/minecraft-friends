@@ -105,24 +105,35 @@ PATH=/tmp/codex-mf-jdk21-213/bin:$PATH \
 
 | 加载器 | 完成启动证据 | 配置 | 停止 |
 | --- | --- | --- | --- |
-| Fabric | `Done (4.628s)! For help, type "help"` | 创建并读取默认离线 Mock 配置 | 正常停止 |
-| Forge | `Done (5.101s)! For help, type "help"` | 创建并读取默认离线 Mock 配置 | 正常停止 |
+| Fabric | `Done (0.939s)! For help, type "help"` | 创建并读取默认离线 Mock 配置 | 控制台 `stop`，Gradle 退出码 0 |
+| Forge | `Done (1.124s)! For help, type "help"` | 创建并读取默认离线 Mock 配置 | 保存世界后由验收脚本终止，Gradle 外壳非零 |
 
 脱敏证据：
 
 ```text
 Fabric: Initializing Minecraft Friends with Fabric
 Fabric: Model provider: MOCK (no network request or paid call is made during startup)
-Fabric: Done (4.628s)! For help, type "help"
+Fabric: Done (0.939s)! For help, type "help"
 Fabric: Stopping server
+Fabric: BUILD SUCCESSFUL
 
 Forge: Initializing Minecraft Friends with Minecraft Forge
 Forge: Model provider: MOCK (no network request or paid call is made during startup)
-Forge: Done (5.101s)! For help, type "help"
+Forge: Done (1.124s)! For help, type "help"
 Forge: Stopping server
+Forge: All dimensions are saved
 ```
 
 `forge:runServer` 虽然启用了 GameTest 命名空间属性，但实际启动的是普通专用服务器，以上判定只依据 `DedicatedServer` 的 `Done` 和完整停止序列，不使用“没有测试函数”的 GameTestServer 结果。
+
+Forge 开发专服通过 Gradle 的管道启动时，控制台 `stop` 没有转发到游戏进程。验收脚本在确认 `Done` 后终止外层进程，游戏自身执行了停止和世界保存，但 Gradle 外壳最终非零。因此 Forge 开发专服的“通过”依据是启动完成和游戏内关闭路径，明确不以该外壳退出码作为成功证据。最终 JAR 的独立 Forge 安装直接启动 Java 进程，控制台 `stop` 和退出码 0 均正常。
+
+开发专服复验日志与 SHA-256：
+
+| 日志 | SHA-256 |
+| --- | --- |
+| `/tmp/mf-runtime-evidence-6e5f66c/clean-stop/fabric-dev-server.log` | `a67b6af3985855a16bd9c3ff3e36df2c20895735a57fc1a2bb6862c93a0d4f05` |
+| `/tmp/mf-runtime-evidence-6e5f66c/clean-stop/forge-dev-server-clean-stop.log` | `824363226ab5d58ce288ce4a52a276c74535040a78a32e616e37dd5b20e43f77` |
 
 ## 最终 JAR 独立安装
 
@@ -152,8 +163,9 @@ Initializing Minecraft Friends with Fabric
 Created default configuration at ./config/minecraft-friends.properties
 Model provider: MOCK (no network request or paid call is made during startup)
 Startup completed without model credentials.
-Done (5.092s)! For help, type "help"
+Done (1.047s)! For help, type "help"
 Stopping server
+All dimensions are saved
 ```
 
 Forge 独立安装实际加载：
@@ -164,8 +176,9 @@ Initializing Minecraft Friends with Minecraft Forge
 Created default configuration at .../forge-server/config/minecraft-friends.properties
 Model provider: MOCK (no network request or paid call is made during startup)
 Startup completed without model credentials.
-Done (5.101s)! For help, type "help"
+Done (1.173s)! For help, type "help"
 Stopping server
+All dimensions are saved
 ```
 
 结果：**通过**。两个目录都完成普通服务端启动、新建世界、默认配置创建、无密钥 Mock 初始化和正常停止。未出现客户端类、渲染类或 OpenGL 类加载错误。
@@ -176,8 +189,15 @@ Forge 首次启动记录了 `server.properties` 不存在后自动创建的非�
 
 | 日志 | SHA-256 |
 | --- | --- |
-| `/tmp/mf-runtime-evidence-6e5f66c/fabric-install/full-server.log` | `5398bc5a3a7ff726e57a4a3a3854cd7e6ec7a7968069736750ad6adfc072b343` |
-| `/tmp/mf-runtime-evidence-6e5f66c/forge-install/full-server.log` | `ca8ec436929cda837f45681f1145c928c4f6b62ce3ad7ebab27191bacb178a75` |
+| `/tmp/mf-runtime-evidence-6e5f66c/clean-stop/fabric-install.log` | `ca609ae96b1afc9df756598a9904031461b080e6a983422aff41d7da6eea62a3` |
+| `/tmp/mf-runtime-evidence-6e5f66c/clean-stop/forge-install.log` | `413ce44dcbbae7e27bc45dec3d39369a7c398368e9c83058222fce71ce0d5de1` |
+
+## 验收异常与处理
+
+- 本次网络环境下，ForgeGradle 启动前的 HTTPS 环境探测出现连接超时。复验 Forge 开发专服时只在验收命令增加 `-Dnet.minecraftforge.gradle.check.certs=false` 跳过该构建环境探针；该参数不关闭游戏运行时网络能力，也不改变模组代码。
+- Forge 开发专服的外层 Gradle 进程因前一项控制台转发问题收到验收脚本终止信号，返回非零。游戏日志仍明确记录 `DedicatedServer` 完成启动、执行 `Stopping server` 和保存全部维度。没有把非零外壳退出码隐藏或改写成正常退出。
+- Forge 独立安装的首次启动出现 `server.properties` 缺失后自动创建，以及一次 Forge 更新检查网络超时。两者均发生在服务器正常工作期间，后续复验正常完成启动与控制台停止。
+- 没有观察到客户端类、渲染类或 OpenGL 类加载错误。退出码 0、JAR 内存在类文件或 GameTestServer 初始化都没有被单独作为通过证据。
 
 ## 状态与限制
 
