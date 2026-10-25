@@ -31,6 +31,11 @@ jobs:
       - name: Run tests and build both loaders
         run: ./gradlew checkAll --no-daemon --stacktrace
 
+      - name: Verify resource-only rebuilds keep loader classes
+        run: |
+          ./gradlew checkAll -Pproject_version=0.1.0-incremental-check --no-daemon --stacktrace
+          ./gradlew checkAll --no-daemon --stacktrace
+
       - name: Upload installable JARs
         uses: actions/upload-artifact@v7
         with:
