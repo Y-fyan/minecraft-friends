@@ -1,0 +1,74 @@
+# Minecraft Friends
+
+在 Minecraft 中，拥有一个能聊天、记住共同经历、陪你探索并帮忙干活的 AI 伙伴。
+
+Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Minecraft Forge** 两个版本。目标是让 AI 操控具有玩家身份、背包和生存能力的伙伴，通过原版聊天框与玩家交流，在实际游戏规则下执行任务。
+
+> **项目状态：规划与技术验证阶段。** 当前仓库仅包含文档，尚无模组源码、构建脚本或可下载版本。下文描述的是开发目标，不代表功能已经实现。Fabric 与 Forge 的兼容性仍需分别验证；Forge 不等于 NeoForge。
+
+## 我们希望带来的体验
+
+- **自然交流**：在聊天框中和伙伴说话，分享今天的经历，也可以提出游戏内请求。
+- **持续陪伴**：伙伴有稳定的名字与性格，记住你明确告诉它的偏好，以及一起完成的事情。
+- **一起行动**：跟随、等待，面对受伤、重逢和任务完成等事件作出恰当回应。
+- **帮忙干活**：理解“收集 8 个橡木原木并交给我”，实际寻找、挖掘、拾取并交付，按真实结果汇报。
+- **随时叫停**：用户可以取消任务，查看并删除记忆，调整主动发言频率。
+
+“真实玩家”的具体实现是第一个技术验证任务：服务器创建的玩家实体，与使用正版账号登录的完整客户端，在认证、皮肤和模组兼容性上存在差别。项目会在验证后公开采用的方案和限制，详见 [Issue #1](https://github.com/Y-fyan/minecraft-friends/issues/1)。
+
+## 初期版本目标
+
+第一个 Alpha 以这个场景验收：
+
+1. 用户在测试世界中创建一个有名字的伙伴。
+2. 在原版聊天框交流，伙伴记住用户指定的称呼。
+3. 伙伴能够跟随用户，并听从等待和停止请求。
+4. 用户指定采集区域后，请伙伴收集 8 个橡木原木并交付。
+5. 退出并重新进入世界，伙伴身份与记忆按配置恢复。
+
+语音、多伙伴群聊、复杂建筑、自动战斗和跨维度自主探索留待后续讨论。初期也不承诺兼容任意纯净服务器或所有整合包。
+
+## 路线图
+
+| 阶段 | 目标 | 对应任务 |
+| --- | --- | --- |
+| M0 技术验证与协作基础 | 验证玩家控制方式，建立双加载器工程和协作约定 | [#1](https://github.com/Y-fyan/minecraft-friends/issues/1)、[#2](https://github.com/Y-fyan/minecraft-friends/issues/2)、[#3](https://github.com/Y-fyan/minecraft-friends/issues/3) |
+| M1 陪伴聊天闭环 | 伙伴身份、模型接入、聊天、人设与记忆 | [#4](https://github.com/Y-fyan/minecraft-friends/issues/4)、[#5](https://github.com/Y-fyan/minecraft-friends/issues/5)、[#6](https://github.com/Y-fyan/minecraft-friends/issues/6)、[#7](https://github.com/Y-fyan/minecraft-friends/issues/7) |
+| M2 干活能力与 Alpha | 感知、动作调度、跟随、采集交付及双加载器验收 | [#8](https://github.com/Y-fyan/minecraft-friends/issues/8)、[#9](https://github.com/Y-fyan/minecraft-friends/issues/9)、[#10](https://github.com/Y-fyan/minecraft-friends/issues/10)、[#11](https://github.com/Y-fyan/minecraft-friends/issues/11) |
+
+完整计划见 [路线图 #12](https://github.com/Y-fyan/minecraft-friends/issues/12)，进度以 [Issues](https://github.com/Y-fyan/minecraft-friends/issues) 和 [里程碑](https://github.com/Y-fyan/minecraft-friends/milestones) 为准。
+
+## 技术与运行边界
+
+| 项目 | 初期约定 |
+| --- | --- |
+| 游戏 | Minecraft Java 1.21.1 |
+| 加载器 | Fabric、Minecraft Forge，分别构建与验证 |
+| 开发环境 | Java 21；计划使用 Gradle Wrapper，具体依赖版本由工程任务锁定 |
+| 模型 | 先实现一种兼容常见 Chat Completions 接口的适配器，提供不联网的 Mock 模式 |
+| 部署 | 单机内置服务器及专用服务器；客户端/服务端安装组合待架构验证确认 |
+| 控制 | 模型输出结构化意图，游戏执行器校验并执行，世界操作由服务端最终授权 |
+
+真实模型调用需要用户配置服务地址、模型与凭据，可能产生服务商费用。当前尚无可用配置文件；工程落地后会补充准确路径、字段与启动步骤。没有凭据时不得自动发起付费请求。
+
+聊天和必要的游戏上下文可能被发送给用户选择的模型服务。正式接入前会说明发送内容与凭据存放位置；默认不采集全服聊天，不在日志中记录密钥。记忆按玩家和世界隔离，并提供删除入口。
+
+## 参与开发
+
+先查看 [贡献指南](CONTRIBUTING.md)，在对应 Issue 中认领任务，再从最新 `main` 创建分支。每个 PR 说明改动、验证方法和未完成项，保留真实作者署名。
+
+| 文档 | 内容 |
+| --- | --- |
+| [贡献指南](CONTRIBUTING.md) | 认领、分支、提交、PR、审查与贡献统计 |
+| [开发规范](docs/DEVELOPMENT.md) | 编码、线程、动作、配置、日志与依赖约定 |
+| [架构草案](docs/ARCHITECTURE.md) | 分层、数据流、公共接口与待决事项 |
+| [测试与发布规范](docs/TESTING.md) | 四格环境矩阵、失败场景与发布门槛 |
+| [架构决策模板](docs/decisions/0000-template.md) | 技术选择的背景、证据、代价与结论 |
+
+当前可以参与需求讨论、技术验证和文档完善。工程尚未建立，暂时没有可执行的构建或启动命令。
+
+## 原创与许可
+
+功能研究参考了 [minecraft-numen](https://github.com/Dwinovo/minecraft-numen/)。本项目独立设计与实现，不复制其代码、提示词、Lua API、界面、文档或素材；第三方依赖必须单独核对许可并记录来源。
+
+**本项目许可证尚未选定。** 仓库公开不等于已授予开源许可；在创作者添加正式 `LICENSE` 前，请勿将本项目描述为采用某种开源许可证。新增第三方材料及对外分发前应先明确许可条件。
