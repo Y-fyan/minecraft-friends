@@ -4,7 +4,7 @@
 
 Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Minecraft Forge** 两个版本。目标是让 AI 操控具有玩家身份、背包和生存能力的伙伴，通过原版聊天框与玩家交流，在实际游戏规则下执行任务。
 
-> **项目状态：M0 基础工程与可行性验证阶段。** #1 已提供独立玩家控制探针和四组运行记录；#2 已建立 Java 21 公共核心、Fabric / Minecraft Forge 1.21.1 最小入口、固定 Gradle Wrapper、自动化测试、CI 和开发 JAR。正式 AI 陪伴功能仍在开发，尚无发布版本；探针和启动冒烟通过不代表聊天、记忆、干活或正式安装兼容性已经实现。Forge 不等于 NeoForge。
+> **项目状态：M0 基础工程与可行性验证阶段。** #1 已提供独立玩家控制探针和四组运行记录；#2 已建立 Java 21 公共核心、Fabric / Minecraft Forge 1.21.1 最小入口、固定 Gradle Wrapper、自动化测试、CI 和双端 JAR，并完成开发客户端、普通专用服务器与最终 JAR 独立安装验收。正式 AI 陪伴功能仍在开发，尚无发布版本；基础加载验收不代表聊天、记忆或干活能力已经实现。Forge 不等于 NeoForge。
 
 ## 我们希望带来的体验
 
@@ -26,7 +26,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | 无密钥启动 | 已验证；创建离线配置且不发起模型请求 |
 | 伙伴、聊天、记忆、导航、采集 | 尚未实现 |
 | 真实模型服务 | 尚未实现；M0 只接受 `mock` / `disabled` |
-| 客户端内运行 | 尚未验证 |
+| 客户端内运行 | Fabric / Forge 开发客户端已验证；正式玩法尚未实现 |
 
 构建、测试和开发运行步骤见 [构建指南](docs/BUILD.md)。
 
@@ -75,6 +75,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | --- | --- |
 | [贡献指南](CONTRIBUTING.md) | 认领、分支、提交、PR、审查与贡献统计 |
 | [构建指南](docs/BUILD.md) | 固定工具链、构建、开发运行、配置与 EULA 边界 |
+| [M0 运行与安装验收](docs/validation/0005-runtime-installation.md) | 双端客户端、普通专服与最终 JAR 独立安装证据 |
 | [项目统筹](docs/COORDINATION.md) | 近期交付、依赖、职责、状态与推进节奏 |
 | [开发规范](docs/DEVELOPMENT.md) | 编码、线程、动作、配置、日志与依赖约定 |
 | [架构草案](docs/ARCHITECTURE.md) | 分层、数据流、公共接口与待决事项 |
