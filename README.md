@@ -60,6 +60,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | 文档 | 内容 |
 | --- | --- |
 | [贡献指南](CONTRIBUTING.md) | 认领、分支、提交、PR、审查与贡献统计 |
+| [项目统筹](docs/COORDINATION.md) | 近期交付、依赖、职责、状态与推进节奏 |
 | [开发规范](docs/DEVELOPMENT.md) | 编码、线程、动作、配置、日志与依赖约定 |
 | [架构草案](docs/ARCHITECTURE.md) | 分层、数据流、公共接口与待决事项 |
 | [测试与发布规范](docs/TESTING.md) | 四格环境矩阵、失败场景与发布门槛 |
