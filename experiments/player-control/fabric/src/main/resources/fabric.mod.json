@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "mf_player_probe",
+  "version": "1.0.0",
+  "name": "Minecraft Friends isolated player probe",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": ["io.github.yfyan.probe.fabric.FabricPlayerTest"],
+    "client": ["io.github.yfyan.probe.fabric.FabricProbeClient"]
+  },
+  "depends": {"fabricloader": ">=0.16.14", "minecraft": "1.21.1", "java": ">=21", "fabric-api": "*"},
+  "license": "All-Rights-Reserved"
+}

@@ -6,7 +6,7 @@
 
 - 初期固定 Minecraft Java 1.21.1、Java 21，分别适配 Fabric 和 Minecraft Forge；不得以 NeoForge 替代 Forge 验收。
 - 工程任务需锁定 Gradle Wrapper、加载器、映射、Fabric API 及其他依赖版本。避免动态版本、未审查快照和不必要的工具链升级。
-- 使用仓库 Wrapper，构建命令由工程 PR 实测后写入文档；当前无 Wrapper，不能声称可以构建。
+- 正式工程使用其仓库 Wrapper，构建命令由工程 PR 实测后写入文档；#1 的独立实验使用 experiments/player-control 自带的 Wrapper，不代表正式模组工程已经交付。
 - 新依赖记录官方来源、固定版本、许可证、用途、目标版本兼容性及替代方案。涉及架构的选择写入 [ADR](decisions/0000-template.md)。
 - 不通过系统批量升级解决依赖问题；不在项目脚本中安装或升级内核、显卡驱动。个人机器安装软件需得到机主授权并核对依赖变更。
 

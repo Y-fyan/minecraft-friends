@@ -1,0 +1,20 @@
+modLoader="javafml"
+loaderVersion="[52,)"
+license="All Rights Reserved"
+[[mods]]
+modId="mf_player_probe"
+version="1.0.0"
+displayName="Minecraft Friends isolated player probe"
+description='''Isolated validation only. Never install in an existing world.'''
+[[dependencies.mf_player_probe]]
+modId="forge"
+mandatory=true
+versionRange="[52.1.20,)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.mf_player_probe]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.21.1,1.21.2)"
+ordering="NONE"
+side="BOTH"

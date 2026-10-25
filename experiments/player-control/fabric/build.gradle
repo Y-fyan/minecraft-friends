@@ -1,0 +1,23 @@
+plugins { id 'fabric-loom' version '1.7.4' }
+dependencies {
+    minecraft 'com.mojang:minecraft:1.21.1'
+    mappings loom.officialMojangMappings()
+    modImplementation 'net.fabricmc:fabric-loader:0.16.14'
+    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.116.17+1.21.1'
+}
+loom {
+    runs {
+        gameTest {
+            server()
+            name 'Isolated player probe GameTest'
+            vmArg '-Dfabric-api.gametest'
+            runDir 'build/run/gametest'
+        }
+        integratedProbe {
+            client()
+            name 'Isolated integrated server probe'
+            vmArg '-Dmf.probe.client=true'
+            runDir 'build/run/integrated'
+        }
+    }
+}

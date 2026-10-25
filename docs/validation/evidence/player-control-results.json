@@ -1,0 +1,570 @@
+{
+  "date": "2026-10-25",
+  "scope": "Independent player entity primitive experiment; not production mod deployment or authenticated-account validation.",
+  "java": "Temurin 21.0.13+9-LTS",
+  "gradle": "8.8",
+  "minecraft": "1.21.1",
+  "fabric_loader": "0.16.14",
+  "fabric_api": "0.116.17+1.21.1",
+  "loom": "1.7.4",
+  "forge": "52.1.20",
+  "forge_gradle": "6.0.24",
+  "runs": [
+    {
+      "target": "fabric-server",
+      "source_tree_sha256": "65915cae4a646e3c9b6e5dd3e4cf36ed828f38d9ba16387c4cf7f2c86f834506",
+      "exit_code": 0,
+      "passed": true,
+      "missing_assertions": [],
+      "client_completion": true,
+      "context_verified": true,
+      "records": [
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 0,
+          "check": "joined",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 20,
+          "check": "movement",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 20,
+          "check": "movement_distance",
+          "value": "0.656143493950367"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 20,
+          "check": "mine_primitive",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 55,
+          "check": "pickup",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 75,
+          "check": "damage",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 75,
+          "check": "damaged_health",
+          "value": "15.0"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 75,
+          "check": "removed",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 75,
+          "check": "rejoin_inventory_7",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 150,
+          "check": "death",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 150,
+          "check": "death_drops_7",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 150,
+          "check": "respawn_adapter",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 150,
+          "check": "no_death_duplication",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 170,
+          "check": "packet_discard",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 170,
+          "check": "discarded_packets",
+          "value": "99"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": true,
+          "tick": 170,
+          "check": "result",
+          "value": "PASS"
+        }
+      ]
+    },
+    {
+      "target": "forge-server",
+      "source_tree_sha256": "65915cae4a646e3c9b6e5dd3e4cf36ed828f38d9ba16387c4cf7f2c86f834506",
+      "exit_code": 0,
+      "passed": true,
+      "missing_assertions": [],
+      "client_completion": true,
+      "context_verified": true,
+      "records": [
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 0,
+          "check": "joined",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 20,
+          "check": "movement",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 20,
+          "check": "movement_distance",
+          "value": "0.6561434958130121"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 20,
+          "check": "mine_primitive",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 55,
+          "check": "pickup",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 75,
+          "check": "damage",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 75,
+          "check": "damaged_health",
+          "value": "15.0"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 75,
+          "check": "removed",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 75,
+          "check": "rejoin_inventory_7",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 150,
+          "check": "death",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 150,
+          "check": "death_drops_7",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 150,
+          "check": "respawn_adapter",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 150,
+          "check": "no_death_duplication",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 170,
+          "check": "packet_discard",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 170,
+          "check": "discarded_packets",
+          "value": "92"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.gametest.framework.GameTestServer",
+          "dedicated": false,
+          "tick": 170,
+          "check": "result",
+          "value": "PASS"
+        }
+      ]
+    },
+    {
+      "target": "fabric-integrated",
+      "source_tree_sha256": "65915cae4a646e3c9b6e5dd3e4cf36ed828f38d9ba16387c4cf7f2c86f834506",
+      "exit_code": 0,
+      "passed": true,
+      "missing_assertions": [],
+      "client_completion": true,
+      "context_verified": true,
+      "records": [
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 0,
+          "check": "joined",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 20,
+          "check": "movement",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 20,
+          "check": "movement_distance",
+          "value": "0.9269057640741769"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 20,
+          "check": "mine_primitive",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 55,
+          "check": "pickup",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 75,
+          "check": "damage",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 75,
+          "check": "damaged_health",
+          "value": "15.0"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 75,
+          "check": "removed",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 75,
+          "check": "rejoin_inventory_7",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 150,
+          "check": "death",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 150,
+          "check": "death_drops_7",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 150,
+          "check": "respawn_adapter",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 150,
+          "check": "no_death_duplication",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 170,
+          "check": "packet_discard",
+          "value": "PASS"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 170,
+          "check": "discarded_packets",
+          "value": "247"
+        },
+        {
+          "loader": "fabric",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 170,
+          "check": "result",
+          "value": "PASS"
+        }
+      ]
+    },
+    {
+      "target": "forge-integrated",
+      "source_tree_sha256": "65915cae4a646e3c9b6e5dd3e4cf36ed828f38d9ba16387c4cf7f2c86f834506",
+      "exit_code": 0,
+      "passed": true,
+      "missing_assertions": [],
+      "client_completion": true,
+      "context_verified": true,
+      "records": [
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 0,
+          "check": "joined",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 20,
+          "check": "movement",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 20,
+          "check": "movement_distance",
+          "value": "0.9269057640741769"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 20,
+          "check": "mine_primitive",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 55,
+          "check": "pickup",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 75,
+          "check": "damage",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 75,
+          "check": "damaged_health",
+          "value": "15.0"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 75,
+          "check": "removed",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 75,
+          "check": "rejoin_inventory_7",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 150,
+          "check": "death",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 150,
+          "check": "death_drops_7",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 150,
+          "check": "respawn_adapter",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 150,
+          "check": "no_death_duplication",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 170,
+          "check": "packet_discard",
+          "value": "PASS"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 170,
+          "check": "discarded_packets",
+          "value": "267"
+        },
+        {
+          "loader": "forge",
+          "server_class": "net.minecraft.client.server.IntegratedServer",
+          "dedicated": false,
+          "tick": 170,
+          "check": "result",
+          "value": "PASS"
+        }
+      ]
+    }
+  ]
+}
