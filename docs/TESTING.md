@@ -17,7 +17,7 @@ Minecraft 均为 Java 1.21.1，开发工具链为 Java 21。每次记录精确�
 
 ## M0 当前验证
 
-2026-10-25 在本地 Git 工作树完成，尚未形成正式发布记录。运行与安装详情见 [M0 验收记录](validation/0005-runtime-installation.md)。
+2026-10-25 在本地 Git 工作树完成，尚未形成正式发布记录。运行与安装详情见 [M0 验收记录](validation/0005-runtime-installation.md)，阶段交付见 [M0 收尾记录](validation/0006-m0-closeout.md)。上方 Alpha 四格矩阵仍需验证正式玩法，不因基础加载通过而勾选。
 
 | 检查 | 结果 |
 | --- | --- |
@@ -26,9 +26,10 @@ Minecraft 均为 Java 1.21.1，开发工具链为 Java 21。每次记录精确�
 | Forge 1.21.1 构建 | 通过；发行 JAR 自包含公共类和 Forge 入口 |
 | 客户端类引用扫描 | 通过；两个发行 JAR 未发现客户端或渲染类引用 |
 | Fabric / Forge 开发客户端 | 通过加载器发现、入口初始化、离线配置和图形渲染初始化 |
-| Fabric / Forge 开发专服 | 通过普通 DedicatedServer 完整启动和正常停止 |
+| Fabric 开发专服 | 普通 DedicatedServer 完整启动；控制台 `stop`，Gradle 退出码 0 |
+| Forge 开发专服 | 普通 DedicatedServer 完整启动；管道未转发 `stop`，脚本终止后游戏保存完成，Gradle 外壳非零 |
 | Forge GameTestServer | 仅作为早期加载冒烟；因尚无测试函数而结束，不计入普通专服通过 |
-| Fabric / Forge 最终 JAR 独立安装 | 通过普通 1.21.1 安装、模组加载、离线配置和完整专服启动 |
+| Fabric / Forge 最终 JAR 独立安装 | 通过普通 1.21.1 安装、模组加载、离线配置、完整专服启动和控制台 `stop`，退出码均为 0 |
 | 伙伴、聊天、记忆、导航和世界操作 | 未实现，未测试 |
 
 ## 按改动选择验证
