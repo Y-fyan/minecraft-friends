@@ -1,6 +1,6 @@
 # 项目统筹与近期执行计划
 
-本文件定义推进方式；任务的实时负责人、状态与证据以 [Issues](https://github.com/Y-fyan/minecraft-friends/issues) 和 [路线图 #12](https://github.com/Y-fyan/minecraft-friends/issues/12) 为准，避免在多个文档中重复维护进度。玩家控制已有 [独立探针与验证](validation/0002-player-control-reproduction.md)；#2 基础工程已随 PR #17 合并，远端 CI 已完成测试、双端构建与产物上传，普通专服及最终安装仍待验收。正式模组玩法仍需逐项实现与验收。
+本文件定义推进方式；任务的实时负责人、状态与证据以 [Issues](https://github.com/Y-fyan/minecraft-friends/issues) 和 [路线图 #12](https://github.com/Y-fyan/minecraft-friends/issues/12) 为准，避免在多个文档中重复维护进度。玩家控制已有 [独立探针与验证](validation/0002-player-control-reproduction.md)；#2 基础工程已完成开发客户端、普通专服和最终 JAR 独立安装验收，证据见 [运行与安装验收](validation/0005-runtime-installation.md)。正式模组玩法仍需逐项实现与验收。
 
 ## 职责与决策
 
@@ -18,7 +18,7 @@
 | 任务 | 下一份交付物 | 进入下一阶段的条件 |
 | --- | --- | --- |
 | [#1 玩家控制验证](https://github.com/Y-fyan/minecraft-friends/issues/1) | ADR 0001 与独立探针已接受和提交；下一步处理普通专服、客户端兼容与正式接入 | 明确玩家实体与正版登录客户端的差异；身份、背包、移动、挖掘、死亡与重进有证据；未通过项公开 |
-| [#2 双加载器工程](https://github.com/Y-fyan/minecraft-friends/issues/2) | 已具备固定工具链、两个 JAR、构建/启动记录与 CI；下一步完成普通客户端/专服与最终 JAR 安装验收 | 两种加载器均能构建和启动；专服不引用客户端类；CI 检查与产物可追溯 |
+| [#2 双加载器工程](https://github.com/Y-fyan/minecraft-friends/issues/2) | 固定工具链、两个 JAR、构建/启动记录、普通客户端/专服与最终 JAR 独立安装均已验收 | 两种加载器均能构建和启动；专服不引用客户端类；CI 检查与产物可追溯 |
 | [#3 协作基础](https://github.com/Y-fyan/minecraft-friends/issues/3) | 在已有文档上补齐实际适用的忽略规则、Issue 模板与工程配置示例，记录许可证决策 | 文档与工程一致；模板可用；许可证由创作者选择；无凭据或存档入库 |
 
 已有 README、贡献指南、开发/架构/测试规范、PR/ADR 模板属于 #3 的部分交付；不能因此关闭整个任务。工程配置未确定时不编造配置示例。

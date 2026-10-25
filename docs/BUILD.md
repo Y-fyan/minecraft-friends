@@ -1,6 +1,6 @@
 # 构建与开发运行
 
-状态：M0 基础工程。Fabric 和 Minecraft Forge 1.21.1 的测试、构建与专服模组初始化已在本地验证；伙伴、聊天、模型请求和世界操作尚未实现。
+状态：M0 基础工程。Fabric 和 Minecraft Forge 1.21.1 的测试、构建、开发客户端、普通专服与最终 JAR 独立安装运行已验证；伙伴、聊天、模型请求和世界操作尚未实现。证据见 [运行与安装验收](validation/0005-runtime-installation.md)。
 
 ## 固定工具链
 
@@ -46,7 +46,7 @@ Windows 使用：
 | `./gradlew :forge:runClient` | Forge 开发客户端 |
 | `./gradlew :forge:runServer` | Forge 开发专用服务器 |
 
-运行目录分别是 `fabric/run/` 和 `forge/run/`，均已加入忽略规则。Fabric 专服首次启动会创建 `server.properties` 和 `eula.txt`。是否同意 Minecraft EULA 必须由使用者本人阅读并决定；工程不会自动修改 `eula.txt`。
+运行目录分别是 `fabric/run/` 和 `forge/run/`，均已加入忽略规则。专服首次启动会创建 `server.properties` 和 `eula.txt`。是否同意 Minecraft EULA 必须由使用者本人阅读并决定；工程不会自动修改 `eula.txt`。
 
 Forge 首次开发运行可能下载游戏资源。仅验证服务端模组加载时，可以跳过纯客户端资源准备：
 
