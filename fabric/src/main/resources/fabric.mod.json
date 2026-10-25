@@ -3,6 +3,7 @@
   "id": "minecraft_friends",
   "version": "${version}",
   "name": "Minecraft Friends",
+  "license": "${license}",
   "description": "AI companions for Minecraft Java Edition.",
   "authors": [
     "Y-fyan and contributors"

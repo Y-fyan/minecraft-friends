@@ -1,6 +1,6 @@
 modLoader="javafml"
 loaderVersion="[52,)"
-license="All Rights Reserved"
+license="GPL-3.0-only"
 [[mods]]
 modId="mf_player_probe"
 version="1.0.0"

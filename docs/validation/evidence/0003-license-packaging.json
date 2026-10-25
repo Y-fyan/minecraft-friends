@@ -1,0 +1,29 @@
+{
+  "license_sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+  "jars": [
+    {
+      "path": "build/artifacts/minecraft-friends-forge-1.21.1-0.1.0-SNAPSHOT.jar",
+      "sha256": "acb23560e957b713a3b7906fe314ffbb55939e7e9c151bd0276bfb889405452a",
+      "license": "GPL-3.0-only",
+      "license_text_matches": true
+    },
+    {
+      "path": "build/artifacts/minecraft-friends-fabric-1.21.1-0.1.0-SNAPSHOT.jar",
+      "sha256": "5cf8d23382625fd05fa7e68b67ffe6b0116234bb30d591979f4b7dd55ab850c5",
+      "license": "GPL-3.0-only",
+      "license_text_matches": true
+    },
+    {
+      "path": "experiments/player-control/fabric/build/libs/fabric-1.0.0.jar",
+      "sha256": "3ad8a1da09c9ffa5405658e0dc23e68fc0c9ece0145dcccadbd11f6070031232",
+      "license": "GPL-3.0-only",
+      "license_text_matches": true
+    },
+    {
+      "path": "experiments/player-control/forge/build/libs/forge-1.0.0.jar",
+      "sha256": "9748f259b7c31f81c8c6fc30aa5fc5040eddef954596b4a9c9ca82762d382a1d",
+      "license": "GPL-3.0-only",
+      "license_text_matches": true
+    }
+  ]
+}
