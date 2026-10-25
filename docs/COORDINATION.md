@@ -1,6 +1,6 @@
 # 项目统筹与近期执行计划
 
-本文件定义推进方式；任务的实时负责人、状态与证据以 [Issues](https://github.com/Y-fyan/minecraft-friends/issues) 和 [路线图 #12](https://github.com/Y-fyan/minecraft-friends/issues/12) 为准，避免在多个文档中重复维护进度。当前起点是已有基础文档，尚无模组实现或游戏内验证结果。
+本文件定义推进方式；任务的实时负责人、状态与证据以 [Issues](https://github.com/Y-fyan/minecraft-friends/issues) 和 [路线图 #12](https://github.com/Y-fyan/minecraft-friends/issues/12) 为准，避免在多个文档中重复维护进度。第一轮以基础文档起步；玩家控制现已有 [独立探针与验证](validation/0002-player-control-reproduction.md)，正式模组仍需逐项实现与验收。
 
 ## 职责与决策
 

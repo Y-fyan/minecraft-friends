@@ -1,6 +1,6 @@
 # 架构草案
 
-状态：**提案，未实现、未验证**。本文用于对齐并行开发边界，最终实现以架构决策记录（ADR）和实测结果为准。前置任务：[玩家控制验证 #1](https://github.com/Y-fyan/minecraft-friends/issues/1)、[双加载器工程 #2](https://github.com/Y-fyan/minecraft-friends/issues/2)。
+状态：**总体架构草案，尚非完整实现**。玩家控制路线已按 [ADR 0001](decisions/0001-player-control-route.md) 接受，依据为独立基础探针；其余模块仍需实现和验证。本文用于对齐并行开发边界，最终实现以 ADR 和实测结果为准。前置任务：[玩家控制验证 #1](https://github.com/Y-fyan/minecraft-friends/issues/1)、[双加载器工程 #2](https://github.com/Y-fyan/minecraft-friends/issues/2)。
 
 ## 设计目标
 
