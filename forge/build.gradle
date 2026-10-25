@@ -14,6 +14,22 @@ sourceSets {
     }
 }
 
+// Forge's development locator needs one directory containing metadata and classes.
+// Keep production task outputs separate; only this Sync task owns the runtime copy.
+def developmentModDirectory = layout.buildDirectory.dir('developmentMod')
+def development = sourceSets.create('development')
+development.java.setSrcDirs([])
+development.resources.setSrcDirs([])
+development.output.classesDirs.setFrom(developmentModDirectory)
+development.runtimeClasspath = files(developmentModDirectory) +
+        (sourceSets.main.runtimeClasspath - sourceSets.main.output)
+
+def prepareDevelopmentMod = tasks.register('prepareDevelopmentMod', Sync) {
+    dependsOn tasks.named('classes'), tasks.named(development.classesTaskName)
+    from sourceSets.main.output
+    into developmentModDirectory
+}
+
 minecraft {
     mappings channel: 'official', version: minecraft_version
     reobf = false
@@ -24,6 +40,9 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.console.level', 'info'
             property 'eventbus.api.strictRuntimeChecks', 'true'
+            mods {
+                minecraft_friends { source development }
+            }
         }
 
         client {
@@ -41,6 +60,10 @@ minecraft {
     }
 }
 
+tasks.matching { it.name in ['runClient', 'runServer', 'runGameTestServer'] }.configureEach {
+    dependsOn prepareDevelopmentMod
+}
+
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     compileOnly "org.slf4j:slf4j-api:${slf4j_version}"
@@ -48,7 +71,7 @@ dependencies {
 
 def resourceProperties = [
         minecraft_version      : minecraft_version,
-        minecraft_version_range: '[1.21.1,1.22)',
+        minecraft_version_range: "[${minecraft_version}]",
         forge_version          : forge_version,
         forge_version_range    : '[52.1.20,)',
         loader_version_range   : '[52,)',
@@ -77,11 +100,4 @@ tasks.named('jar', Jar) {
                 'Implementation-Version': project.version
         )
     }
-}
-
-// Forge dev runs expect classes and resources in one directory on the mod layer.
-sourceSets.each {
-    def outputDirectory = layout.buildDirectory.dir("sourceSets/${it.name}")
-    it.output.resourcesDir = outputDirectory
-    it.java.destinationDirectory = outputDirectory
 }
