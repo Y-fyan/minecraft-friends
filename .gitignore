@@ -1,0 +1,22 @@
+# Gradle
+.gradle/
+**/build/
+
+# Minecraft development runs and generated assets
+**/run/
+**/runs/
+**/*.log
+
+# IDEs
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+eclipse/
+bin/
+out/
+
+# Local operating system files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "minecraft_friends",
+  "version": "${version}",
+  "name": "Minecraft Friends",
+  "description": "AI companions for Minecraft Java Edition.",
+  "authors": [
+    "Y-fyan and contributors"
+  ],
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "io.github.yfyan.minecraftfriends.fabric.MinecraftFriendsFabric"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.20.1",
+    "minecraft": "~1.21.1",
+    "java": ">=21"
+  }
+}

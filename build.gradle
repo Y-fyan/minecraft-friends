@@ -1,0 +1,99 @@
+plugins {
+    id 'base'
+}
+
+allprojects {
+    group = project_group
+    version = project_version
+}
+
+subprojects {
+    repositories {
+        mavenCentral()
+    }
+
+    plugins.withId('java') {
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(java_version as int)
+            }
+            withSourcesJar()
+        }
+
+        tasks.withType(JavaCompile).configureEach {
+            options.encoding = 'UTF-8'
+            options.release = java_version as int
+        }
+
+        tasks.withType(Test).configureEach {
+            useJUnitPlatform()
+            testLogging {
+                events 'failed', 'skipped'
+                exceptionFormat = 'full'
+            }
+        }
+    }
+}
+
+tasks.register('checkAll') {
+    group = 'verification'
+    description = 'Runs common tests and prepares both installable loader artifacts.'
+    dependsOn ':common:check', ':fabric:check', ':forge:check', 'verifyArtifacts'
+}
+
+tasks.register('collectArtifacts', Sync) {
+    group = 'build'
+    description = 'Collects the two installable loader JARs under build/artifacts.'
+    dependsOn ':fabric:remapJar', ':forge:jar'
+    from(project(':fabric').tasks.named('remapJar'))
+    from(project(':forge').tasks.named('jar'))
+    into layout.buildDirectory.dir('artifacts')
+}
+
+tasks.register('verifyArtifacts') {
+    group = 'verification'
+    description = 'Checks that both installable JARs contain their loader entrypoints and common classes.'
+    dependsOn 'collectArtifacts'
+
+    doLast {
+        def artifactsDirectory = layout.buildDirectory.dir('artifacts').get().asFile
+        def jars = artifactsDirectory.listFiles()
+                ?.findAll { it.isFile() && it.name.endsWith('.jar') }
+                ?.sort { it.name }
+                ?: []
+
+        if (jars.size() != 2) {
+            throw new GradleException("Expected exactly two JARs in ${artifactsDirectory}, found ${jars.size()}")
+        }
+
+        def requiredEntries = [
+                'minecraft-friends-fabric-' : [
+                        'fabric.mod.json',
+                        'io/github/yfyan/minecraftfriends/fabric/MinecraftFriendsFabric.class',
+                        'io/github/yfyan/minecraftfriends/MinecraftFriends.class',
+                        'io/github/yfyan/minecraftfriends/config/ConfigLoader.class'
+                ],
+                'minecraft-friends-forge-'  : [
+                        'META-INF/mods.toml',
+                        'io/github/yfyan/minecraftfriends/forge/MinecraftFriendsForge.class',
+                        'io/github/yfyan/minecraftfriends/MinecraftFriends.class',
+                        'io/github/yfyan/minecraftfriends/config/ConfigLoader.class'
+                ]
+        ]
+
+        jars.each { jarFile ->
+            def expectedPrefix = requiredEntries.keySet().find { jarFile.name.startsWith(it) }
+            if (expectedPrefix == null) {
+                throw new GradleException("Unexpected loader artifact: ${jarFile.name}")
+            }
+
+            new java.util.zip.ZipFile(jarFile).withCloseable { zip ->
+                requiredEntries[expectedPrefix].each { entry ->
+                    if (zip.getEntry(entry) == null) {
+                        throw new GradleException("Missing ${entry} in ${jarFile.name}")
+                    }
+                }
+            }
+        }
+    }
+}

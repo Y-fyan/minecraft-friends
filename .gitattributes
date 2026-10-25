@@ -1,0 +1,11 @@
+* text=auto
+*.bat text eol=crlf
+*.gradle text eol=lf
+*.java text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.mcmeta text eol=lf
+*.properties text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+gradlew text eol=lf

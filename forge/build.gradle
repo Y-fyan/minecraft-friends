@@ -1,0 +1,87 @@
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'net.minecraftforge.gradle' version "${forge_gradle_version}"
+}
+
+base {
+    archivesName = "minecraft-friends-forge-${minecraft_version}"
+}
+
+sourceSets {
+    main {
+        java.srcDir rootProject.file('common/src/main/java')
+    }
+}
+
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+    reobf = false
+    copyIdeResources = true
+
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'info'
+            property 'eventbus.api.strictRuntimeChecks', 'true'
+        }
+
+        client {
+            property 'forge.enabledGameTestNamespaces', 'minecraft_friends'
+        }
+
+        server {
+            property 'forge.enabledGameTestNamespaces', 'minecraft_friends'
+            args '--nogui'
+        }
+
+        gameTestServer {
+            property 'forge.enabledGameTestNamespaces', 'minecraft_friends'
+        }
+    }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    compileOnly "org.slf4j:slf4j-api:${slf4j_version}"
+}
+
+def resourceProperties = [
+        minecraft_version      : minecraft_version,
+        minecraft_version_range: '[1.21.1,1.22)',
+        forge_version          : forge_version,
+        forge_version_range    : '[52.1.20,)',
+        loader_version_range   : '[52,)',
+        mod_id                 : 'minecraft_friends',
+        mod_name               : 'Minecraft Friends',
+        mod_license            : 'All Rights Reserved',
+        mod_version            : project.version,
+        mod_authors            : 'Y-fyan and contributors',
+        mod_description        : 'AI companions for Minecraft Java Edition.'
+]
+
+tasks.named('processResources', ProcessResources) {
+    inputs.properties resourceProperties
+
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand resourceProperties
+    }
+}
+
+tasks.named('jar', Jar) {
+    manifest {
+        attributes(
+                'Specification-Title': 'minecraft_friends',
+                'Specification-Version': '1',
+                'Implementation-Title': 'Minecraft Friends Forge',
+                'Implementation-Version': project.version
+        )
+    }
+}
+
+// Forge dev runs expect classes and resources in one directory on the mod layer.
+sourceSets.each {
+    def outputDirectory = layout.buildDirectory.dir("sourceSets/${it.name}")
+    it.output.resourcesDir = outputDirectory
+    it.java.destinationDirectory = outputDirectory
+}

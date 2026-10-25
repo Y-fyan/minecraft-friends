@@ -4,7 +4,7 @@
 
 Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Minecraft Forge** 两个版本。目标是让 AI 操控具有玩家身份、背包和生存能力的伙伴，通过原版聊天框与玩家交流，在实际游戏规则下执行任务。
 
-> **项目状态：基础可行性验证阶段。** 已提供 #1 的独立玩家控制探针及四组运行记录，正式 AI 陪伴模组仍在开发，尚无正式发布版本。下文功能为产品目标；探针通过不代表聊天、记忆、干活或正式安装兼容性已实现。Forge 不等于 NeoForge。
+> **项目状态：M0 基础工程与可行性验证阶段。** #1 已提供独立玩家控制探针和四组运行记录；#2 已建立 Java 21 公共核心、Fabric / Minecraft Forge 1.21.1 最小入口、固定 Gradle Wrapper、自动化测试、CI 和开发 JAR。正式 AI 陪伴功能仍在开发，尚无发布版本；探针和启动冒烟通过不代表聊天、记忆、干活或正式安装兼容性已经实现。Forge 不等于 NeoForge。
 
 ## 我们希望带来的体验
 
@@ -15,6 +15,20 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 - **随时叫停**：用户可以取消任务，查看并删除记忆，调整主动发言频率。
 
 初期采用服务端玩家实体，它拥有玩家身份与生存能力，但不是经过认证的真人账号。选择依据和限制见 [ADR 0001](docs/decisions/0001-player-control-route.md) 与 [独立验证记录](docs/validation/0002-player-control-reproduction.md)。
+
+## 当前实现
+
+| 能力 | 状态 |
+| --- | --- |
+| Java 21 公共核心 | 已实现；包含配置、模型契约、Mock Provider 和任务终态规则 |
+| Fabric / Forge 1.21.1 工程 | 已构建；分别产出独立发行 JAR |
+| 专服类隔离 | 已扫描；发行 JAR 不引用客户端或渲染类 |
+| 无密钥启动 | 已验证；创建离线配置且不发起模型请求 |
+| 伙伴、聊天、记忆、导航、采集 | 尚未实现 |
+| 真实模型服务 | 尚未实现；M0 只接受 `mock` / `disabled` |
+| 客户端内运行 | 尚未验证 |
+
+构建、测试和开发运行步骤见 [构建指南](docs/BUILD.md)。
 
 ## 初期版本目标
 
@@ -44,12 +58,12 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | --- | --- |
 | 游戏 | Minecraft Java 1.21.1 |
 | 加载器 | Fabric、Minecraft Forge，分别构建与验证 |
-| 开发环境 | Java 21；计划使用 Gradle Wrapper，具体依赖版本由工程任务锁定 |
-| 模型 | 先实现一种兼容常见 Chat Completions 接口的适配器，提供不联网的 Mock 模式 |
-| 部署 | 单机内置服务器及专用服务器；客户端/服务端安装组合待架构验证确认 |
+| 开发环境 | Java 21、Gradle Wrapper 8.8；加载器、映射和插件版本已固定 |
+| 模型 | M0 提供不联网 Mock 和关闭状态；真实 Chat Completions 适配器尚未实现 |
+| 部署 | 已有 Fabric / Forge 两个开发 JAR；客户端安装组合和正式发行尚未验证 |
 | 控制 | 模型输出结构化意图，游戏执行器校验并执行，世界操作由服务端最终授权 |
 
-真实模型调用需要用户配置服务地址、模型与凭据，可能产生服务商费用。当前尚无可用配置文件；工程落地后会补充准确路径、字段与启动步骤。没有凭据时不得自动发起付费请求。
+真实模型调用需要用户配置服务地址、模型与凭据，可能产生服务商费用。当前配置只支持离线 Provider，不读取或保存 API key。运行时会创建 `config/minecraft-friends.properties`；字段和限制见 [构建指南](docs/BUILD.md#配置)。
 
 聊天和必要的游戏上下文可能被发送给用户选择的模型服务。正式接入前会说明发送内容与凭据存放位置；默认不采集全服聊天，不在日志中记录密钥。记忆按玩家和世界隔离，并提供删除入口。
 
@@ -60,13 +74,18 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | 文档 | 内容 |
 | --- | --- |
 | [贡献指南](CONTRIBUTING.md) | 认领、分支、提交、PR、审查与贡献统计 |
+| [构建指南](docs/BUILD.md) | 固定工具链、构建、开发运行、配置与 EULA 边界 |
 | [项目统筹](docs/COORDINATION.md) | 近期交付、依赖、职责、状态与推进节奏 |
 | [开发规范](docs/DEVELOPMENT.md) | 编码、线程、动作、配置、日志与依赖约定 |
 | [架构草案](docs/ARCHITECTURE.md) | 分层、数据流、公共接口与待决事项 |
 | [测试与发布规范](docs/TESTING.md) | 四格环境矩阵、失败场景与发布门槛 |
+| [依赖与许可](docs/DEPENDENCIES.md) | M0 直接依赖、用途、版本和许可 |
+| [玩家控制 ADR 0001](docs/decisions/0001-player-control-route.md) | 服务端玩家实体与真实账号客户端的路线取舍 |
+| [玩家控制验证](docs/validation/0002-player-control-reproduction.md) | 独立探针源码、四组结果与可追溯证据 |
+| [ADR 0002](docs/decisions/0002-multiloader-layout.md) | 公共源码加双加载器发行 JAR 的取舍 |
 | [架构决策模板](docs/decisions/0000-template.md) | 技术选择的背景、证据、代价与结论 |
 
-当前可以按 [独立探针说明](experiments/player-control/README.md) 构建并复跑玩家控制实验；正式模组工程由 #2 推进。实验目录与运行器用于验证，不能作为已发布的陪伴模组安装到真实存档。
+当前可以参与 Issue #1 的未测环境、Issue #2 的基础工程审查或 Issue #3 的协作完善。根目录命令 `./gradlew checkAll --no-daemon` 会运行公共测试并生成两个 JAR；独立玩家控制实验按 [探针说明](experiments/player-control/README.md) 运行。实验目录用于验证，不能作为已发布的陪伴模组安装到真实存档。
 
 ## 原创与许可
 
