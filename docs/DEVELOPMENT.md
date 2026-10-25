@@ -7,6 +7,7 @@
 - 初期固定 Minecraft Java 1.21.1、Java 21，分别适配 Fabric 和 Minecraft Forge；不得以 NeoForge 替代 Forge 验收。
 - 当前固定 Gradle Wrapper 8.8、Fabric Loader 0.20.1、Fabric Loom 1.7.4、Minecraft Forge 52.1.20 和 ForgeGradle 6.0.24；版本集中在根 `gradle.properties`。
 - 使用仓库 Wrapper。当前构建、公共测试、两端 JAR 和专服初始化已在本地验证，命令见 [构建指南](BUILD.md)。
+- #1 的独立实验使用 `experiments/player-control` 自带 Wrapper，不代表正式模组工程；正式工程以上一条根目录 Wrapper 为准。
 - 新依赖记录官方来源、固定版本、许可证、用途、目标版本兼容性及替代方案。涉及架构的选择写入 [ADR](decisions/0000-template.md)。
 - 不通过系统批量升级解决依赖问题；不在项目脚本中安装或升级内核、显卡驱动。个人机器安装软件需得到机主授权并核对依赖变更。
 

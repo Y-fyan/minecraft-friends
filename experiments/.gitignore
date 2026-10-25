@@ -1,0 +1,8 @@
+# Experimental build products and generated worlds; formal project ignores belong to #2.
+**/.gradle/
+**/build/
+**/run/
+**/runs/
+**/__pycache__/
+**/node_modules/
+*.log

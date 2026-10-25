@@ -1,0 +1,7 @@
+{
+  "pack": {
+    "pack_format": 48,
+    "supported_formats": [34, 48],
+    "description": "Authored empty player-probe test structure"
+  }
+}

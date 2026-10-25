@@ -1,0 +1,107 @@
+{
+  "source_tree_sha256": "65915cae4a646e3c9b6e5dd3e4cf36ed828f38d9ba16387c4cf7f2c86f834506",
+  "files": [
+    {
+      "path": "experiments/player-control/README.md",
+      "sha256": "872273c42f147c189bed31c81295780ca58bbf213104b751a417317bb290a529"
+    },
+    {
+      "path": "experiments/player-control/build.gradle",
+      "sha256": "ec5b92639af5d856c9cbb952831641f226043b5ee7590cd96737e762e51cdd94"
+    },
+    {
+      "path": "experiments/player-control/fabric/build.gradle",
+      "sha256": "5d0ea182b2798fa189e6cdfb0f415fcc456a6b2b249a9657e9aa67225e32a23e"
+    },
+    {
+      "path": "experiments/player-control/fabric/src/main/java/io/github/yfyan/probe/fabric/FabricPlayerTest.java",
+      "sha256": "db43239443c21f08420544088b188e166d28bad6f0493e9647051a0e7c46aed9"
+    },
+    {
+      "path": "experiments/player-control/fabric/src/main/java/io/github/yfyan/probe/fabric/FabricProbeClient.java",
+      "sha256": "b4139cd966f8755d2324cd8e3f2b852bc66e4f2071ddce11a921b1a484b9e3f9"
+    },
+    {
+      "path": "experiments/player-control/fabric/src/main/resources/fabric.mod.json",
+      "sha256": "27ef05c67075e5f28abc71fcec6a1bf351c8672e518e466d403109869cc68374"
+    },
+    {
+      "path": "experiments/player-control/forge/build.gradle",
+      "sha256": "e4f31beeaee964b0f2b15d89f1ae8422611f30a955845c23302a02e84c48ab8b"
+    },
+    {
+      "path": "experiments/player-control/forge/src/main/java/io/github/yfyan/probe/forge/ForgePlayerTest.java",
+      "sha256": "fc7d758fca64bbf31f06903ee4ba8ad8301b3a98d16506eec7eac0168ccbd42c"
+    },
+    {
+      "path": "experiments/player-control/forge/src/main/java/io/github/yfyan/probe/forge/ForgeProbeClient.java",
+      "sha256": "694b2bb8f2f2c122bf27b28af739d068a8cd0bd59dca2f9a7980e9df14b03418"
+    },
+    {
+      "path": "experiments/player-control/forge/src/main/resources/META-INF/mods.toml",
+      "sha256": "f54c3ac6f38bca631dd5bfa60be890ca1fdba5e3fe3c8c453fc9c2489dcea73b"
+    },
+    {
+      "path": "experiments/player-control/gradle/wrapper/gradle-wrapper.jar",
+      "sha256": "cb0da6751c2b753a16ac168bb354870ebb1e162e9083f116729cec9c781156b8"
+    },
+    {
+      "path": "experiments/player-control/gradle/wrapper/gradle-wrapper.properties",
+      "sha256": "7dd44a08b1af5b35e0e8f2269f82873bbddf99c88ce91d1bebc6f5cdb9127840"
+    },
+    {
+      "path": "experiments/player-control/gradle.properties",
+      "sha256": "399d5870f325fd938eb1594c5e6770ad947e6d94390ebd5ee66ec91b24287b12"
+    },
+    {
+      "path": "experiments/player-control/gradlew",
+      "sha256": "d8231d345ab33433ab7b2c0720d5beb416c8d5c6789dbc01ad122b63bc2cae0d"
+    },
+    {
+      "path": "experiments/player-control/gradlew.bat",
+      "sha256": "bdecf875b6868cbcbd36a1f85eedf0832f358ff28092c5797ed645f7edce77d9"
+    },
+    {
+      "path": "experiments/player-control/run_probe.py",
+      "sha256": "f770cd4d969cb7f4d25491cb990f5ff085ed1022298ba53fd744323e63350f69"
+    },
+    {
+      "path": "experiments/player-control/settings.gradle",
+      "sha256": "7142ff2ce36b335f9ab5fe6f677b99915603a71fed4c8d98fe8323b42c809f8b"
+    },
+    {
+      "path": "experiments/player-control/shared/src/main/java/io/github/yfyan/probe/PlayerScenario.java",
+      "sha256": "81a6d237529538da28e24e611c9f8b77cedeb7490665c89436b3dde1fc3c3f9e"
+    },
+    {
+      "path": "experiments/player-control/shared/src/main/java/io/github/yfyan/probe/ProbeConnection.java",
+      "sha256": "c80456d0a0d0abff64bb42d0190773646b1978323c2f4c5016b1fa904e5e995b"
+    },
+    {
+      "path": "experiments/player-control/shared/src/main/java/io/github/yfyan/probe/client/IntegratedProbe.java",
+      "sha256": "caa93a65c004af477e1609597260eae80f80de9721abfe5499182d9de7040ada"
+    },
+    {
+      "path": "experiments/player-control/shared/src/main/resources/data/mf_player_probe/structure/empty.nbt",
+      "sha256": "659c2793282777002d06862035de4b73835e671ee46372adfe1132adb576a967"
+    },
+    {
+      "path": "experiments/player-control/shared/src/main/resources/pack.mcmeta",
+      "sha256": "2b1c6aa12467609bb049b4b496500deef66ddb22c63a7a31f87299dd2016db72"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "experiments/player-control/fabric/build/libs/fabric-1.0.0.jar",
+      "size": 14776,
+      "sha256": "62c39a816306761682d3957f1c7494ef8aaf7f543e1dd3b67c313e845dbc9d22"
+    },
+    {
+      "path": "experiments/player-control/forge/build/libs/forge-1.0.0.jar",
+      "size": 14626,
+      "sha256": "d401047c40860bc3828447374a2480209f766584ebdba2c3760069bb54abef61"
+    }
+  ],
+  "note": "Only checksums are committed. JARs, Minecraft resources, worlds and full logs are not distributed.",
+  "source_commit": "d99168a6e9615438bdbdb9f6f4f231e5ca445fe4"
+}

@@ -4,7 +4,7 @@
 
 Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Minecraft Forge** 两个版本。目标是让 AI 操控具有玩家身份、背包和生存能力的伙伴，通过原版聊天框与玩家交流，在实际游戏规则下执行任务。
 
-> **项目状态：M0 基础工程阶段。** 当前已有 Java 21 公共核心、Fabric / Minecraft Forge 1.21.1 最小入口、固定 Gradle Wrapper、自动化测试、CI 和可安装 JAR。两端均完成专服模组加载冒烟验证；伙伴实体、聊天、真实模型请求和游戏内任务尚未实现。Forge 不等于 NeoForge。
+> **项目状态：M0 基础工程与可行性验证阶段。** #1 已提供独立玩家控制探针和四组运行记录；#2 已建立 Java 21 公共核心、Fabric / Minecraft Forge 1.21.1 最小入口、固定 Gradle Wrapper、自动化测试、CI 和开发 JAR。正式 AI 陪伴功能仍在开发，尚无发布版本；探针和启动冒烟通过不代表聊天、记忆、干活或正式安装兼容性已经实现。Forge 不等于 NeoForge。
 
 ## 我们希望带来的体验
 
@@ -14,7 +14,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 - **帮忙干活**：理解“收集 8 个橡木原木并交给我”，实际寻找、挖掘、拾取并交付，按真实结果汇报。
 - **随时叫停**：用户可以取消任务，查看并删除记忆，调整主动发言频率。
 
-“真实玩家”的具体实现是第一个技术验证任务：服务器创建的玩家实体，与使用正版账号登录的完整客户端，在认证、皮肤和模组兼容性上存在差别。项目会在验证后公开采用的方案和限制，详见 [Issue #1](https://github.com/Y-fyan/minecraft-friends/issues/1)。
+初期采用服务端玩家实体，它拥有玩家身份与生存能力，但不是经过认证的真人账号。选择依据和限制见 [ADR 0001](docs/decisions/0001-player-control-route.md) 与 [独立验证记录](docs/validation/0002-player-control-reproduction.md)。
 
 ## 当前实现
 
@@ -81,11 +81,11 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | [测试与发布规范](docs/TESTING.md) | 四格环境矩阵、失败场景与发布门槛 |
 | [依赖与许可](docs/DEPENDENCIES.md) | M0 直接依赖、用途、版本和许可 |
 | [玩家控制 ADR 0001](docs/decisions/0001-player-control-route.md) | 服务端玩家实体与真实账号客户端的路线取舍 |
-| [玩家控制验证](docs/validation/0001-player-control.md) | Fabric / Forge 探针和协议机器人的第一轮实测 |
+| [玩家控制验证](docs/validation/0002-player-control-reproduction.md) | 独立探针源码、四组结果与可追溯证据 |
 | [ADR 0002](docs/decisions/0002-multiloader-layout.md) | 公共源码加双加载器发行 JAR 的取舍 |
 | [架构决策模板](docs/decisions/0000-template.md) | 技术选择的背景、证据、代价与结论 |
 
-当前可以参与 Issue #1 的控制路线审查、补齐未测环境，或审查 Issue #2 的基础工程。根目录命令 `./gradlew checkAll --no-daemon` 会运行公共测试并生成两个 JAR。
+当前可以参与 Issue #1 的未测环境、Issue #2 的基础工程审查或 Issue #3 的协作完善。根目录命令 `./gradlew checkAll --no-daemon` 会运行公共测试并生成两个 JAR；独立玩家控制实验按 [探针说明](experiments/player-control/README.md) 运行。实验目录用于验证，不能作为已发布的陪伴模组安装到真实存档。
 
 ## 原创与许可
 
