@@ -1,6 +1,6 @@
 # 独立实验的第三方工具与材料
 
-本清单针对 `player-control`，不是正式模组所有依赖的完整清单，也不选择 Minecraft Friends 自身的许可证。实验不复制 minecraft-numen 或 Carpet 的实现；探针通过公开 Minecraft/加载器 API 自行编写。
+本清单针对 `player-control`，不是正式模组所有依赖的完整清单，Minecraft Friends 自身现采用 [GPL-3.0-only](../LICENSE)，第三方组件继续保留各自许可。实验不复制 minecraft-numen 或 Carpet 的实现；探针通过公开 Minecraft/加载器 API 自行编写。
 
 | 工具 / 材料 | 固定版本 | 来源与许可记录 | 仓库是否分发 |
 | --- | --- | --- | --- |

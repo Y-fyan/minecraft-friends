@@ -54,7 +54,7 @@ def resourceProperties = [
         loader_version_range   : '[52,)',
         mod_id                 : 'minecraft_friends',
         mod_name               : 'Minecraft Friends',
-        mod_license            : 'All Rights Reserved',
+        mod_license            : project_license,
         mod_version            : project.version,
         mod_authors            : 'Y-fyan and contributors',
         mod_description        : 'AI companions for Minecraft Java Edition.'

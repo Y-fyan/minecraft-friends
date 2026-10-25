@@ -9,6 +9,9 @@ subprojects {
             options.release = 21
             options.encoding = 'UTF-8'
         }
+        tasks.withType(Jar).configureEach {
+            from(rootProject.file('../../LICENSE')) { into 'META-INF' }
+        }
         sourceSets.main.java.srcDir rootProject.file('shared/src/main/java')
         sourceSets.main.resources.srcDir rootProject.file('shared/src/main/resources')
     }

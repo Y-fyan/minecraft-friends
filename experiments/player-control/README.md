@@ -37,4 +37,4 @@ Windows 使用 `gradlew.bat`；按本机环境设置 `JAVA_HOME`。首次运行�
 
 提交验证证据时只选取脱敏摘要，记录对应源码提交与产物 SHA-256，不提交世界、完整日志、缓存或个人数据。失败运行保留在本地，不能覆盖成成功结论。实验资产仅包含自行生成的空结构，不分发 Mojang 游戏代码、资源或 JAR。
 
-依赖来源： [Gradle](https://github.com/gradle/gradle)、[Fabric Loader](https://github.com/FabricMC/fabric-loader)、[Fabric API](https://github.com/FabricMC/fabric)、[Fabric Loom](https://github.com/FabricMC/fabric-loom)、[Forge](https://github.com/MinecraftForge/MinecraftForge)、[ForgeGradle](https://github.com/MinecraftForge/ForgeGradle)。使用其公开 API 和开发工具，项目自身许可证仍由创作者选择；具体运行结果见仓库的验证记录。
+依赖来源： [Gradle](https://github.com/gradle/gradle)、[Fabric Loader](https://github.com/FabricMC/fabric-loader)、[Fabric API](https://github.com/FabricMC/fabric)、[Fabric Loom](https://github.com/FabricMC/fabric-loom)、[Forge](https://github.com/MinecraftForge/MinecraftForge)、[ForgeGradle](https://github.com/MinecraftForge/ForgeGradle)。使用其公开 API 和开发工具，项目自身采用 [GPL-3.0-only](../../LICENSE)，第三方许可保持不变；具体运行结果见仓库的验证记录。

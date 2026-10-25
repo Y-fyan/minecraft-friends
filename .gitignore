@@ -20,3 +20,14 @@ out/
 # Local operating system files
 .DS_Store
 Thumbs.db
+
+# Local work, runtime state and developer secrets
+/work/
+/config/
+/saves/
+/world/
+/world_nether/
+/world_the_end/
+.env
+.env.*
+!.env.example

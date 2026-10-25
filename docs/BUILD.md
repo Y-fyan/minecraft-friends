@@ -60,7 +60,7 @@ Forge 首次开发运行可能下载游戏资源。仅验证服务端模组加�
 
 ## 配置
 
-模组启动时会在运行目录的 `config/minecraft-friends.properties` 创建默认配置。M0 支持的字段如下：
+模组启动时会在运行目录的 `config/minecraft-friends.properties` 创建默认配置。[可直接使用的配置示例](examples/minecraft-friends.properties) 与生产解析器的默认值一致。开发环境对应 `fabric/run/config/minecraft-friends.properties` 或 `forge/run/config/minecraft-friends.properties`；预置时复制到对应路径，已有配置先比较差异，不盲目覆盖。当前没有热重载命令，修改后需重新启动相应开发实例。M0 支持的字段如下：
 
 | 键 | 默认值 | 范围与行为 |
 | --- | --- | --- |
@@ -68,6 +68,8 @@ Forge 首次开发运行可能下载游戏资源。仅验证服务端模组加�
 | `model.provider` | `mock` | `mock` 或 `disabled` |
 | `model.timeout-seconds` | `30` | 1 到 300 |
 | `diagnostics.enabled` | `true` | 布尔值 |
+
+这些字段目前用于读取、校验与报告配置；即使关闭 `enabled`，配置加载和启动日志仍会执行，尚无伙伴或业务任务可被它控制。`model.timeout-seconds` 是预留请求预算，当前 Mock 不进行网络调用，不将字段存在当作真实请求超时已实现。
 
 M0 不读取、保存或接受 API key，也不会发起模型网络请求。无效字段会记录警告并使用安全默认值。后续真实 Provider 的路径、隐私和费用影响必须在对应实现任务中补充。
 

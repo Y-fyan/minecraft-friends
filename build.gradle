@@ -20,6 +20,10 @@ subprojects {
             withSourcesJar()
         }
 
+        tasks.withType(Jar).configureEach {
+            from(rootProject.file('LICENSE')) { into 'META-INF' }
+        }
+
         tasks.withType(JavaCompile).configureEach {
             options.encoding = 'UTF-8'
             options.release = java_version as int

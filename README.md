@@ -80,6 +80,8 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | [架构草案](docs/ARCHITECTURE.md) | 分层、数据流、公共接口与待决事项 |
 | [测试与发布规范](docs/TESTING.md) | 四格环境矩阵、失败场景与发布门槛 |
 | [依赖与许可](docs/DEPENDENCIES.md) | M0 直接依赖、用途、版本和许可 |
+| [配置示例](docs/examples/minecraft-friends.properties) | 与 M0 默认值一致的离线配置 |
+| [项目许可](docs/LICENSING.md) | GPL-3.0-only 与第三方材料边界 |
 | [玩家控制 ADR 0001](docs/decisions/0001-player-control-route.md) | 服务端玩家实体与真实账号客户端的路线取舍 |
 | [玩家控制验证](docs/validation/0002-player-control-reproduction.md) | 独立探针源码、四组结果与可追溯证据 |
 | [ADR 0002](docs/decisions/0002-multiloader-layout.md) | 公共源码加双加载器发行 JAR 的取舍 |
@@ -91,4 +93,4 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 
 功能研究参考了 [minecraft-numen](https://github.com/Dwinovo/minecraft-numen/)。本项目独立设计与实现，不复制其代码、提示词、Lua API、界面、文档或素材；第三方依赖必须单独核对许可并记录来源。
 
-**本项目许可证尚未选定。** 仓库公开不等于已授予开源许可；在创作者添加正式 `LICENSE` 前，请勿将本项目描述为采用某种开源许可证。新增第三方材料及对外分发前应先明确许可条件。
+本项目原创代码与文档按 [GNU GPL v3（GPL-3.0-only）](LICENSE) 发布，Copyright (C) 2026 Y-fyan and contributors。保留真实作者与第三方许可声明；许可范围见 [项目许可说明](docs/LICENSING.md)。
