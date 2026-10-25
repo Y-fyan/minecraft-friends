@@ -4,7 +4,7 @@
 
 Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Minecraft Forge** 两个版本。目标是让 AI 操控具有玩家身份、背包和生存能力的伙伴，通过原版聊天框与玩家交流，在实际游戏规则下执行任务。
 
-> **项目状态：M0 基础工程与可行性验证阶段。** #1 已提供独立玩家控制探针和四组运行记录；#2 已建立 Java 21 公共核心、Fabric / Minecraft Forge 1.21.1 最小入口、固定 Gradle Wrapper、自动化测试、CI 和双端 JAR，并完成开发客户端、普通专用服务器与最终 JAR 独立安装验收。正式 AI 陪伴功能仍在开发，尚无发布版本；基础加载验收不代表聊天、记忆或干活能力已经实现。Forge 不等于 NeoForge。
+> **项目状态：M0 技术验证与协作基础已完成，下一阶段为 M1 陪伴聊天闭环。** #1 已提供独立玩家控制探针和四组运行记录；#2 已建立 Java 21 公共核心、Fabric / Minecraft Forge 1.21.1 最小入口、固定 Gradle Wrapper、自动化测试、CI 和双端 JAR，并完成开发客户端、普通专用服务器与最终 JAR 独立安装验收；#3 已完成协作规范与 GPL-3.0-only 许可。详见 [M0 收尾记录](docs/validation/0006-m0-closeout.md)。正式 AI 陪伴功能尚未实现，也没有发布版本。Forge 不等于 NeoForge。
 
 ## 我们希望带来的体验
 
@@ -46,9 +46,9 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 
 | 阶段 | 目标 | 对应任务 |
 | --- | --- | --- |
-| M0 技术验证与协作基础 | 验证玩家控制方式，建立双加载器工程和协作约定 | [#1](https://github.com/Y-fyan/minecraft-friends/issues/1)、[#2](https://github.com/Y-fyan/minecraft-friends/issues/2)、[#3](https://github.com/Y-fyan/minecraft-friends/issues/3) |
-| M1 陪伴聊天闭环 | 伙伴身份、模型接入、聊天、人设与记忆 | [#4](https://github.com/Y-fyan/minecraft-friends/issues/4)、[#5](https://github.com/Y-fyan/minecraft-friends/issues/5)、[#6](https://github.com/Y-fyan/minecraft-friends/issues/6)、[#7](https://github.com/Y-fyan/minecraft-friends/issues/7) |
-| M2 干活能力与 Alpha | 感知、动作调度、跟随、采集交付及双加载器验收 | [#8](https://github.com/Y-fyan/minecraft-friends/issues/8)、[#9](https://github.com/Y-fyan/minecraft-friends/issues/9)、[#10](https://github.com/Y-fyan/minecraft-friends/issues/10)、[#11](https://github.com/Y-fyan/minecraft-friends/issues/11) |
+| M0 技术验证与协作基础（已完成） | 已验证玩家控制基础路径，建立双加载器工程和协作约定 | [#1](https://github.com/Y-fyan/minecraft-friends/issues/1)、[#2](https://github.com/Y-fyan/minecraft-friends/issues/2)、[#3](https://github.com/Y-fyan/minecraft-friends/issues/3) |
+| M1 陪伴聊天闭环（待实现） | 伙伴身份、模型接入、聊天、人设与记忆 | [#4](https://github.com/Y-fyan/minecraft-friends/issues/4)、[#5](https://github.com/Y-fyan/minecraft-friends/issues/5)、[#6](https://github.com/Y-fyan/minecraft-friends/issues/6)、[#7](https://github.com/Y-fyan/minecraft-friends/issues/7) |
+| M2 干活能力与 Alpha（待实现） | 感知、动作调度、跟随、采集交付及双加载器验收 | [#8](https://github.com/Y-fyan/minecraft-friends/issues/8)、[#9](https://github.com/Y-fyan/minecraft-friends/issues/9)、[#10](https://github.com/Y-fyan/minecraft-friends/issues/10)、[#11](https://github.com/Y-fyan/minecraft-friends/issues/11) |
 
 完整计划见 [路线图 #12](https://github.com/Y-fyan/minecraft-friends/issues/12)，进度以 [Issues](https://github.com/Y-fyan/minecraft-friends/issues) 和 [里程碑](https://github.com/Y-fyan/minecraft-friends/milestones) 为准。
 
@@ -60,7 +60,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | 加载器 | Fabric、Minecraft Forge，分别构建与验证 |
 | 开发环境 | Java 21、Gradle Wrapper 8.8；加载器、映射和插件版本已固定 |
 | 模型 | M0 提供不联网 Mock 和关闭状态；真实 Chat Completions 适配器尚未实现 |
-| 部署 | 已有 Fabric / Forge 两个开发 JAR；客户端安装组合和正式发行尚未验证 |
+| 部署 | 两侧开发客户端加载及最终 JAR 独立专服安装已通过；游戏内交互、完整客户端安装组合和正式发行仍待后续验收 |
 | 控制 | 模型输出结构化意图，游戏执行器校验并执行，世界操作由服务端最终授权 |
 
 真实模型调用需要用户配置服务地址、模型与凭据，可能产生服务商费用。当前配置只支持离线 Provider，不读取或保存 API key。运行时会创建 `config/minecraft-friends.properties`；字段和限制见 [构建指南](docs/BUILD.md#配置)。
@@ -76,6 +76,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | [贡献指南](CONTRIBUTING.md) | 认领、分支、提交、PR、审查与贡献统计 |
 | [构建指南](docs/BUILD.md) | 固定工具链、构建、开发运行、配置与 EULA 边界 |
 | [M0 运行与安装验收](docs/validation/0005-runtime-installation.md) | 双端客户端、普通专服与最终 JAR 独立安装证据 |
+| [M0 收尾记录](docs/validation/0006-m0-closeout.md) | 阶段交付、证据复核、已知限制与 M1 入口 |
 | [项目统筹](docs/COORDINATION.md) | 近期交付、依赖、职责、状态与推进节奏 |
 | [开发规范](docs/DEVELOPMENT.md) | 编码、线程、动作、配置、日志与依赖约定 |
 | [架构草案](docs/ARCHITECTURE.md) | 分层、数据流、公共接口与待决事项 |
@@ -88,7 +89,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | [ADR 0002](docs/decisions/0002-multiloader-layout.md) | 公共源码加双加载器发行 JAR 的取舍 |
 | [架构决策模板](docs/decisions/0000-template.md) | 技术选择的背景、证据、代价与结论 |
 
-当前可以参与 Issue #1 的未测环境、Issue #2 的基础工程审查或 Issue #3 的协作完善。根目录命令 `./gradlew checkAll --no-daemon` 会运行公共测试并生成两个 JAR；独立玩家控制实验按 [探针说明](experiments/player-control/README.md) 运行。实验目录用于验证，不能作为已发布的陪伴模组安装到真实存档。
+M0 的 #1、#2、#3 已关闭。下一步优先认领 #4 伙伴生命周期或 #5 模型异步接入，先对齐归属、会话和取消接口，再推进 #6 聊天。根目录命令 `./gradlew checkAll --no-daemon` 会运行公共测试并生成两个 JAR；独立玩家控制实验按 [探针说明](experiments/player-control/README.md) 运行。实验目录用于验证，不能作为已发布的陪伴模组安装到真实存档。
 
 ## 原创与许可
 

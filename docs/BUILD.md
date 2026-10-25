@@ -9,7 +9,7 @@
 | Java | 21 | 编译目标和运行要求 |
 | Gradle | 8.8 | 通过仓库 Wrapper 使用 |
 | Minecraft | 1.21.1 | Fabric 与 Forge 共用目标版本 |
-| Fabric Loader | 0.20.1 | 与 #1 的玩家控制验证宿主一致；当前不依赖 Fabric API |
+| Fabric Loader | 0.20.1 | 正式基础工程版本；#1 历史独立探针使用 0.16.14，当前工程不依赖 Fabric API |
 | Fabric Loom | 1.7.4 | 仅作为构建插件 |
 | Minecraft Forge | 52.1.20 | 不使用 NeoForge 替代 |
 | ForgeGradle | 6.0.24 | 锁定插件版本 |
@@ -47,6 +47,8 @@ Windows 使用：
 | `./gradlew :forge:runServer` | Forge 开发专用服务器 |
 
 运行目录分别是 `fabric/run/` 和 `forge/run/`，均已加入忽略规则。专服首次启动会创建 `server.properties` 和 `eula.txt`。是否同意 Minecraft EULA 必须由使用者本人阅读并决定；工程不会自动修改 `eula.txt`。
+
+本次 Forge 开发专服经 Gradle 管道启动时，`stop` 未转发到游戏进程；验收脚本终止外层进程后，游戏执行停止与世界保存，Gradle 外壳非零。独立 Forge 安装直接启动 Java 时，`stop` 与退出码 0 均正常。完整证据见 [运行验收](validation/0005-runtime-installation.md#开发专用服务器)，不要将开发管道退出码当作游戏关闭结果。
 
 Forge 首次开发运行可能下载游戏资源。仅验证服务端模组加载时，可以跳过纯客户端资源准备：
 

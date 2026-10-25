@@ -7,7 +7,7 @@
 三项运行阻塞均已通过：
 
 1. Fabric 与 Minecraft Forge 的正式工程开发客户端完成图形初始化。
-2. 两侧普通 DedicatedServer 完整启动，创建离线配置并正常停止。
+2. 两侧普通 DedicatedServer 完整启动并创建离线配置；游戏停止与世界保存有记录，Forge 开发管道外壳非零的限制见下文。
 3. `build/artifacts/` 的最终两个 JAR 在独立 1.21.1 安装目录中由加载器实际发现、加载和运行。
 
 Minecraft EULA 由创作者本人阅读并接受。本文只记录该事实，不代表项目、加载器或任何依赖因此改变许可；工程没有自动修改 `eula.txt`。
@@ -209,6 +209,7 @@ Forge 首次启动记录了 `server.properties` 不存在后自动创建的非�
 | Forge 普通开发 DedicatedServer | 通过 |
 | `checkAll` 与产物哈希 | 通过 |
 | Fabric 最终 JAR 独立安装运行 | 通过 |
+| Forge 最终 JAR 独立安装运行 | 通过；控制台 `stop`，Java 退出码 0 |
 | Minecraft EULA | 创作者本人已接受 |
 | 真实存档、真实账号、付费模型 | 未使用 |
 | 伙伴、聊天、记忆、导航、采集 | 未实现，未测试 |

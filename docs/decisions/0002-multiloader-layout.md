@@ -1,9 +1,9 @@
 # ADR 0002：公共源码加双加载器构建模块
 
-- 状态：提议
+- 状态：**已接受，限 M0 构建布局与基础加载**
 - 日期：2026-10-25
-- 关联 Issue / PR：#2
-- 提议人 / 审查人 / 接受者：Codex 实现与本地验证 / 待项目审查者确认 / 待 Y-fyan 确认
+- 关联 Issue / PR：#2；PR #17、#19、#20、#21
+- 提议人：Codex 工程实现；复核与接受者：Y-fyan 账号下的统筹助手，依据创作者统筹及阶段收尾授权。不同聊天的助手进行了证据复核，未增加独立人类审查者。
 - 替代或被替代的 ADR：无；ADR 0001 用于玩家控制路线
 
 ## 背景与约束
@@ -22,11 +22,14 @@ Minecraft 1.21.1 的 Fabric 和 Minecraft Forge 使用不同的启动入口、�
 - Java 21、Gradle 8.8、ForgeGradle 6.0.24、Minecraft Forge 52.1.20 构建成功。
 - 两个 JAR 均包含公共类和对应加载器入口。
 - `jdeps` 扫描未发现 `net.minecraft.client` 或渲染类引用。
-- Fabric 专服和 Forge GameTestServer 均完成模组初始化并创建离线默认配置。
+- 两侧开发客户端完成模组和图形初始化；普通 DedicatedServer 与独立最终 JAR 安装均完成启动。独立专服控制台停止正常；Forge 开发管道外壳退出限制保留，见 [运行验收](../validation/0005-runtime-installation.md)。
+- PR #19 修复资源重建删除 Forge 入口的问题；CI 已加入只改版本资源的增量重建与恢复检查。阶段证据及主分支 CI 见 [M0 收尾记录](../validation/0006-m0-closeout.md)。
 
 ## 决定
 
 根工程包含 `common`、`fabric`、`forge` 三个 Gradle 模块。`common` 保存与加载器无关的模型契约、配置、任务状态和测试；两个加载器模块把 `common/src/main/java` 加入各自源码集并产出独立 JAR。
+
+Forge 生产 Java 类和资源使用各自输出目录；开发运行由 `prepareDevelopmentMod` 的 Sync 任务生成独立合并副本，并通过 `development` 源集提供运行类路径，避免资源任务清理生产类。
 
 本决定不承诺两加载器的事件和世界接口相同。后续能力通过小型、类型明确的适配接口增加；发现明显重复且抽象稳定后，再评估源集组合方式。
 
