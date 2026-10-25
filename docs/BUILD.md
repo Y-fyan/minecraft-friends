@@ -1,6 +1,6 @@
 # 构建与开发运行
 
-状态：M1 伙伴身份与生命周期实现中。Fabric 和 Minecraft Forge 1.21.1 的基础运行与安装已验证；本分支加入伙伴创建、召唤、暂离、断线恢复和死亡重生行为，完整游戏验收记录待本 Issue 验证完成后追加。
+状态：M1 伙伴身份与生命周期开发中。Fabric 和 Minecraft Forge 1.21.1 的身份/归属生命周期 GameTest 与普通专服启动已通过；单机实际玩法和 gamerule 掉落实体仍未验收。详见 [伙伴生命周期记录](validation/0007-companion-lifecycle.md)。
 
 ## 固定工具链
 
@@ -63,7 +63,7 @@ Forge 首次开发运行可能下载游戏资源。仅验证服务端模组加�
 
 ## 配置
 
-模组启动时会在运行目录的 `config/minecraft-friends.properties` 创建默认配置。[可直接使用的配置示例](examples/minecraft-friends.properties) 与生产解析器的默认值一致。开发环境对应 `fabric/run/config/minecraft-friends.properties` 或 `forge/run/config/minecraft-friends.properties`；预置时复制到对应路径，已有配置先比较差异，不盲目覆盖。当前没有热重载命令，修改后需重新启动相应开发实例。M0 支持的字段如下：
+模组启动时会在运行目录的 `config/minecraft-friends.properties` 创建默认配置。[可直接使用的配置示例](examples/minecraft-friends.properties) 与生产解析器的默认值一致。开发环境对应 `fabric/build/run/<client|server>/config/minecraft-friends.properties` 或 `forge/build/run/<client|server>/config/minecraft-friends.properties`；预置时复制到对应路径，已有配置先比较差异，不盲目覆盖。当前没有热重载命令，修改后需重新启动相应开发实例。M0 支持的字段如下：
 
 | 键 | 默认值 | 范围与行为 |
 | --- | --- | --- |
@@ -83,7 +83,7 @@ Forge 首次开发运行可能下载游戏资源。仅验证服务端模组加�
 /mf companion status
 ```
 
-每位玩家最多一个伙伴。默认名称为 `MF_<玩家名>`，显式名称限 1 至 16 位 ASCII 字母、数字和下划线。创建是幂等的；重复创建保留原伙伴 UUID 和名称。伙伴 UUID 与主人 UUID 独立，`MF_` 标识不会使用真人档案或认证账号。
+每位玩家最多一个伙伴。名称必须以 `MF_` 开头，长度为 1 至 16 个 ASCII 字母、数字或下划线；默认名称为 `MF_<玩家名>`。创建是幂等的；重复创建保留原伙伴 UUID 和名称。伙伴 UUID 与主人 UUID 独立，`MF_` 标识不会使用真人档案或认证账号。
 
 主人断线或服务端关闭时，活动伙伴会保存并暂时卸载；主人再次加入后自动恢复。`dismiss` 将活动状态持久化为暂离，需由主人再次 `summon`。背包、生命、维度和位置由原版玩家数据存储；伙伴归属、名字、稳定 UUID 和活动状态由世界 `data/minecraft_friends_companions.dat` 保存。死亡遵循世界 `keepInventory` gamerule，并通过原版玩家重生流程恢复，不额外复制背包。自动 GameTest 已验证死亡后重生且背包没有重复恢复；GameTest 对掉落实体查询不稳定，默认 `keepInventory=false` 下的实际掉落数仍待普通游戏场景核验。
 

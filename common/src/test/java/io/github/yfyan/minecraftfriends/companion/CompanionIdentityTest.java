@@ -27,5 +27,7 @@ class CompanionIdentityTest {
                 () -> new CompanionIdentity(UUID.randomUUID(), owner, "Ada Friend"));
         assertThrows(IllegalArgumentException.class,
                 () -> new CompanionIdentity(UUID.randomUUID(), owner, "a-name-longer-than-16"));
+        assertThrows(IllegalArgumentException.class,
+                () -> new CompanionIdentity(UUID.randomUUID(), owner, "Ada"));
     }
 }

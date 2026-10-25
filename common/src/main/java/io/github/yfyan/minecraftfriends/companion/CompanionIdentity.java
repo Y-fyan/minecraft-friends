@@ -18,5 +18,8 @@ public record CompanionIdentity(UUID companionId, UUID ownerId, String name) {
         if (!VALID_NAME.matcher(name).matches()) {
             throw new IllegalArgumentException("Companion names must be 1-16 ASCII letters, digits, or underscores.");
         }
+        if (!name.startsWith("MF_")) {
+            throw new IllegalArgumentException("Companion names must start with MF_ to distinguish them from human accounts.");
+        }
     }
 }
