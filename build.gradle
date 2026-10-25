@@ -1,0 +1,51 @@
+plugins {
+    id 'base'
+}
+
+allprojects {
+    group = project_group
+    version = project_version
+}
+
+subprojects {
+    repositories {
+        mavenCentral()
+    }
+
+    plugins.withId('java') {
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(java_version as int)
+            }
+            withSourcesJar()
+        }
+
+        tasks.withType(JavaCompile).configureEach {
+            options.encoding = 'UTF-8'
+            options.release = java_version as int
+        }
+
+        tasks.withType(Test).configureEach {
+            useJUnitPlatform()
+            testLogging {
+                events 'failed', 'skipped'
+                exceptionFormat = 'full'
+            }
+        }
+    }
+}
+
+tasks.register('checkAll') {
+    group = 'verification'
+    description = 'Runs common tests and prepares both installable loader artifacts.'
+    dependsOn ':common:check', ':fabric:check', ':forge:check', 'collectArtifacts'
+}
+
+tasks.register('collectArtifacts', Copy) {
+    group = 'build'
+    description = 'Collects the two installable loader JARs under build/artifacts.'
+    dependsOn ':fabric:remapJar', ':forge:jar'
+    from(project(':fabric').tasks.named('remapJar'))
+    from(project(':forge').tasks.named('jar'))
+    into layout.buildDirectory.dir('artifacts')
+}

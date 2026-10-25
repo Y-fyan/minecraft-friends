@@ -6,7 +6,7 @@
 
 阅读 [README](README.md)、[开发规范](docs/DEVELOPMENT.md) 和 [测试规范](docs/TESTING.md)。涉及玩家控制、网络或模块边界时，同时阅读 [架构草案](docs/ARCHITECTURE.md)。
 
-当前只有文档，没有 Gradle Wrapper、源码或 CI。请勿把尚未存在的命令、配置路径或产物写成已经可用。
+当前已有 Java 21 公共核心、Fabric / Forge 最小工程、Gradle Wrapper 和 CI，但伙伴与游戏玩法尚未实现。可执行命令、配置字段和产物路径以 [构建指南](docs/BUILD.md) 为准，不把规划能力写成已经可用。
 
 ## 认领与分工
 
