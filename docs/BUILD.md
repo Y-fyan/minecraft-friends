@@ -1,6 +1,6 @@
 # 构建与开发运行
 
-状态：M0 基础工程。Fabric 和 Minecraft Forge 1.21.1 的测试、构建、开发客户端、普通专服与最终 JAR 独立安装运行已验证；伙伴、聊天、模型请求和世界操作尚未实现。证据见 [运行与安装验收](validation/0005-runtime-installation.md)。
+状态：M1 伙伴身份与生命周期实现中。Fabric 和 Minecraft Forge 1.21.1 的基础运行与安装已验证；本分支加入伙伴创建、召唤、暂离、断线恢复和死亡重生行为，完整游戏验收记录待本 Issue 验证完成后追加。
 
 ## 固定工具链
 
@@ -9,7 +9,8 @@
 | Java | 21 | 编译目标和运行要求 |
 | Gradle | 8.8 | 通过仓库 Wrapper 使用 |
 | Minecraft | 1.21.1 | Fabric 与 Forge 共用目标版本 |
-| Fabric Loader | 0.20.1 | 正式基础工程版本；#1 历史独立探针使用 0.16.14，当前工程不依赖 Fabric API |
+| Fabric Loader | 0.20.1 | Fabric 加载器 |
+| Fabric API | 0.116.17+1.21.1 | Fabric 命令与玩家生命周期事件；客户端和服务端都需安装 |
 | Fabric Loom | 1.7.4 | 仅作为构建插件 |
 | Minecraft Forge | 52.1.20 | 不使用 NeoForge 替代 |
 | ForgeGradle | 6.0.24 | 锁定插件版本 |
@@ -46,7 +47,7 @@ Windows 使用：
 | `./gradlew :forge:runClient` | Forge 开发客户端 |
 | `./gradlew :forge:runServer` | Forge 开发专用服务器 |
 
-运行目录分别是 `fabric/run/` 和 `forge/run/`，均已加入忽略规则。专服首次启动会创建 `server.properties` 和 `eula.txt`。是否同意 Minecraft EULA 必须由使用者本人阅读并决定；工程不会自动修改 `eula.txt`。
+运行目录位于 `fabric/build/run/` 和 `forge/build/run/` 下，客户端、专服与 GameTest 各自隔离。专服首次启动会创建 `server.properties` 和 `eula.txt`。是否同意 Minecraft EULA 必须由使用者本人阅读并决定；工程不会自动修改 `eula.txt`。
 
 本次 Forge 开发专服经 Gradle 管道启动时，`stop` 未转发到游戏进程；验收脚本终止外层进程后，游戏执行停止与世界保存，Gradle 外壳非零。独立 Forge 安装直接启动 Java 时，`stop` 与退出码 0 均正常。完整证据见 [运行验收](validation/0005-runtime-installation.md#开发专用服务器)，不要将开发管道退出码当作游戏关闭结果。
 
@@ -58,7 +59,7 @@ Forge 首次开发运行可能下载游戏资源。仅验证服务端模组加�
   -x :forge:downloadMCMeta
 ```
 
-当前没有注册 GameTest 用例，因此该命令会完成模组初始化后以“没有测试函数”结束。它只用于 M0 加载冒烟检查，不是正式测试命令；正式 CI 使用 `checkAll`。
+该命令用于 Forge GameTest 运行；没有测试用例时不能以退出码 0 作为玩法通过证据。完整的伙伴生命周期验收需要记录每项断言结果。
 
 ## 配置
 
@@ -70,6 +71,23 @@ Forge 首次开发运行可能下载游戏资源。仅验证服务端模组加�
 | `model.provider` | `mock` | `mock` 或 `disabled` |
 | `model.timeout-seconds` | `30` | 1 到 300 |
 | `diagnostics.enabled` | `true` | 布尔值 |
+
+## 伙伴命令
+
+伙伴命令由服务端执行，并按执行玩家 UUID 查找归属：
+
+```text
+/mf companion create [name]
+/mf companion summon
+/mf companion dismiss
+/mf companion status
+```
+
+每位玩家最多一个伙伴。默认名称为 `MF_<玩家名>`，显式名称限 1 至 16 位 ASCII 字母、数字和下划线。创建是幂等的；重复创建保留原伙伴 UUID 和名称。伙伴 UUID 与主人 UUID 独立，`MF_` 标识不会使用真人档案或认证账号。
+
+主人断线或服务端关闭时，活动伙伴会保存并暂时卸载；主人再次加入后自动恢复。`dismiss` 将活动状态持久化为暂离，需由主人再次 `summon`。背包、生命、维度和位置由原版玩家数据存储；伙伴归属、名字、稳定 UUID 和活动状态由世界 `data/minecraft_friends_companions.dat` 保存。死亡遵循世界 `keepInventory` gamerule，并通过原版玩家重生流程恢复，不额外复制背包。自动 GameTest 已验证死亡后重生且背包没有重复恢复；GameTest 对掉落实体查询不稳定，默认 `keepInventory=false` 下的实际掉落数仍待普通游戏场景核验。
+
+状态与命令仅供主人使用；当前没有聊天寻址、移动 AI 或伙伴自主动作。服务端玩家实体没有真实客户端，无法收到客户端 UI、皮肤或资源包回执；连接适配显式丢弃发往客户端的数据包。
 
 这些字段目前用于读取、校验与报告配置；即使关闭 `enabled`，配置加载和启动日志仍会执行，尚无伙伴或业务任务可被它控制。`model.timeout-seconds` 是预留请求预算，当前 Mock 不进行网络调用，不将字段存在当作真实请求超时已实现。
 

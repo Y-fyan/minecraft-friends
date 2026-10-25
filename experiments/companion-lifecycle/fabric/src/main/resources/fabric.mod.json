@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "minecraft_friends",
+  "version": "1.0.0",
+  "name": "Minecraft Friends companion lifecycle test",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["io.github.yfyan.minecraftfriends.fabric.MinecraftFriendsFabric"],
+    "fabric-gametest": ["io.github.yfyan.minecraftfriends.test.fabric.CompanionLifecycleGameTest"]
+  },
+  "depends": {
+    "fabricloader": ">=0.20.1",
+    "fabric-api": "0.116.17+1.21.1",
+    "minecraft": "1.21.1",
+    "java": ">=21"
+  },
+  "license": "GPL-3.0-only"
+}

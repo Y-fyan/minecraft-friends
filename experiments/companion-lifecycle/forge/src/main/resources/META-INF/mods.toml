@@ -1,0 +1,23 @@
+modLoader="javafml"
+loaderVersion="[52,)"
+license="GPL-3.0-only"
+
+[[mods]]
+modId="minecraft_friends"
+version="1.0.0"
+displayName="Minecraft Friends companion lifecycle test"
+description='''Temporary isolated runtime test harness using the production Minecraft Friends source.'''
+
+[[dependencies.minecraft_friends]]
+modId="forge"
+mandatory=true
+versionRange="[52.1.20,]"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.minecraft_friends]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.21.1]"
+ordering="NONE"
+side="BOTH"

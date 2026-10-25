@@ -1,0 +1,21 @@
+plugins { id 'fabric-loom' version '1.7.4' }
+
+dependencies {
+    minecraft 'com.mojang:minecraft:1.21.1'
+    mappings loom.officialMojangMappings()
+    modImplementation 'net.fabricmc:fabric-loader:0.20.1'
+    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.116.17+1.21.1'
+}
+
+sourceSets.main.java.srcDir rootProject.file('../../fabric/src/main/java')
+loom {
+    runs {
+        gameTest {
+            server()
+            name 'Companion lifecycle GameTest'
+            vmArg '-Dfabric-api.gametest'
+            vmArg '-Dmf.lifecycle.loader=fabric'
+            runDir 'build/run/gametest'
+        }
+    }
+}
