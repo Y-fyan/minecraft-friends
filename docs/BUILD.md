@@ -30,7 +30,7 @@ Windows 使用：
 .\gradlew.bat checkAll --no-daemon
 ```
 
-该命令运行 `common` 测试，并收集两个可安装产物到 `build/artifacts/`：
+该命令运行 `common` 测试，收集两个可安装产物到 `build/artifacts/`，并打开 JAR 校验加载器入口、元数据与公共类是否齐全：
 
 - `minecraft-friends-fabric-1.21.1-<版本>.jar`
 - `minecraft-friends-forge-1.21.1-<版本>.jar`
