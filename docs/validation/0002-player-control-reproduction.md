@@ -39,6 +39,8 @@ python3 run_probe.py forge-integrated
 
 ## 证据与可追溯性
 
+本轮装置对应源码提交：`d99168a6e9615438bdbdb9f6f4f231e5ca445fe4`。后续只补充证据索引元数据，不更改该提交的探针源码。
+
 - 结构化脱敏断言、退出码、源码树摘要与环境检查：[player-control-results.json](evidence/player-control-results.json)。
 - 实验源码文件摘要与生成 JAR 校验值：[player-control-manifest.json](evidence/player-control-manifest.json)。
 - 原作者初轮报告：[0001-player-control.md](0001-player-control.md)，继续明确原装置未提供，原数字尚未独立核实。

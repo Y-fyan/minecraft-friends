@@ -102,5 +102,6 @@
       "sha256": "d401047c40860bc3828447374a2480209f766584ebdba2c3760069bb54abef61"
     }
   ],
-  "note": "Only checksums are committed. JARs, Minecraft resources, worlds and full logs are not distributed."
+  "note": "Only checksums are committed. JARs, Minecraft resources, worlds and full logs are not distributed.",
+  "source_commit": "d99168a6e9615438bdbdb9f6f4f231e5ca445fe4"
 }
