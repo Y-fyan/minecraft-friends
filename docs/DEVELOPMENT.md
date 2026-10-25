@@ -12,7 +12,7 @@
 
 ## 2. 模块边界与代码风格
 
-公共核心承担模型协议、会话、人设、任务状态与规则，不依赖加载器、客户端类或具体世界实现。根工程采用 `common`、`fabric`、`forge` 三模块；加载器发行 JAR 各自编译公共源码，理由和代价见 [ADR 0001](decisions/0001-multiloader-layout.md)。加载器适配层处理注册、事件、网络、玩家实体和世界操作。
+公共核心承担模型协议、会话、人设、任务状态与规则，不依赖加载器、客户端类或具体世界实现。根工程采用 `common`、`fabric`、`forge` 三模块；加载器发行 JAR 各自编译公共源码，理由和代价见 [ADR 0002](decisions/0002-multiloader-layout.md)。加载器适配层处理注册、事件、网络、玩家实体和世界操作。
 
 Java 使用 UTF-8、4 空格缩进、禁止通配符导入；类型用 `UpperCamelCase`，方法和字段用 `lowerCamelCase`，常量用 `UPPER_SNAKE_CASE`。包名使用小写，最终根包名由工程任务确定。
 
