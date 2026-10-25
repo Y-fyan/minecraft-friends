@@ -1,0 +1,59 @@
+name: 缺陷报告
+description: 报告可复现的问题，附环境、步骤和脱敏证据。
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        先搜索现有任务，避免重复报告。请勿上传 API key、账号令牌、私人聊天或真实存档。
+        模组尚在早期开发，请明确报告来自源码构建、开发环境还是发布版本。
+  - type: input
+    id: version
+    attributes:
+      label: 模组版本或提交 SHA
+      description: 源码构建请填写提交 SHA；未发布功能的问题请说明依据。
+    validations:
+      required: true
+  - type: dropdown
+    id: loader
+    attributes:
+      label: 加载器
+      options:
+        - Fabric
+        - Minecraft Forge
+        - 公共核心或文档（无加载器）
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境
+      description: 填写 Minecraft、Java、加载器及相关依赖精确版本、操作系统、单机或专服、客户端与服务端安装情况。涉及模型时说明 Mock 或服务类型，不填写凭据。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 最小复现步骤
+      description: 使用独立测试世界，说明初始条件和逐步操作。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果与证据
+      description: 提供脱敏日志、错误信息或截图；无法复现时如实说明频率和条件。
+    validations:
+      required: true
+  - type: textarea
+    id: related
+    attributes:
+      label: 相关任务与排查
+      description: 关联 Issue/PR、最小模组列表以及已尝试的方法。不要在公开日志中粘贴密钥。
