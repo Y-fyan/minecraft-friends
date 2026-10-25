@@ -1,0 +1,43 @@
+name: 功能提案
+description: 提出用户场景、范围与可验证的完成标准。
+title: "[提案] "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先搜索现有 Issues。已有任务的补充意见直接在原任务讨论。
+        提案创建后仍需评估依赖和范围，不自动代表已接受、已认领或进入初期 Alpha。
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 用户场景与问题
+      description: 谁在什么情况下需要这个功能？当前行为带来什么问题？
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 建议行为与范围
+      description: 写明目标版本与加载器、单机或联机、输入到结果的示例，以及本次不包含的部分。
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收标准
+      description: 用具体步骤与可观察结果说明何时算完成，包含必要的失败、停止或隔离场景。
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: 依赖、影响与替代方案
+      description: 关联任务、接口影响、第三方依赖及许可、隐私或模型费用；未知项写待验证。
+    validations:
+      required: true
+  - type: textarea
+    id: participation
+    attributes:
+      label: 参与意向
+      description: 如希望认领，说明可交付范围；维护者确认后再设置负责人。可留空。

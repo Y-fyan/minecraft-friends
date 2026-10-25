@@ -75,14 +75,17 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | --- | --- |
 | [贡献指南](CONTRIBUTING.md) | 认领、分支、提交、PR、审查与贡献统计 |
 | [构建指南](docs/BUILD.md) | 固定工具链、构建、开发运行、配置与 EULA 边界 |
+| [项目统筹](docs/COORDINATION.md) | 近期交付、依赖、职责、状态与推进节奏 |
 | [开发规范](docs/DEVELOPMENT.md) | 编码、线程、动作、配置、日志与依赖约定 |
 | [架构草案](docs/ARCHITECTURE.md) | 分层、数据流、公共接口与待决事项 |
 | [测试与发布规范](docs/TESTING.md) | 四格环境矩阵、失败场景与发布门槛 |
 | [依赖与许可](docs/DEPENDENCIES.md) | M0 直接依赖、用途、版本和许可 |
+| [玩家控制 ADR 0001](docs/decisions/0001-player-control-route.md) | 服务端玩家实体与真实账号客户端的路线取舍 |
+| [玩家控制验证](docs/validation/0001-player-control.md) | Fabric / Forge 探针和协议机器人的第一轮实测 |
 | [ADR 0002](docs/decisions/0002-multiloader-layout.md) | 公共源码加双加载器发行 JAR 的取舍 |
 | [架构决策模板](docs/decisions/0000-template.md) | 技术选择的背景、证据、代价与结论 |
 
-当前可以从 Issue #1 的玩家控制验证或 Issue #2 的工程审查开始参与。根目录命令 `./gradlew checkAll --no-daemon` 会运行公共测试并生成两个 JAR。
+当前可以参与 Issue #1 的控制路线审查、补齐未测环境，或审查 Issue #2 的基础工程。根目录命令 `./gradlew checkAll --no-daemon` 会运行公共测试并生成两个 JAR。
 
 ## 原创与许可
 
