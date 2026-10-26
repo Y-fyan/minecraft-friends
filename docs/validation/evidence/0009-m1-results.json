@@ -335,7 +335,7 @@
     }
   ],
   "real_model_verified": false,
-  "multiplayer_and_events": "pending separate final evidence",
+  "multiplayer_and_events": "Events independently checked; multiplayer pending",
   "incremental_and_restore": [
     {
       "jar": "minecraft-friends-forge-1.21.1-0.1.0-SNAPSHOT.jar",
@@ -359,5 +359,83 @@
     "forbidden_client_class_references": 0,
     "licenses_match": true,
     "ci_run": 40310970489
-  }
+  },
+  "events_and_list_delete": [
+    {
+      "target": "fabric-integrated",
+      "source_commit": "4fbcfc79beff212e7d8b0a94f435ef3f55fdb172",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "helper_sources_sha256": "05fa71398e0eb66df8116f12698cc392b19962dad5420a35a885a5d42b61eca3",
+      "production_jar_sha256": "e3278b45c1f77755ce35b1ba73e6a9a1aaa3376778153bc59fe3a2dd4633a336",
+      "protocol_simulation_not_real_model": true,
+      "request_body_stored": false,
+      "log_policy": "only fixed MF_EVENTS assertion lines are retained",
+      "passed": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": false,
+      "seconds": 28.41,
+      "artifact_unchanged": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "checks_sha256": "d3a606fcede606f6a3e50ea6665cbf7649ee9fef232684980cc560f9d064f27b",
+      "missing_checks": [],
+      "protocol_count_delta": {
+        "FIRST_MEETING": 1,
+        "INJURED": 1,
+        "REJOIN": 1,
+        "DELETE_PROBE": 1
+      },
+      "protocol_counts_passed": true,
+      "protocol_failures_unchanged": true,
+      "fixture_state_matches_summary": true,
+      "client_completion": true,
+      "server_completion": true,
+      "m1_events_complete": true,
+      "not_covered": [
+        "真实模型服务",
+        "DedicatedServer重启后恢复",
+        "完整人工游戏体验"
+      ],
+      "local_evidence_id": "fabric-integrated-1793012914185165751"
+    },
+    {
+      "target": "forge-integrated",
+      "source_commit": "4fbcfc79beff212e7d8b0a94f435ef3f55fdb172",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "helper_sources_sha256": "05fa71398e0eb66df8116f12698cc392b19962dad5420a35a885a5d42b61eca3",
+      "production_jar_sha256": "bfad1766bcfb44f8077fc625908ca1dd152c2d76ae4efb7241ab9efa6024cfe6",
+      "protocol_simulation_not_real_model": true,
+      "request_body_stored": false,
+      "log_policy": "only fixed MF_EVENTS assertion lines are retained",
+      "passed": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": false,
+      "seconds": 33.21,
+      "artifact_unchanged": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "checks_sha256": "d3a606fcede606f6a3e50ea6665cbf7649ee9fef232684980cc560f9d064f27b",
+      "missing_checks": [],
+      "protocol_count_delta": {
+        "FIRST_MEETING": 1,
+        "INJURED": 1,
+        "REJOIN": 1,
+        "DELETE_PROBE": 1
+      },
+      "protocol_counts_passed": true,
+      "protocol_failures_unchanged": true,
+      "fixture_state_matches_summary": true,
+      "client_completion": true,
+      "server_completion": true,
+      "m1_events_complete": true,
+      "not_covered": [
+        "真实模型服务",
+        "DedicatedServer重启后恢复",
+        "完整人工游戏体验"
+      ],
+      "local_evidence_id": "forge-integrated-1793012821555182923"
+    }
+  ]
 }
