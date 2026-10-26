@@ -10,6 +10,7 @@ subprojects {
             options.encoding = 'UTF-8'
         }
         sourceSets.main.java.srcDir rootProject.file('shared/src/main/java')
+        sourceSets.main.java.srcDir rootProject.file('negative/src/main/java')
         tasks.withType(Jar).configureEach {
             from(rootProject.file('../../LICENSE')) { into 'META-INF' }
         }
@@ -27,5 +28,14 @@ if (acceptanceInstance != null) {
     }
     subprojects {
         layout.buildDirectory.set(layout.projectDirectory.dir("build/peer/${acceptanceRunId}/${acceptanceInstance}"))
+    }
+}
+
+def negativeRunDirectory = providers.gradleProperty('acceptanceNegativeRunDir').orNull
+if (negativeRunDirectory != null) {
+    def allowed = rootProject.file('negative/build/run').toPath().toAbsolutePath().normalize()
+    def requested = rootProject.file(negativeRunDirectory).toPath().toAbsolutePath().normalize()
+    if (!requested.startsWith(allowed)) {
+        throw new GradleException('Negative acceptance must use its isolated negative/build/run directory')
     }
 }

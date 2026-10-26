@@ -6,7 +6,7 @@ dependencies {
 }
 def prepareAcceptance = tasks.register('prepareAcceptance', Copy) {
     from productionJar
-    into layout.buildDirectory.dir('run/client/mods')
+    into project.hasProperty('acceptanceNegativeRunDir') ? project.file(project.property('acceptanceNegativeRunDir')).toPath().resolve('mods').toFile() : layout.buildDirectory.dir('run/client/mods')
 }
 def runtimeDirectory = layout.buildDirectory.dir('acceptanceMod')
 def acceptanceRuntime = sourceSets.create('acceptanceRuntime')
@@ -25,9 +25,15 @@ minecraft {
     reobf = false
     runs {
         client {
-            workingDirectory project.layout.buildDirectory.dir('run/client').get().asFile
+            workingDirectory project.hasProperty('acceptanceNegativeRunDir') ? project.file(project.property('acceptanceNegativeRunDir')) : project.layout.buildDirectory.dir('run/client').get().asFile
             property 'mf.acceptance', 'true'
             property 'mf.acceptance.loader', 'forge'
+            if (project.hasProperty('acceptanceEvents')) { property 'mf.acceptance.events', 'true' }
+            if (project.hasProperty('acceptanceNegative')) {
+                property 'mf.acceptance.negative', 'true'
+                property 'mf.acceptance.negative.scenario', project.property('acceptanceNegativeScenario')
+                property 'mf.acceptance.negative.runDir', project.property('acceptanceNegativeRunDir')
+            }
             if (project.hasProperty('acceptancePeer')) {
                 property 'mf.acceptance.peer', 'true'
                 property 'mf.acceptance.peer.role', project.property('acceptancePeerRole')

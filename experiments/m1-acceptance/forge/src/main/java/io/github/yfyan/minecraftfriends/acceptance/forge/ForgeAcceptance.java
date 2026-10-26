@@ -1,10 +1,10 @@
 package io.github.yfyan.minecraftfriends.acceptance.forge;
 
-import io.github.yfyan.minecraftfriends.acceptance.AcceptanceScenario;
-import io.github.yfyan.minecraftfriends.acceptance.PeerScenario;
+import io.github.yfyan.minecraftfriends.acceptance.ServerAcceptanceDispatch;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -16,18 +16,11 @@ public final class ForgeAcceptance {
         if (Boolean.getBoolean("mf.acceptance")) { MinecraftForge.EVENT_BUS.register(this); }
     }
     @SubscribeEvent
-    public void commands(RegisterCommandsEvent event) {
-        if (Boolean.getBoolean("mf.acceptance.peer")) { PeerScenario.registerCommands(event.getDispatcher()); }
-        else { AcceptanceScenario.registerCommands(event.getDispatcher()); }
-    }
+    public void starting(ServerStartingEvent event) { ServerAcceptanceDispatch.starting(event.getServer()); }
     @SubscribeEvent
-    public void tick(TickEvent.ServerTickEvent.Post event) {
-        if (Boolean.getBoolean("mf.acceptance.peer")) { PeerScenario.tick(event.getServer()); }
-        else { AcceptanceScenario.tick(event.getServer()); }
-    }
+    public void commands(RegisterCommandsEvent event) { ServerAcceptanceDispatch.commands(event.getDispatcher()); }
     @SubscribeEvent
-    public void stopped(ServerStoppedEvent event) {
-        if (Boolean.getBoolean("mf.acceptance.peer")) { PeerScenario.remove(event.getServer()); }
-        else { AcceptanceScenario.remove(event.getServer()); }
-    }
+    public void tick(TickEvent.ServerTickEvent.Post event) { ServerAcceptanceDispatch.tick(event.getServer()); }
+    @SubscribeEvent
+    public void stopped(ServerStoppedEvent event) { ServerAcceptanceDispatch.stopped(event.getServer()); }
 }
