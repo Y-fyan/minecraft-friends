@@ -9,6 +9,9 @@ public record ActionRequest(UUID taskId, UUID ownerId, ActionType type, BlockAre
         Objects.requireNonNull(taskId, "taskId");
         Objects.requireNonNull(ownerId, "ownerId");
         Objects.requireNonNull(type, "type");
+        if (type == ActionType.NONE || type == ActionType.STOP) {
+            throw new IllegalArgumentException("Idle and stop are scheduler controls, not queued actions.");
+        }
         if (type == ActionType.COLLECT_OAK_LOGS) {
             Objects.requireNonNull(area, "area");
             if (requestedCount < 1 || requestedCount > 64) {

@@ -15,7 +15,7 @@ import java.util.UUID;
 /** Bounded per-owner FIFO scheduler. Callers serialize world work on the server thread. */
 public final class ActionScheduler {
     public static final int MAX_QUEUED_PER_OWNER = 16;
-    private static final int MAX_RETAINED_TASK_IDS = 256;
+    static final int MAX_RETAINED_TASK_IDS = 256;
 
     private final Map<UUID, OwnerQueue> owners = new LinkedHashMap<>();
     private final LinkedHashMap<UUID, TaskRecord> retained = new LinkedHashMap<>();
@@ -25,7 +25,9 @@ public final class ActionScheduler {
         if (retained.containsKey(request.taskId())) {
             return SubmitResult.DUPLICATE;
         }
-        trimRetained();
+        while (retained.size() >= MAX_RETAINED_TASK_IDS && evictOldestTerminal()) {
+            // Keep the most recent terminal outcomes while making room for new work.
+        }
         if (retained.size() >= MAX_RETAINED_TASK_IDS) {
             return SubmitResult.FULL;
         }
@@ -37,7 +39,6 @@ public final class ActionScheduler {
         TaskRecord task = new TaskRecord(request);
         retained.put(request.taskId(), task);
         queue.pending.addLast(task);
-        trimRetained();
         return SubmitResult.ACCEPTED;
     }
 
@@ -90,6 +91,8 @@ public final class ActionScheduler {
         if (queue != null && queue.active == task) {
             queue.active = null;
             removeIfEmpty(task.request.ownerId(), queue);
+        } else if (queue != null && queue.pending.remove(task)) {
+            removeIfEmpty(task.request.ownerId(), queue);
         }
         return true;
     }
@@ -138,18 +141,13 @@ public final class ActionScheduler {
         }
     }
 
-    private void trimRetained() {
-        while (retained.size() > MAX_RETAINED_TASK_IDS) {
-            UUID removable = retained.entrySet().stream()
-                    .filter(entry -> entry.getValue().machine.state().isTerminal())
-                    .map(Map.Entry::getKey)
-                    .findFirst()
-                    .orElse(null);
-            if (removable == null) {
-                return;
-            }
-            retained.remove(removable);
-        }
+    private boolean evictOldestTerminal() {
+        UUID removable = retained.entrySet().stream()
+                .filter(entry -> entry.getValue().machine.state().isTerminal())
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+        return removable != null && retained.remove(removable) != null;
     }
 
     public enum SubmitResult { ACCEPTED, DUPLICATE, FULL }

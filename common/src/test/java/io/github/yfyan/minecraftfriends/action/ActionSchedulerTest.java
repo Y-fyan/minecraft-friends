@@ -74,4 +74,45 @@ class ActionSchedulerTest {
         assertThrows(IllegalArgumentException.class,
                 () -> ActionRequest.collectOakLogs(UUID.randomUUID(), owner, area, 65));
     }
+
+    @Test
+    void evictsOldestTerminalBeforeAcceptingMoreThanTheRetentionLimit() {
+        for (int i = 0; i < 2 * ActionScheduler.MAX_RETAINED_TASK_IDS; i++) {
+            UUID taskId = UUID.randomUUID();
+            assertEquals(ActionScheduler.SubmitResult.ACCEPTED,
+                    scheduler.submit(ActionRequest.follow(taskId, owner)));
+            assertTrue(scheduler.startNext(owner).isPresent());
+            assertTrue(scheduler.finish(taskId, TaskState.SUCCEEDED, 0, 0, "done"));
+        }
+        assertEquals(ActionScheduler.SubmitResult.ACCEPTED,
+                scheduler.submit(ActionRequest.follow(UUID.randomUUID(), owner)));
+    }
+
+    @Test
+    void keepsActiveTasksWhenRetentionIsFull() {
+        UUID firstOwner = UUID.randomUUID();
+        for (int i = 0; i < ActionScheduler.MAX_RETAINED_TASK_IDS; i++) {
+            UUID taskId = UUID.randomUUID();
+            UUID distinctOwner = i == 0 ? firstOwner : UUID.randomUUID();
+            assertEquals(ActionScheduler.SubmitResult.ACCEPTED,
+                    scheduler.submit(ActionRequest.follow(taskId, distinctOwner)));
+            assertTrue(scheduler.startNext(distinctOwner).isPresent());
+        }
+        UUID overflowOwner = UUID.randomUUID();
+        assertEquals(ActionScheduler.SubmitResult.FULL,
+                scheduler.submit(ActionRequest.follow(UUID.randomUUID(), overflowOwner)));
+        assertEquals(TaskState.RUNNING,
+                scheduler.status(firstOwner).orElseThrow().state());
+    }
+
+    @Test
+    void terminalQueuedTasksAreRemovedBeforeTheNextStart() {
+        UUID queued = UUID.randomUUID();
+        assertEquals(ActionScheduler.SubmitResult.ACCEPTED,
+                scheduler.submit(ActionRequest.follow(queued, owner)));
+        assertTrue(scheduler.finish(queued, TaskState.FAILED, 0, 0, "failed before start"));
+        assertTrue(scheduler.startNext(owner).isEmpty());
+        assertEquals(TaskState.FAILED, scheduler.status(owner).orElseThrow().state());
+    }
+
 }
