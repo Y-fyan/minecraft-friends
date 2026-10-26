@@ -335,7 +335,7 @@
     }
   ],
   "real_model_verified": false,
-  "multiplayer_and_events": "Events independently checked; multiplayer pending",
+  "multiplayer_and_events": "Both loaders passed events/list/delete and two-real-client DedicatedServer isolation; real service and experience acceptance pending",
   "incremental_and_restore": [
     {
       "jar": "minecraft-friends-forge-1.21.1-0.1.0-SNAPSHOT.jar",
@@ -358,7 +358,8 @@
     "local_markdown_paths_checked": 106,
     "forbidden_client_class_references": 0,
     "licenses_match": true,
-    "ci_run": 40310970489
+    "ci_run": 40310970489,
+    "peer_fixture_tests": 11
   },
   "events_and_list_delete": [
     {
@@ -437,5 +438,270 @@
       ],
       "local_evidence_id": "forge-integrated-1793012821555182923"
     }
-  ]
+  ],
+  "multiplayer": [
+    {
+      "passed": true,
+      "target": "fabric-dedicated",
+      "protocol_simulation_not_real_model": true,
+      "server_process_managed": false,
+      "client_processes": {
+        "a": {
+          "pid": 337321,
+          "exit_code": 0,
+          "ready": true,
+          "pass_marker": true
+        },
+        "b": {
+          "pid": 337324,
+          "exit_code": 0,
+          "ready": true,
+          "pass_marker": true
+        }
+      },
+      "server_checks_seen_by_clients": {
+        "both_shared_requests_replied_to_both_real_clients": [
+          "a",
+          "b"
+        ],
+        "client_b_dismissed_only_its_companion": [
+          "a",
+          "b"
+        ],
+        "client_b_memory_clear_left_client_a_state_unchanged": [
+          "a",
+          "b"
+        ],
+        "distinct_private_facts_saved": [
+          "a",
+          "b"
+        ],
+        "invite_uuid_parsed_by_invited_client": [
+          "a",
+          "b"
+        ],
+        "invitee_explicitly_joined_by_client_command": [
+          "a",
+          "b"
+        ],
+        "left_client_saw_no_echo_or_reply_during_observation": [
+          "a",
+          "b"
+        ],
+        "memory_list_completed": [
+          "a"
+        ],
+        "private_command_reply_ack_by_owner_a": [
+          "a",
+          "b"
+        ],
+        "private_ordinary_prefix_reply_ack_by_owner_b": [
+          "a",
+          "b"
+        ],
+        "proactive_disabled_and_private_addresses_set": [
+          "a",
+          "b"
+        ],
+        "result": [
+          "a",
+          "b"
+        ],
+        "shared_uuid_parsed_from_real_create_message": [
+          "a",
+          "b"
+        ],
+        "two_independent_companions_created_by_clients": [
+          "a",
+          "b"
+        ],
+        "two_real_offline_clients": [
+          "a",
+          "b"
+        ],
+        "uninvited_join_rejected_for_real_client_uuid": [
+          "a",
+          "b"
+        ],
+        "uninvited_shared_send_rejected": [
+          "a",
+          "b"
+        ]
+      },
+      "missing_server_checks": [],
+      "fixture_call_delta": {
+        "PRIVATE_A": 1,
+        "PRIVATE_B": 1,
+        "SHARED_A": 1,
+        "SHARED_B": 1,
+        "SHARED_AFTER_LEAVE": 1,
+        "SETUP_GREETING": 2
+      },
+      "fixture_failures_delta": {},
+      "fixture_isolation_assertions_passed": true,
+      "setup_greeting_count_delta": 2,
+      "exit_codes": {
+        "a": 0,
+        "b": 0
+      },
+      "timed_out": false,
+      "launch_error": null,
+      "termination_errors": [],
+      "sources_and_jar_unchanged": true,
+      "elapsed_seconds": 59.31,
+      "limitations": [
+        "真实模型服务未验证",
+        "仅执行已选加载器的 DedicatedServer 双客户端流程",
+        "不验证真实账号、DedicatedServer 重启恢复或主动事件冷却"
+      ],
+      "local_evidence_id": "fabric-dedicated-peer-1793015257257074821",
+      "source_commit": "e8c2e03db03d67a0a5b381ec63fe2c2ffac23913",
+      "source_diff_sha256": "838a9cf1f0f472c0b21ddf454b9d51be02f92ee917bd28495c0a808aa7298995",
+      "source_diff_present": true,
+      "helper_sources_sha256": "53ae8dd008d16f2f964b19720b78abf9c606e2fe74f42ed36e3b70f15f23e122",
+      "production_jar_sha256": "e3278b45c1f77755ce35b1ba73e6a9a1aaa3376778153bc59fe3a2dd4633a336",
+      "committed_helper_equivalent": "297b75df38706031822cf1f2c05130ac1d1672d6",
+      "server_log_sha256": "b5947721bfdb5910b5ba700d498a4cfefc16fe5320f29e3e5cdb8680544b948c",
+      "server_saved_all_dimensions": true,
+      "server_exit_code": 0,
+      "fixture_stopped": true,
+      "marker_sha256": {
+        "a": "5a61ef6896642b72d1effcd0318eada9101dd10f8291ac81ba76730b39f35a07",
+        "b": "9f299b456a5a76f3d344fa2f0d20e1299b6dfec670bbf851960642e3ac3489e4"
+      },
+      "protocol_summary_sha256": "55d1512906e0dc8618840c5ccbd282afb2214f53af25c91c7f9d2482a7ee209c"
+    },
+    {
+      "passed": true,
+      "target": "forge-dedicated",
+      "protocol_simulation_not_real_model": true,
+      "server_process_managed": false,
+      "client_processes": {
+        "a": {
+          "pid": 340278,
+          "exit_code": 0,
+          "ready": true,
+          "pass_marker": true
+        },
+        "b": {
+          "pid": 340282,
+          "exit_code": 0,
+          "ready": true,
+          "pass_marker": true
+        }
+      },
+      "server_checks_seen_by_clients": {
+        "both_shared_requests_replied_to_both_real_clients": [
+          "a",
+          "b"
+        ],
+        "client_b_dismissed_only_its_companion": [
+          "a",
+          "b"
+        ],
+        "client_b_memory_clear_left_client_a_state_unchanged": [
+          "a",
+          "b"
+        ],
+        "distinct_private_facts_saved": [
+          "a",
+          "b"
+        ],
+        "invite_uuid_parsed_by_invited_client": [
+          "a",
+          "b"
+        ],
+        "invitee_explicitly_joined_by_client_command": [
+          "a",
+          "b"
+        ],
+        "left_client_saw_no_echo_or_reply_during_observation": [
+          "a",
+          "b"
+        ],
+        "memory_list_completed": [
+          "a"
+        ],
+        "private_command_reply_ack_by_owner_a": [
+          "a",
+          "b"
+        ],
+        "private_ordinary_prefix_reply_ack_by_owner_b": [
+          "a",
+          "b"
+        ],
+        "proactive_disabled_and_private_addresses_set": [
+          "a",
+          "b"
+        ],
+        "result": [
+          "a",
+          "b"
+        ],
+        "shared_uuid_parsed_from_real_create_message": [
+          "a",
+          "b"
+        ],
+        "two_independent_companions_created_by_clients": [
+          "a",
+          "b"
+        ],
+        "two_real_offline_clients": [
+          "a",
+          "b"
+        ],
+        "uninvited_join_rejected_for_real_client_uuid": [
+          "a",
+          "b"
+        ],
+        "uninvited_shared_send_rejected": [
+          "a",
+          "b"
+        ]
+      },
+      "missing_server_checks": [],
+      "fixture_call_delta": {
+        "PRIVATE_A": 1,
+        "PRIVATE_B": 1,
+        "SHARED_A": 1,
+        "SHARED_B": 1,
+        "SHARED_AFTER_LEAVE": 1,
+        "SETUP_GREETING": 2
+      },
+      "fixture_failures_delta": {},
+      "fixture_isolation_assertions_passed": true,
+      "setup_greeting_count_delta": 2,
+      "exit_codes": {
+        "a": 0,
+        "b": 0
+      },
+      "timed_out": false,
+      "launch_error": null,
+      "termination_errors": [],
+      "sources_and_jar_unchanged": true,
+      "elapsed_seconds": 59.03,
+      "limitations": [
+        "真实模型服务未验证",
+        "仅执行已选加载器的 DedicatedServer 双客户端流程",
+        "不验证真实账号、DedicatedServer 重启恢复或主动事件冷却"
+      ],
+      "local_evidence_id": "forge-dedicated-peer-1793015373047626913",
+      "source_commit": "e8c2e03db03d67a0a5b381ec63fe2c2ffac23913",
+      "source_diff_sha256": "838a9cf1f0f472c0b21ddf454b9d51be02f92ee917bd28495c0a808aa7298995",
+      "source_diff_present": true,
+      "helper_sources_sha256": "53ae8dd008d16f2f964b19720b78abf9c606e2fe74f42ed36e3b70f15f23e122",
+      "production_jar_sha256": "bfad1766bcfb44f8077fc625908ca1dd152c2d76ae4efb7241ab9efa6024cfe6",
+      "committed_helper_equivalent": "297b75df38706031822cf1f2c05130ac1d1672d6",
+      "server_log_sha256": "1c5cefb7306013033398fd256dfcb7428a476d0d24b3c4bbe96be78be24cbb79",
+      "server_saved_all_dimensions": true,
+      "server_exit_code": 0,
+      "fixture_stopped": true,
+      "marker_sha256": {
+        "a": "5a61ef6896642b72d1effcd0318eada9101dd10f8291ac81ba76730b39f35a07",
+        "b": "9f299b456a5a76f3d344fa2f0d20e1299b6dfec670bbf851960642e3ac3489e4"
+      },
+      "protocol_summary_sha256": "c0e50581207b18d5d50673f853cca453afc91e8eb5dda99108dcaa3e30558cc3"
+    }
+  ],
+  "m1_complete": false
 }
