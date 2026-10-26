@@ -176,6 +176,9 @@ public final class ChatRuntime {
     }
 
     public static void onLogin(ServerPlayer player) {
+        if (CompanionRuntime.isCompanion(player)) {
+            return;
+        }
         RuntimeState state = state(player.server);
         if (state == null || !state.chatEnabled || state.worldId == null) {
             return;
@@ -233,6 +236,9 @@ public final class ChatRuntime {
 
     /** Call only after a loader has verified that this owned companion actually took damage. */
     public static void onCompanionInjured(ServerPlayer companion) {
+        if (!CompanionRuntime.isCompanion(companion)) {
+            return;
+        }
         RuntimeState state = state(companion.server);
         if (state == null || !state.chatEnabled || state.worldId == null || !companion.isAlive()) {
             return;
@@ -406,7 +412,8 @@ public final class ChatRuntime {
         }
         CompanionData data = companionData(state);
         CompanionData.Entry entry = data == null ? null : data.find(ownerId).orElse(null);
-        boolean online = entry != null && server.getPlayerList().getPlayer(entry.identity().companionId()) != null;
+        ServerPlayer live = entry == null ? null : server.getPlayerList().getPlayer(entry.identity().companionId());
+        boolean online = live != null && CompanionRuntime.isCompanion(live);
         ChatSessionService.OwnerMetrics metrics = state.sessions == null
                 ? new ChatSessionService.OwnerMetrics(0, 0, 0, 0, 0)
                 : state.sessions.metricsForOwner(ownerId);
@@ -1033,7 +1040,9 @@ public final class ChatRuntime {
     }
 
     private static boolean companionAvailable(MinecraftServer server, CompanionData.Entry entry) {
-        return entry.active() && server.getPlayerList().getPlayer(entry.identity().companionId()) != null;
+        ServerPlayer companion = server.getPlayerList().getPlayer(entry.identity().companionId());
+        return entry.active() && companion != null && companion.isAlive()
+                && CompanionRuntime.isCompanion(companion);
     }
 
     private static ChatSessionService.Limits chatLimits(ModConfig config) {
