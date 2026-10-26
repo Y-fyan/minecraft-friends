@@ -147,7 +147,7 @@ public final class NegativeScenario {
             return;
         }
 
-        Path worldRoot = server.getWorldPath(LevelResource.ROOT);
+        Path worldRoot = server.getWorldPath(LevelResource.ROOT).toRealPath();
         Path expectedRunDirectory = Path.of(System.getProperty("mf.acceptance.negative.runDir", ""));
         if (expectedRunDirectory.toString().isBlank()) {
             fail("isolated_run_dir_property_missing");
