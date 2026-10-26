@@ -16,6 +16,7 @@ loom {
             runDir project.relativePath(acceptanceClientDirectory)
             vmArg '-Dmf.acceptance=true'
             vmArg '-Dmf.acceptance.loader=fabric'
+            if (project.hasProperty('acceptanceActionsScope')) { vmArg '-Dmf.acceptance.actions.scope=' + project.property('acceptanceActionsScope') }
             if (project.hasProperty('acceptanceActions')) { vmArg '-Dmf.acceptance.actions=true' }
             if (project.hasProperty('acceptanceEvents')) { vmArg '-Dmf.acceptance.events=true' }
             if (project.hasProperty('acceptanceReal')) { vmArg '-Dmf.acceptance.real=true' }

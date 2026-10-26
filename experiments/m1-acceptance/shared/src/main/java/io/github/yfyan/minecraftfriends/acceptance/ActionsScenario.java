@@ -81,6 +81,7 @@ public final class ActionsScenario {
                     if(age==4) stopped=bot.position();
                     if(age>=44) {
                         check(bot.position().distanceTo(stopped)<0.4,"stop_clears_movement");
+                        if ("navigation".equals(System.getProperty("mf.acceptance.actions.scope"))) { complete(); return; }
                         bot.teleportTo(2.5,-60,6.5);owner.teleportTo(2.5,-60,3.5);
                         for(int x=7;x<=10;x++) for(int y=-60;y<=-59;y++) owner.serverLevel().setBlock(new BlockPos(x,y,6),Blocks.OAK_LOG.defaultBlockState(),3);
                         owner.serverLevel().setBlock(new BlockPos(12,-60,6),Blocks.OAK_LOG.defaultBlockState(),3);
@@ -103,12 +104,15 @@ public final class ActionsScenario {
                 }
                 case 9 -> {if(age>=100){check(inventory(owner)==8,"repeat_request_does_not_create_items");command("mf task stop");next(10);}}
                 case 10 -> {if(age>=20){
-                    System.out.println("MF_M2_METRIC baseline_mean_tick_ns="+mean(baseline)+" active_mean_tick_ns="+mean(active)+" samples="+active.size());
-                    emit("result",true);owner.sendSystemMessage(Component.literal("MF_M2 PASS"));finished=true;
+                    complete();
                 }}
                 default -> fail("invalid_phase");
             }
         } catch(Exception failure) { fail("exception_"+failure.getClass().getSimpleName()); }
+    }
+    private void complete(){
+        System.out.println("MF_M2_METRIC baseline_mean_tick_ns="+mean(baseline)+" active_mean_tick_ns="+mean(active)+" samples="+active.size());
+        emit("result",true);owner.sendSystemMessage(Component.literal("MF_M2 PASS"));finished=true;
     }
     private int logs(){int n=0;for(int x=7;x<=10;x++)for(int y=-60;y<=-59;y++)if(owner.serverLevel().getBlockState(new BlockPos(x,y,6)).is(Blocks.OAK_LOG))n++;return n;}
     private static int inventory(ServerPlayer p){int n=0;for(int i=0;i<p.getInventory().getContainerSize();i++){var s=p.getInventory().getItem(i);if(s.is(Items.OAK_LOG))n+=s.getCount();}return n;}
