@@ -8,6 +8,18 @@ def prepareAcceptance = tasks.register('prepareAcceptance', Copy) {
     from productionJar
     into layout.buildDirectory.dir('run/client/mods')
 }
+def runtimeDirectory = layout.buildDirectory.dir('acceptanceMod')
+def acceptanceRuntime = sourceSets.create('acceptanceRuntime')
+acceptanceRuntime.java.setSrcDirs([])
+acceptanceRuntime.resources.setSrcDirs([])
+acceptanceRuntime.output.classesDirs.setFrom(runtimeDirectory)
+acceptanceRuntime.runtimeClasspath = files(runtimeDirectory) +
+        (sourceSets.main.runtimeClasspath - sourceSets.main.output)
+def prepareRuntime = tasks.register('prepareAcceptanceMod', Sync) {
+    dependsOn tasks.named('classes'), tasks.named(acceptanceRuntime.classesTaskName)
+    from sourceSets.main.output
+    into runtimeDirectory
+}
 minecraft {
     mappings channel: 'official', version: '1.21.1'
     reobf = false
@@ -19,13 +31,10 @@ minecraft {
             if (project.hasProperty('acceptanceServer')) {
                 property 'mf.acceptance.server', project.property('acceptanceServer')
             }
-            mods { mf_m1_acceptance { source sourceSets.main } }
+            mods { mf_m1_acceptance { source acceptanceRuntime } }
         }
     }
 }
-tasks.named('runClient') { dependsOn prepareAcceptance }
-sourceSets.each {
-    def combined = layout.buildDirectory.dir("acceptanceSources/${it.name}")
-    it.output.resourcesDir = combined
-    it.java.destinationDirectory = combined
+tasks.matching { it.name == 'runClient' }.configureEach {
+    dependsOn prepareAcceptance, prepareRuntime
 }

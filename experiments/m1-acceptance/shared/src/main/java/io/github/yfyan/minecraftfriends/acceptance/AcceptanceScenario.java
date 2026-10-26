@@ -125,8 +125,8 @@ public final class AcceptanceScenario {
     private void beginDeath(boolean keepInventory) {
         ServerPlayer companion = live();
         deathLevel = companion.serverLevel();
-        companion.teleportTo(owner.getX() + 8.0, owner.getY(), owner.getZ() + 8.0);
-        deathArea = companion.getBoundingBox().inflate(32.0);
+        companion.teleportTo(owner.getX() + 24.0, owner.getY(), owner.getZ() + 24.0);
+        deathArea = companion.getBoundingBox().inflate(8.0);
         deathLevel.getGameRules().getRule(GameRules.RULE_KEEPINVENTORY).set(keepInventory, server);
         companion.hurt(deathLevel.damageSources().genericKill(), Float.MAX_VALUE);
         check(!companion.isAlive(), "death_started_" + keepInventory);

@@ -23,6 +23,8 @@ def run():
     parser.add_argument('--server', help='Already prepared loopback test server, e.g. 127.0.0.1:25575')
     parser.add_argument('--timeout', type=int, default=420)
     parser.add_argument('--offline', action='store_true')
+    parser.add_argument('--skip-forge-build-cert-probe', action='store_true',
+                        help='Skip only ForgeGradle environment preflight for this run; keep artifact/HTTP TLS validation')
     options = parser.parse_args()
     loader, kind = options.target.split('-')
     if kind == 'dedicated' and not options.server:
@@ -42,6 +44,8 @@ def run():
                '--no-daemon', '--console=plain']
     if options.offline:
         command.append('--offline')
+    if options.skip_forge_build_cert_probe:
+        command.append('-Dnet.minecraftforge.gradle.check.certs=false')
     if options.server:
         command.append('-PacceptanceServer=' + options.server)
     environment = dict(os.environ)
