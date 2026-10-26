@@ -19,44 +19,62 @@ public final class PeerClient {
     private static final Pattern PRIVATE_REPLY = Pattern.compile("MF_CHAT_REPLY:([0-9a-fA-F-]{36})");
     private static final Pattern CREATED = Pattern.compile("共享会话已创建，编号 ([0-9a-fA-F-]{36})");
     private static final Pattern JOIN_COMMAND = Pattern.compile("/mf chat shared join ([0-9a-fA-F-]{36})");
+    private static final Pattern MEMORY_LIST_HEADER = Pattern.compile("伙伴长期记忆（([0-9]{1,3}) 条）：");
+    private static final Pattern MEMORY_LIST_ENTRY = Pattern.compile("([0-9a-fA-F-]{36}) / (?:PREFERENCE|EVENT) / .+");
     private static final String SERVER = System.getProperty("mf.acceptance.server", "");
     private static final String ROLE = System.getProperty("mf.acceptance.peer.role", "");
     private static final String USERNAME = "a".equals(ROLE) ? "MFAcceptA" : "MFAcceptB";
-    private static final ConcurrentLinkedQueue<String> MESSAGES = new ConcurrentLinkedQueue<>();
+    private static final ConcurrentLinkedQueue<IncomingMessage> MESSAGES = new ConcurrentLinkedQueue<>();
     private static final ConcurrentLinkedQueue<Outbound> OUTBOUND = new ConcurrentLinkedQueue<>();
     private static final int OUTBOUND_INTERVAL_TICKS = 20;
     private static final int OUTBOUND_LIMIT = 128;
     private static final Set<String> EXPECTED_NONCES = ConcurrentHashMap.newKeySet();
     private static final Map<String, Watch> WATCHES = new ConcurrentHashMap<>();
+    private static final Set<String> MEMORY_LIST_ENTRY_IDS = ConcurrentHashMap.newKeySet();
     private static boolean started;
     private static boolean readySent;
     private static boolean finished;
     private static boolean outboundOverflow;
     private static int outboundTicks;
     private static String sessionId;
+    private static boolean memoryListRequested;
+    private static boolean memoryListCompleted;
+    private static int memoryListExpected = -1;
+    private static String pendingMemoryListReport;
 
     private record Outbound(boolean chat, String text) { }
+    private record IncomingMessage(String text, boolean systemMessage) { }
 
     private static final class Watch {
         private final String needle;
+        private final boolean systemOnly;
         private int count;
-        private Watch(String needle) { this.needle = needle; }
+        private Watch(String needle, boolean systemOnly) {
+            this.needle = needle;
+            this.systemOnly = systemOnly;
+        }
     }
 
     private PeerClient() { }
 
     public static void message(String text) {
-        if (MESSAGES.size() < 512) { MESSAGES.add(text); }
+        message(text, false);
+    }
+
+    public static void message(String text, boolean systemMessage) {
+        if (MESSAGES.size() < 512) { MESSAGES.add(new IncomingMessage(text, systemMessage)); }
     }
 
     public static void tick(Minecraft client) {
         if (finished) { return; }
-        String text;
-        while ((text = MESSAGES.poll()) != null) {
+        IncomingMessage incoming;
+        while ((incoming = MESSAGES.poll()) != null) {
+            String text = incoming.text();
             if (text.startsWith("MF_PEER ")) {
                 if (handleControl(client, text.substring("MF_PEER ".length()))) { return; }
             } else {
-                observe(text, client);
+                observe(text, incoming.systemMessage(), client);
+                if (finished) { return; }
             }
         }
         if (client.player != null && client.level != null && !readySent) {
@@ -78,7 +96,15 @@ public final class PeerClient {
     private static boolean handleControl(Minecraft client, String control) {
         if (control.startsWith("COMMAND ")) {
             if (client.player == null) { fail(client, "command_before_connection"); return true; }
-            enqueueCommand(control.substring("COMMAND ".length()));
+            String command = control.substring("COMMAND ".length());
+            if ("mf memory list".equals(command)) {
+                if (memoryListRequested) { fail(client, "memory_list_requested_more_than_once"); return true; }
+                memoryListRequested = true;
+                memoryListExpected = -1;
+                memoryListCompleted = false;
+                MEMORY_LIST_ENTRY_IDS.clear();
+            }
+            enqueueCommand(command);
         } else if (control.startsWith("CHAT ")) {
             if (client.player == null) { fail(client, "chat_before_connection"); return true; }
             enqueueChat(control.substring("CHAT ".length()));
@@ -95,13 +121,21 @@ public final class PeerClient {
             if (parts.length != 3 || parts[1].length() > 16 || parts[2].length() > 96) {
                 fail(client, "invalid_watch_request"); return true;
             }
-            WATCHES.put(parts[1], new Watch(parts[2]));
+            WATCHES.put(parts[1], new Watch(parts[2], "fact".equals(parts[1])));
             report(client, "watch_ready_" + parts[1], "true");
         } else if (control.startsWith("REPORT_WATCH ")) {
             String id = control.substring("REPORT_WATCH ".length()).strip();
             Watch watch = WATCHES.get(id);
             if (watch == null) { fail(client, "unknown_watch_id"); return true; }
-            report(client, "watch_" + id, Integer.toString(watch.count));
+            if ("fact".equals(id)) {
+                if (!memoryListRequested || pendingMemoryListReport != null) {
+                    fail(client, "memory_list_report_out_of_sequence"); return true;
+                }
+                if (!memoryListCompleted) { pendingMemoryListReport = id; }
+                else { report(client, "watch_" + id, Integer.toString(watch.count)); }
+            } else {
+                report(client, "watch_" + id, Integer.toString(watch.count));
+            }
         } else if (control.startsWith("ASSERT ")) {
             String check = control.substring("ASSERT ".length()).strip();
             if (!check.matches("[A-Za-z0-9_-]{1,64}")) { fail(client, "invalid_server_assertion"); return true; }
@@ -145,11 +179,13 @@ public final class PeerClient {
         outboundTicks = OUTBOUND_INTERVAL_TICKS;
     }
 
-    private static void observe(String text, Minecraft client) {
+    private static void observe(String text, boolean systemMessage, Minecraft client) {
         // Never persist chat content. Watchers retain only bounded integer counts in memory.
         for (Watch watch : WATCHES.values()) {
-            if (!watch.needle.isEmpty() && text.contains(watch.needle) && watch.count < 999) { watch.count++; }
+            if ((!watch.systemOnly || systemMessage) && !watch.needle.isEmpty()
+                    && text.contains(watch.needle) && watch.count < 999) { watch.count++; }
         }
+        if (systemMessage) { observeMemoryList(text, client); }
         Matcher reply = PRIVATE_REPLY.matcher(text);
         if (reply.find()) {
             String nonce = reply.group(1).toLowerCase();
@@ -171,6 +207,46 @@ public final class PeerClient {
         if (text.contains("玩家 UUID 尚未加入这个共享会话")) { report(client, "denied_send", "true"); }
         if (text.contains("你已加入共享会话") && sessionId != null) { report(client, "joined", sessionId); }
         if (text.contains("你已离开共享会话") && sessionId != null) { report(client, "left", "true"); }
+    }
+
+    private static void observeMemoryList(String text, Minecraft client) {
+        if (!memoryListRequested || memoryListCompleted) { return; }
+        Matcher header = MEMORY_LIST_HEADER.matcher(text);
+        if (header.matches()) {
+            if (memoryListExpected >= 0) { fail(client, "duplicate_memory_list_header"); return; }
+            memoryListExpected = Integer.parseInt(header.group(1));
+            completeMemoryListIfReady(client);
+            return;
+        }
+        if ("长期记忆为空。".equals(text)) {
+            if (memoryListExpected >= 0) { fail(client, "duplicate_memory_list_header"); return; }
+            memoryListExpected = 0;
+            completeMemoryListIfReady(client);
+            return;
+        }
+        Matcher entry = MEMORY_LIST_ENTRY.matcher(text);
+        if (!entry.matches()) { return; }
+        if (memoryListExpected < 0) { fail(client, "memory_list_entry_before_header"); return; }
+        String id = entry.group(1).toLowerCase();
+        if (!validUuid(id)) { fail(client, "invalid_memory_list_entry_id"); return; }
+        MEMORY_LIST_ENTRY_IDS.add(id);
+        if (MEMORY_LIST_ENTRY_IDS.size() > memoryListExpected) {
+            fail(client, "memory_list_entry_count_exceeded_header"); return;
+        }
+        completeMemoryListIfReady(client);
+    }
+
+    private static void completeMemoryListIfReady(Minecraft client) {
+        if (memoryListExpected < 0 || MEMORY_LIST_ENTRY_IDS.size() != memoryListExpected) { return; }
+        memoryListCompleted = true;
+        System.out.println("MF_PEER_CLIENT ASSERT role=" + ROLE + " check=memory_list_completed");
+        if (pendingMemoryListReport != null) {
+            String id = pendingMemoryListReport;
+            pendingMemoryListReport = null;
+            Watch watch = WATCHES.get(id);
+            if (watch == null) { fail(client, "unknown_watch_id_after_memory_list"); return; }
+            report(client, "watch_" + id, Integer.toString(watch.count));
+        }
     }
 
     private static void report(Minecraft client, String key, String value) {

@@ -16,10 +16,10 @@ public final class ForgeAcceptanceClient {
         if (Boolean.getBoolean("mf.acceptance")) { ClientAcceptanceDispatch.tick(Minecraft.getInstance()); }
     }
     @SubscribeEvent
-    public static void message(ClientChatReceivedEvent event) { receive(event.getMessage().getString()); }
+    public static void message(ClientChatReceivedEvent event) { receive(event.getMessage().getString(), false); }
     @SubscribeEvent
-    public static void systemMessage(SystemMessageReceivedEvent event) { receive(event.getMessage().getString()); }
-    private static void receive(String text) {
-        if (Boolean.getBoolean("mf.acceptance")) { ClientAcceptanceDispatch.message(text); }
+    public static void systemMessage(SystemMessageReceivedEvent event) { receive(event.getMessage().getString(), true); }
+    private static void receive(String text, boolean systemMessage) {
+        if (Boolean.getBoolean("mf.acceptance")) { ClientAcceptanceDispatch.message(text, systemMessage); }
     }
 }

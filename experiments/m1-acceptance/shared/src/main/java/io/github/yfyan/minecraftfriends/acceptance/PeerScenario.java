@@ -53,7 +53,6 @@ public final class PeerScenario {
     private boolean aFactWatchRequested;
     private boolean aFactListRequested;
     private boolean aFactWatchReportRequested;
-    private int aFactListStart;
 
     private record Status(String provider, UUID worldId, UUID companionId, boolean companionActive,
                           boolean companionOnline, boolean memoryLoaded, long generation, int memoryCount,
@@ -372,10 +371,8 @@ public final class PeerScenario {
         if (!aFactListRequested) {
             command(a, "mf memory list");
             aFactListRequested = true;
-            aFactListStart = age;
             return;
         }
-        if (age - aFactListStart < 20) { return; }
         if (!aFactWatchReportRequested) {
             tell(a, "REPORT_WATCH fact");
             aFactWatchReportRequested = true;

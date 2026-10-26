@@ -22,4 +22,11 @@ public final class ClientAcceptanceDispatch {
             case NEGATIVE -> NegativeClient.message(text);
         }
     }
+    public static void message(String text, boolean systemMessage) {
+        if (AcceptanceMode.CURRENT == AcceptanceMode.PEER) {
+            PeerClient.message(text, systemMessage);
+        } else {
+            message(text);
+        }
+    }
 }

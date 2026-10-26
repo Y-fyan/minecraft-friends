@@ -10,7 +10,7 @@ public final class FabricAcceptanceClient implements ClientModInitializer {
     public void onInitializeClient() {
         if (!Boolean.getBoolean("mf.acceptance")) { return; }
         ClientTickEvents.END_CLIENT_TICK.register(ClientAcceptanceDispatch::tick);
-        ClientReceiveMessageEvents.GAME.register((message, overlay) -> ClientAcceptanceDispatch.message(message.getString()));
-        ClientReceiveMessageEvents.CHAT.register((message, signed, sender, type, time) -> ClientAcceptanceDispatch.message(message.getString()));
+        ClientReceiveMessageEvents.GAME.register((message, overlay) -> ClientAcceptanceDispatch.message(message.getString(), true));
+        ClientReceiveMessageEvents.CHAT.register((message, signed, sender, type, time) -> ClientAcceptanceDispatch.message(message.getString(), false));
     }
 }
