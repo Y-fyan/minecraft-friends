@@ -18,7 +18,7 @@ CHECKS = ('isolated_survival_map', 'physical_follow_over_obstacle', 'wait_does_n
           'stop_clears_movement', 'collection_requires_explicit_area',
           'eight_real_logs_delivered_without_duplication', 'outside_area_resource_untouched',
           'repeat_request_does_not_create_items', 'result')
-MARKER = re.compile(r'MF_M2_(?:SERVER [A-Za-z0-9_.$]+ [a-z0-9_]+ (?:PASS|FAIL)|CLIENT (?:COMMAND_SENT|PASS M2_PASS|FAIL [a-z0-9_]+)|METRIC [a-z0-9_= ]+)')
+MARKER = re.compile(r'MF_M2_(?:SERVER [A-Za-z0-9_.$]+ [a-z0-9_]+ (?:PASS|FAIL)|CLIENT (?:COMMAND_SENT|PASS M2_PASS|FAIL [a-z0-9_]+)|METRIC [-a-z0-9_= ]+)')
 ANSI = re.compile(r'\x1b\[[0-9;]*m')
 
 def sha(path):

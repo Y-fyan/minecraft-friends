@@ -2,6 +2,7 @@ package io.github.yfyan.minecraftfriends.acceptance;
 
 import com.mojang.brigadier.CommandDispatcher;
 import io.github.yfyan.minecraftfriends.companion.CompanionRuntime;
+import io.github.yfyan.minecraftfriends.action.ActionRuntime;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -65,6 +66,11 @@ public final class ActionsScenario {
                     last=bot.position(); maxStep=0; command("mf task follow"); next(2);
                 }
                 case 2 -> {
+                    if (age % 20 == 0) {
+                        var state = ActionRuntime.status(server,owner.getUUID()).state();
+                        System.out.println("MF_M2_METRIC phase=2 x_milli="+Math.round(bot.getX()*1000)+" z_milli="+Math.round(bot.getZ()*1000)+" state_"+state.name().toLowerCase(Locale.ROOT)+"=1");
+                        if (Set.of("FAILED","TIMED_OUT","CANCELLED").contains(state.name())) { fail("navigation_"+state.name().toLowerCase(Locale.ROOT)); return; }
+                    }
                     double step=bot.position().distanceTo(last); maxStep=Math.max(maxStep,step);last=bot.position();
                     if(maxStep>1.5) {fail("navigation_teleport_detected");return;}
                     if(age>30 && bot.distanceTo(owner)<4.5) {
