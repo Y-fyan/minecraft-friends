@@ -19,6 +19,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -128,6 +129,11 @@ public final class ActionRuntime {
                     || !owner.serverLevel().dimension().equals(ownerState.dimension)
                     || !companion.serverLevel().dimension().equals(ownerState.dimension)
                     || owner.distanceToSqr(companion) > (double) MAX_OWNER_DISTANCE * MAX_OWNER_DISTANCE) {
+                if (owner != null && ownerState.execution != null
+                        && ownerState.execution.request.type() == ActionType.COLLECT_OAK_LOGS
+                        && ownerState.execution.logsPicked > 0) {
+                    owner.sendSystemMessage(Component.literal("采集任务已取消；伙伴已拾取的橡木原木仍留在伙伴背包，未远距离转移。"));
+                }
                 cancelOwner(server, state, ownerId, ownerState);
                 state.owners.remove(ownerId);
                 continue;
@@ -168,6 +174,73 @@ public final class ActionRuntime {
         }
     }
 
+    /** Called only by the local companion's vanilla Player.take callback after actual item pickup. */
+    public static void onItemPickedUp(ServerPlayer companion, UUID itemEntityId, int amount,
+                                      int stackCountBeforePickup) {
+        if (amount <= 0 || !CompanionRuntime.isCompanion(companion)) {
+            return;
+        }
+        ServerState state = stateIfStarted(companion.server);
+        if (state == null) {
+            return;
+        }
+        CompanionData.Entry owner = CompanionRuntime.data(companion.server)
+                .findByCompanion(companion.getUUID()).orElse(null);
+        OwnerState ownerState = owner == null ? null : state.owners.get(owner.identity().ownerId());
+        Execution execution = ownerState == null ? null : ownerState.execution;
+        if (execution == null || execution.request.type() != ActionType.COLLECT_OAK_LOGS) {
+            return;
+        }
+        int expected = execution.pendingDrops.getOrDefault(itemEntityId, 0);
+        boolean directDrop = expected > 0;
+        if (!directDrop) {
+            int baseline = execution.dropCountsBefore.getOrDefault(itemEntityId, 0);
+            if (baseline > 0) {
+                int outstanding = execution.pendingDrops.values().stream().mapToInt(Integer::intValue).sum();
+                expected = Math.min(outstanding, Math.max(0, stackCountBeforePickup - baseline));
+            }
+        }
+        int eligible = Math.max(0, Math.min(execution.logsDestroyed,
+                execution.request.requestedCount()) - execution.logsPicked);
+        int credited = Math.min(Math.min(expected, amount), eligible);
+        if (credited <= 0) {
+            return;
+        }
+        execution.logsPicked += credited;
+        consumePendingDrop(execution, itemEntityId, directDrop, credited);
+        state.scheduler.updateProgress(execution.request.taskId(), execution.logsPicked, 0,
+                "伙伴已正常拾取 " + execution.logsPicked + "/" + execution.request.requestedCount());
+    }
+
+    private static void consumePendingDrop(Execution execution, UUID itemEntityId, boolean directDrop, int count) {
+        int remaining = count;
+        if (directDrop) {
+            int pending = execution.pendingDrops.getOrDefault(itemEntityId, 0);
+            int consumed = Math.min(pending, remaining);
+            if (pending == consumed) {
+                execution.pendingDrops.remove(itemEntityId);
+            } else {
+                execution.pendingDrops.put(itemEntityId, pending - consumed);
+            }
+            remaining -= consumed;
+        }
+        if (remaining > 0) {
+            for (UUID id : List.copyOf(execution.pendingDrops.keySet())) {
+                if (remaining == 0) {
+                    break;
+                }
+                int pending = execution.pendingDrops.getOrDefault(id, 0);
+                int consumed = Math.min(pending, remaining);
+                if (pending == consumed) {
+                    execution.pendingDrops.remove(id);
+                } else {
+                    execution.pendingDrops.put(id, pending - consumed);
+                }
+                remaining -= consumed;
+            }
+        }
+    }
+
     public static void onServerStopping(MinecraftServer server) {
         ServerState state = stateIfStarted(server);
         if (state == null) {
@@ -181,8 +254,31 @@ public final class ActionRuntime {
         }
     }
 
+    /** Handles only exact deterministic phrases from the owner's private addressed chat. */
+    public static boolean handleDeterministicIntent(ServerPlayer owner, String message) {
+        ActionPlan plan = ActionPhraseParser.parse(message).orElse(null);
+        if (plan == null) {
+            return false;
+        }
+        try {
+            switch (plan.type()) {
+                case STOP -> stopFor(owner);
+                case COLLECT_OAK_LOGS -> collectForOwner(owner, plan.count());
+                case FOLLOW, WAIT -> startFor(owner, plan.type());
+                case NONE -> { return false; }
+            }
+        } catch (CommandSyntaxException refused) {
+            owner.sendSystemMessage(Component.literal(refused.getMessage()));
+        }
+        return true;
+    }
+
     private static int start(CommandSourceStack source, ActionType type) throws CommandSyntaxException {
         ServerPlayer owner = source.getPlayerOrException();
+        return startFor(owner, type);
+    }
+
+    private static int startFor(ServerPlayer owner, ActionType type) throws CommandSyntaxException {
         CompanionData.Entry entry = requireLiveCompanion(owner);
         ServerState serverState = state(owner.server);
         OwnerState ownerState = ownerState(serverState, owner, entry.identity().companionId());
@@ -198,12 +294,16 @@ public final class ActionRuntime {
 
     private static int stop(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer owner = source.getPlayerOrException();
+        stopFor(owner);
+        return 1;
+    }
+
+    private static void stopFor(ServerPlayer owner) {
         ServerState serverState = stateIfStarted(owner.server);
         if (serverState != null) {
             cancelOwner(owner.server, serverState, owner.getUUID(), serverState.owners.get(owner.getUUID()));
         }
         owner.sendSystemMessage(Component.literal("已取消伙伴动作并清除输入。"));
-        return 1;
     }
 
     private static int sendStatus(CommandSourceStack source) throws CommandSyntaxException {
@@ -231,7 +331,7 @@ public final class ActionRuntime {
             throw commandError("区域必须在主人和伙伴 32 格范围内。", null);
         }
         ServerLevel level = owner.serverLevel();
-        if (!loaded(level, area)) {
+        if (!validAreaBounds(level, area) || !loaded(level, area)) {
             throw commandError("区域包含未加载区块；区域未授权。", null);
         }
         ServerState serverState = state(owner.server);
@@ -245,7 +345,10 @@ public final class ActionRuntime {
     }
 
     private static int collect(CommandSourceStack source, int count) throws CommandSyntaxException {
-        ServerPlayer owner = source.getPlayerOrException();
+        return collectForOwner(source.getPlayerOrException(), count);
+    }
+
+    private static int collectForOwner(ServerPlayer owner, int count) throws CommandSyntaxException {
         CompanionData.Entry entry = requireLiveCompanion(owner);
         ServerState serverState = state(owner.server);
         OwnerState ownerState = ownerState(serverState, owner, entry.identity().companionId());
@@ -254,7 +357,8 @@ public final class ActionRuntime {
             ownerState.area = null;
             throw commandError("请先在当前维度执行 /mf task area 选择一次性区域。", null);
         }
-        if (!loaded(owner.serverLevel(), ownerState.area)
+        if (!validAreaBounds(owner.serverLevel(), ownerState.area)
+                || !loaded(owner.serverLevel(), ownerState.area)
                 || !areaNear(owner, ownerState.area, MAX_AREA_DISTANCE)
                 || !areaNear(owner.server.getPlayerList().getPlayer(entry.identity().companionId()),
                 ownerState.area, MAX_AREA_DISTANCE)) {
@@ -356,14 +460,13 @@ public final class ActionRuntime {
         ActionRequest request = execution.request;
         BlockArea area = request.area();
         ServerLevel level = companion.serverLevel();
-        int observed = countOakLogs(companion);
-        if (observed > execution.lastObservedOakLogs) {
-            execution.logsPicked = Math.min(request.requestedCount(), execution.logsPicked
-                    + observed - execution.lastObservedOakLogs);
-        }
-        execution.lastObservedOakLogs = observed;
         state.scheduler.updateProgress(request.taskId(), execution.logsPicked, 0,
                 "已正常拾取 " + execution.logsPicked + "/" + request.requestedCount());
+
+        if (execution.returning) {
+            tickReturnToOwner(server, state, ownerState, owner, companion);
+            return;
+        }
 
         if (execution.elapsedTicks > COLLECTION_TIMEOUT_TICKS) {
             completeCollection(server, state, ownerState, owner, companion, TaskState.TIMED_OUT,
@@ -390,7 +493,8 @@ public final class ActionRuntime {
                         "掉落物未被伙伴正常拾取；按实际数量结算。");
                 return;
             }
-            ItemEntity item = nearestTaskDrop(companion, execution.pickupAnchor);
+            refreshMergedDropAliases(companion.serverLevel(), execution);
+            ItemEntity item = nearestTaskDrop(companion, execution.pickupAnchor, execution);
             if (item != null) {
                 navigate(server, state, ownerState, owner, companion, item.blockPosition(), 1);
             } else {
@@ -456,13 +560,13 @@ public final class ActionRuntime {
         }
         execution.miningPos = target.immutable();
         execution.miningDirection = Direction.UP;
-        execution.miningProgressPerTick = progressPerTick;
+        execution.miningProgress = 0.0F;
         execution.miningTicks = 0;
-        execution.requiredMiningTicks = Math.max(1, (int) Math.ceil(0.8 / progressPerTick));
+        execution.dropCountsBefore = oakDropCounts(level, target);
         companion.gameMode.handleBlockBreakAction(target, ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
                 execution.miningDirection, level.getMaxBuildHeight(), execution.nextSequence++);
         if (level.getBlockState(target).isAir()) {
-            recordMinedLog(server, state, ownerState, target);
+            recordMinedLog(server, state, ownerState, level, target);
         }
     }
 
@@ -482,17 +586,31 @@ public final class ActionRuntime {
             return;
         }
         if (level.getBlockState(target).isAir()) {
-            recordMinedLog(server, state, ownerState, target);
+            completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
+                    "挖掘结束前目标被其他变化移除；未计入本任务采集。");
             return;
         }
+        BlockState block = level.getBlockState(target);
+        if (!block.is(Blocks.OAK_LOG)) {
+            completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
+                    "挖掘目标已变化；未计入本任务采集。");
+            return;
+        }
+        float currentProgress = block.getDestroyProgress(companion, level, target);
+        if (currentProgress <= 0.0F) {
+            completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
+                    "当前生存工具无法继续挖掘该橡木原木。");
+            return;
+        }
+        execution.miningProgress += currentProgress;
         execution.miningTicks++;
-        if (execution.miningTicks < execution.requiredMiningTicks) {
+        if (execution.miningProgress < 1.0F) {
             return;
         }
         companion.gameMode.handleBlockBreakAction(target, ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
                 execution.miningDirection, level.getMaxBuildHeight(), execution.nextSequence++);
         if (level.getBlockState(target).isAir()) {
-            recordMinedLog(server, state, ownerState, target);
+            recordMinedLog(server, state, ownerState, level, target);
         } else {
             completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
                     "服务端未完成此次生存挖掘；未计入成功数量。");
@@ -500,11 +618,28 @@ public final class ActionRuntime {
     }
 
     private static void recordMinedLog(MinecraftServer server, ServerState state, OwnerState ownerState,
-                                       BlockPos target) {
+                                       ServerLevel level, BlockPos target) {
         Execution execution = ownerState.execution;
         execution.logsDestroyed++;
         execution.pickupAnchor = target.immutable();
         execution.pickupDeadlineTick = server.getTickCount() + PICKUP_TIMEOUT_TICKS;
+        execution.pendingDrops.clear();
+        int eligible = Math.max(0, Math.min(execution.logsDestroyed,
+                execution.request.requestedCount()) - execution.logsPicked);
+        Map<UUID, Integer> afterBreak = oakDropCounts(level, target);
+        for (Map.Entry<UUID, Integer> drop : afterBreak.entrySet()) {
+            if (eligible <= 0) {
+                break;
+            }
+            int added = Math.max(0, drop.getValue()
+                    - execution.dropCountsBefore.getOrDefault(drop.getKey(), 0));
+            int tracked = Math.min(added, eligible);
+            if (tracked > 0) {
+                execution.pendingDrops.put(drop.getKey(), tracked);
+                eligible -= tracked;
+            }
+        }
+        execution.dropCountsBefore = Map.of();
         execution.miningPos = null;
         execution.targetLog = null;
         execution.path = List.of();
@@ -520,6 +655,7 @@ public final class ActionRuntime {
                 || !CompanionRuntime.isCompanion(companion)
                 || !owner.serverLevel().dimension().equals(ownerState.dimension)
                 || !companion.serverLevel().dimension().equals(ownerState.dimension)
+                || !validAreaBounds(companion.serverLevel(), area)
                 || !areaNear(owner, area, MAX_AREA_DISTANCE)
                 || !areaNear(companion, area, MAX_AREA_DISTANCE)) {
             return false;
@@ -545,10 +681,48 @@ public final class ActionRuntime {
         return new AreaScan(null, true);
     }
 
-    private static ItemEntity nearestTaskDrop(ServerPlayer companion, BlockPos anchor) {
+    private static Map<UUID, Integer> oakDropCounts(ServerLevel level, BlockPos center) {
+        AABB bounds = new AABB(center.getX() - 2.0, center.getY() - 2.0, center.getZ() - 2.0,
+                center.getX() + 3.0, center.getY() + 3.0, center.getZ() + 3.0);
+        Map<UUID, Integer> counts = new HashMap<>();
+        for (ItemEntity entity : level.getEntitiesOfClass(ItemEntity.class, bounds,
+                item -> item.isAlive() && item.getItem().is(Items.OAK_LOG))) {
+            counts.put(entity.getUUID(), entity.getItem().getCount());
+        }
+        return counts;
+    }
+
+    private static void refreshMergedDropAliases(ServerLevel level, Execution execution) {
+        Map<UUID, Integer> current = oakDropCounts(level, execution.pickupAnchor);
+        int missingExpected = 0;
+        for (UUID id : List.copyOf(execution.pendingDrops.keySet())) {
+            if (!current.containsKey(id)) {
+                missingExpected += execution.pendingDrops.remove(id);
+            }
+        }
+        if (missingExpected <= 0) {
+            return;
+        }
+        AABB bounds = new AABB(execution.pickupAnchor.getX() - 2.0, execution.pickupAnchor.getY() - 2.0,
+                execution.pickupAnchor.getZ() - 2.0, execution.pickupAnchor.getX() + 3.0,
+                execution.pickupAnchor.getY() + 3.0, execution.pickupAnchor.getZ() + 3.0);
+        for (ItemEntity candidate : level.getEntitiesOfClass(ItemEntity.class, bounds,
+                item -> item.isAlive() && item.getItem().is(Items.OAK_LOG))) {
+            int before = execution.dropCountsBefore.getOrDefault(candidate.getUUID(), 0);
+            int added = Math.max(0, candidate.getItem().getCount() - before);
+            if (before > 0 && added == missingExpected
+                    && candidate.blockPosition().distSqr(execution.pickupAnchor) <= 4.0) {
+                execution.pendingDrops.put(candidate.getUUID(), missingExpected);
+                return;
+            }
+        }
+    }
+
+    private static ItemEntity nearestTaskDrop(ServerPlayer companion, BlockPos anchor, Execution execution) {
         return companion.serverLevel().getEntitiesOfClass(ItemEntity.class,
                         companion.getBoundingBox().inflate(12.0), entity -> entity.isAlive()
                                 && entity.getItem().is(Items.OAK_LOG)
+                                && execution.pendingDrops.containsKey(entity.getUUID())
                                 && entity.blockPosition().distSqr(anchor) <= 16.0)
                 .stream().min((left, right) -> Double.compare(
                         left.distanceToSqr(companion), right.distanceToSqr(companion))).orElse(null);
@@ -570,6 +744,87 @@ public final class ActionRuntime {
                                            String message) {
         Execution execution = ownerState.execution;
         if (execution == null) {
+            return;
+        }
+        if (execution.logsPicked == 0) {
+            TaskState result = requestedState == TaskState.SUCCEEDED ? TaskState.FAILED : requestedState;
+            finish(server, state, ownerState, result, 0, 0,
+                    message + " 实际拾取 0，交付 0/" + execution.request.requestedCount() + "。");
+            return;
+        }
+        if (!deliveryPairValid(ownerState, owner, companion, false)) {
+            finish(server, state, ownerState, TaskState.FAILED, execution.logsPicked, 0,
+                    message + " 无法安全返回主人；物品仍留在伙伴背包，交付 0。");
+            return;
+        }
+        if (owner.distanceToSqr(companion) > 9.0) {
+            if (execution.miningPos != null) {
+                companion.gameMode.handleBlockBreakAction(execution.miningPos,
+                        ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK,
+                        execution.miningDirection, companion.serverLevel().getMaxBuildHeight(),
+                        execution.nextSequence++);
+                execution.miningPos = null;
+            }
+            execution.returning = true;
+            execution.returnState = requestedState;
+            execution.returnMessage = message;
+            execution.returnDeadlineTick = server.getTickCount() + 20L * 60L;
+            execution.path = List.of();
+            execution.navigationTarget = null;
+            execution.noPathTicks = 0;
+            state.scheduler.updateProgress(execution.request.taskId(), execution.logsPicked, 0,
+                    "返回主人附近交付实际拾取的橡木原木。");
+            return;
+        }
+        settleCollectionAtOwner(server, state, ownerState, owner, companion, requestedState, message);
+    }
+
+    private static void tickReturnToOwner(MinecraftServer server, ServerState state, OwnerState ownerState,
+                                          ServerPlayer owner, ServerPlayer companion) {
+        Execution execution = ownerState.execution;
+        if (server.getTickCount() > execution.returnDeadlineTick) {
+            finish(server, state, ownerState, TaskState.FAILED, execution.logsPicked, 0,
+                    execution.returnMessage + " 返回主人超时；物品仍留在伙伴背包，交付 0。");
+            return;
+        }
+        if (!deliveryPairValid(ownerState, owner, companion, false)) {
+            finish(server, state, ownerState, TaskState.FAILED, execution.logsPicked, 0,
+                    execution.returnMessage + " 主人或伙伴状态变化，无法交付；物品仍留在伙伴背包，交付 0。");
+            return;
+        }
+        if (owner.distanceToSqr(companion) <= 9.0) {
+            settleCollectionAtOwner(server, state, ownerState, owner, companion,
+                    execution.returnState, execution.returnMessage);
+            return;
+        }
+        navigate(server, state, ownerState, owner, companion, owner.blockPosition(), 1);
+    }
+
+    private static boolean deliveryPairValid(OwnerState ownerState, ServerPlayer owner,
+                                             ServerPlayer companion, boolean requireClose) {
+        if (!CompanionRuntime.isEnabled() || !owner.isAlive() || !companion.isAlive()
+                || !CompanionRuntime.isCompanion(companion)
+                || owner.server.getPlayerList().getPlayer(owner.getUUID()) != owner
+                || !owner.serverLevel().dimension().equals(ownerState.dimension)
+                || !companion.serverLevel().dimension().equals(ownerState.dimension)) {
+            return false;
+        }
+        CompanionData.Entry entry = CompanionRuntime.data(owner.server).find(owner.getUUID()).orElse(null);
+        return entry != null && entry.active()
+                && entry.identity().companionId().equals(companion.getUUID())
+                && (!requireClose || owner.distanceToSqr(companion) <= 9.0);
+    }
+
+    private static void settleCollectionAtOwner(MinecraftServer server, ServerState state, OwnerState ownerState,
+                                                ServerPlayer owner, ServerPlayer companion,
+                                                TaskState requestedState, String message) {
+        Execution execution = ownerState.execution;
+        if (execution == null) {
+            return;
+        }
+        if (!deliveryPairValid(ownerState, owner, companion, true)) {
+            finish(server, state, ownerState, TaskState.FAILED, execution.logsPicked, 0,
+                    message + " 交付前距离或归属复核失败；物品仍留在伙伴背包，交付 0。");
             return;
         }
         int desired = Math.min(execution.logsPicked, execution.request.requestedCount());
@@ -691,7 +946,10 @@ public final class ActionRuntime {
 
     private static void failCurrentAction(MinecraftServer server, ServerState state, OwnerState ownerState,
                                           ServerPlayer owner, ServerPlayer companion, String message) {
-        if (ownerState.execution != null
+        if (ownerState.execution != null && ownerState.execution.returning) {
+            finish(server, state, ownerState, TaskState.FAILED, ownerState.execution.logsPicked, 0,
+                    ownerState.execution.returnMessage + " 返回路径受阻；物品仍留在伙伴背包，交付 0。 " + message);
+        } else if (ownerState.execution != null
                 && ownerState.execution.request.type() == ActionType.COLLECT_OAK_LOGS) {
             completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED, message);
         } else {
@@ -784,6 +1042,21 @@ public final class ActionRuntime {
         return true;
     }
 
+    private static boolean validAreaBounds(ServerLevel level, BlockArea area) {
+        if (area.minY() < level.getMinBuildHeight() || area.maxY() >= level.getMaxBuildHeight()) {
+            return false;
+        }
+        for (int x : new int[]{area.minX(), area.maxX()}) {
+            for (int z : new int[]{area.minZ(), area.maxZ()}) {
+                if (!level.getWorldBorder().isWithinBounds(new BlockPos(x, area.minY(), z))
+                        || !level.getWorldBorder().isWithinBounds(new BlockPos(x, area.maxY(), z))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     private static boolean areaNear(ServerPlayer player, BlockArea area, int maxDistance) {
         if (player == null) {
             return false;
@@ -849,18 +1122,21 @@ public final class ActionRuntime {
         private int noPathTicks;
         private int stuckTicks;
         private int nextSequence;
-        private int startingOakLogs;
-        private int lastObservedOakLogs;
         private int logsPicked;
         private int logsDestroyed;
         private int delivered;
         private int miningTicks;
-        private int requiredMiningTicks;
-        private float miningProgressPerTick;
+        private float miningProgress;
+        private final Map<UUID, Integer> pendingDrops = new HashMap<>();
+        private Map<UUID, Integer> dropCountsBefore = Map.of();
         private BlockPos navigationTarget;
         private BlockPos targetLog;
         private BlockPos pickupAnchor;
         private long pickupDeadlineTick;
+        private boolean returning;
+        private TaskState returnState;
+        private String returnMessage;
+        private long returnDeadlineTick;
         private List<BlockPos> path = List.of();
         private BlockPos miningPos;
         private net.minecraft.core.Direction miningDirection = net.minecraft.core.Direction.UP;
@@ -870,8 +1146,6 @@ public final class ActionRuntime {
             this.lastRepathTick = startTick - 10L;
             this.lastX = companion.getX();
             this.lastZ = companion.getZ();
-            this.startingOakLogs = countOakLogs(companion);
-            this.lastObservedOakLogs = startingOakLogs;
         }
     }
 

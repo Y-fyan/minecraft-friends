@@ -431,7 +431,7 @@ public final class CompanionRuntime {
         }
         ServerLevel level = owner != null ? owner.serverLevel() : server.overworld();
         GameProfile profile = new GameProfile(companionId, entry.identity().name());
-        ServerPlayer companion = new ServerPlayer(server, level, profile, ClientInformation.createDefault());
+        ServerPlayer companion = new CompanionServerPlayer(server, level, profile, ClientInformation.createDefault());
         CompanionConnection connection = new CompanionConnection();
         markCompanion(companion);
         try {

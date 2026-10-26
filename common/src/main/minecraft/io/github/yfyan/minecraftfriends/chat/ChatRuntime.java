@@ -7,6 +7,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.yfyan.minecraftfriends.companion.CompanionData;
 import io.github.yfyan.minecraftfriends.companion.CompanionIdentity;
 import io.github.yfyan.minecraftfriends.companion.CompanionRuntime;
+import io.github.yfyan.minecraftfriends.action.ActionRuntime;
 import io.github.yfyan.minecraftfriends.config.ConfigLoader;
 import io.github.yfyan.minecraftfriends.config.ModConfig;
 import io.github.yfyan.minecraftfriends.config.ProviderMode;
@@ -310,6 +311,9 @@ public final class ChatRuntime {
         if (state.worldId == null) {
             CompanionData.Entry owned = data.find(player.getUUID()).orElse(null);
             if (owned != null && sameName(owned.identity().name(), address.companionName())) {
+                if (ActionRuntime.handleDeterministicIntent(player, address.message())) {
+                    return true;
+                }
                 player.sendSystemMessage(Component.literal("聊天功能当前已关闭：" + state.disabledReason + "。"));
                 return true;
             }
@@ -324,6 +328,11 @@ public final class ChatRuntime {
             return true;
         }
         Target target = matches.getFirst();
+        if (target.conversation() instanceof ChatSessionService.PrivateConversation
+                && target.entry().identity().ownerId().equals(player.getUUID())
+                && ActionRuntime.handleDeterministicIntent(player, address.message())) {
+            return true;
+        }
         if (!state.chatEnabled || state.sessions == null) {
             player.sendSystemMessage(Component.literal("聊天功能当前已关闭：" + state.disabledReason + "。"));
             return true;
