@@ -11,6 +11,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod("mf_m1_acceptance")
 public final class ForgeAcceptance {
     public ForgeAcceptance() {
+        System.out.println("MF_ACCEPTANCE_FORGE_INIT enabled=" + Boolean.getBoolean("mf.acceptance"));
         if (Boolean.getBoolean("mf.acceptance")) { MinecraftForge.EVENT_BUS.register(this); }
     }
     @SubscribeEvent

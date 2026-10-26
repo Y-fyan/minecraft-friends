@@ -89,7 +89,7 @@ def run():
     options_file = client_run / 'options.txt'
     if not options_file.exists():
         options_file.write_text('onboardAccessibility:false\nmaxFps:30\n'
-                               'renderDistance:4\nsimulationDistance:4\nfullscreen:false\n'
+                               'renderDistance:4\nsimulationDistance:5\nfullscreen:false\n'
                                'tutorialStep:none\nskipMultiplayerWarning:true\nsoundCategory_master:0.0\n')
     evidence = HERE / 'build/evidence' / f'{options.target}-{time.time_ns()}'
     evidence.mkdir(parents=True)

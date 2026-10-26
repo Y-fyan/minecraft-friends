@@ -27,6 +27,7 @@ public final class AcceptanceClient {
     private static boolean reopening;
     private static boolean lifecyclePassed;
     private static boolean finished;
+    private static int diagnosticTicks;
     private static int waiting;
 
     public static void message(String text) {
@@ -36,6 +37,11 @@ public final class AcceptanceClient {
     }
     public static void tick(Minecraft client) {
         if (finished) { return; }
+        if (++diagnosticTicks % 100 == 1) {
+            System.out.println("MF_ACCEPTANCE_SCREEN "
+                    + (client.screen == null ? "none" : client.screen.getClass().getName())
+                    + " overlay=" + (client.getOverlay() == null ? "none" : client.getOverlay().getClass().getName()));
+        }
         String text;
         while ((text = MESSAGES.poll()) != null) {
             if (text.startsWith("MF_ACCEPTANCE EXPECT ")) {
