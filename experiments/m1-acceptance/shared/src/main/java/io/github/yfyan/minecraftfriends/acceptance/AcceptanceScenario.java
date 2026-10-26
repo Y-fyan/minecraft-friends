@@ -60,6 +60,7 @@ public final class AcceptanceScenario {
     private int age;
     private int phase;
     private int phaseStart;
+    private int memoryCountBeforeRemember;
     private boolean finished;
 
     private AcceptanceScenario(MinecraftServer server) { this.server = server; }
@@ -176,12 +177,16 @@ public final class AcceptanceScenario {
                 case 8 -> {
                     if (!"验收主人".equals(chat().address())) { return; }
                     check(true, "private_address_saved");
+                    memoryCountBeforeRemember = chat().memoryCount();
+                    expectedNonce = UUID.randomUUID();
+                    acknowledgedNonce = null;
+                    owner.sendSystemMessage(Component.literal("MF_ACCEPTANCE EXPECT_SAVE " + expectedNonce));
                     command("mf memory remember MF_PRIVATE_FACT");
                     next();
                 }
                 case 9 -> {
                     ChatSnapshot status = chat();
-                    if (status.memoryCount() < 1 || !idle(status)) { return; }
+                    if (!acknowledged() || status.memoryCount() <= memoryCountBeforeRemember || !idle(status)) { return; }
                     check(true, "private_memory_saved");
                     request("PRIVATE", false);
                     next();

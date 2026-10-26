@@ -23,6 +23,7 @@ public final class AcceptanceClient {
     private static final String WORLD = "mf-m1-acceptance-" + UUID.randomUUID();
     private static final String SERVER = System.getProperty("mf.acceptance.server", "");
     private static String expectedNonce;
+    private static String expectedSaveNonce;
     private static boolean started;
     private static boolean reopening;
     private static boolean lifecyclePassed;
@@ -31,7 +32,8 @@ public final class AcceptanceClient {
     private static int waiting;
 
     public static void message(String text) {
-        if (text.startsWith("MF_ACCEPTANCE ") || text.startsWith("MF_M1Bot：")) {
+        if (text.startsWith("MF_ACCEPTANCE ") || text.startsWith("MF_M1Bot：")
+                || text.equals("已保存这条明确偏好。")) {
             if (MESSAGES.size() < 128) { MESSAGES.add(text); }
         }
     }
@@ -44,7 +46,15 @@ public final class AcceptanceClient {
         }
         String text;
         while ((text = MESSAGES.poll()) != null) {
-            if (text.startsWith("MF_ACCEPTANCE EXPECT ")) {
+            if (text.startsWith("MF_ACCEPTANCE EXPECT_SAVE ")) {
+                String nonce = text.substring("MF_ACCEPTANCE EXPECT_SAVE ".length());
+                try { expectedSaveNonce = UUID.fromString(nonce).toString(); }
+                catch (IllegalArgumentException invalid) { fail(client, "invalid_save_nonce"); return; }
+            } else if (expectedSaveNonce != null && text.equals("已保存这条明确偏好。")) {
+                if (client.player == null) { fail(client, "save_without_player"); return; }
+                client.player.connection.sendCommand("mfacceptance ack " + expectedSaveNonce);
+                expectedSaveNonce = null;
+            } else if (text.startsWith("MF_ACCEPTANCE EXPECT ")) {
                 String nonce = text.substring("MF_ACCEPTANCE EXPECT ".length());
                 try { expectedNonce = UUID.fromString(nonce).toString(); }
                 catch (IllegalArgumentException invalid) { fail(client, "invalid_expected_nonce"); return; }
