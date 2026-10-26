@@ -3,6 +3,7 @@ package io.github.yfyan.minecraftfriends.chat;
 import io.github.yfyan.minecraftfriends.model.ChatMessage;
 import io.github.yfyan.minecraftfriends.model.ChatRole;
 import io.github.yfyan.minecraftfriends.model.ModelProvider;
+import io.github.yfyan.minecraftfriends.model.ModelCallException;
 import io.github.yfyan.minecraftfriends.model.ModelRequest;
 import io.github.yfyan.minecraftfriends.model.ModelResponse;
 import org.junit.jupiter.api.AfterEach;
@@ -14,12 +15,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ChatSessionServiceTest {
@@ -49,6 +52,39 @@ class ChatSessionServiceTest {
         fixture.provider.completeNext("清空后的迟到回复");
         fixture.drainServerTasks();
         assertTrue(fixture.replies.isEmpty());
+        assertTrue(fixture.failures.isEmpty());
+    }
+
+    @Test
+    void wrappedModelFailureCategoryReachesListenerWithoutRetainingExceptionText() {
+        Fixture fixture = new Fixture(ChatSessionService.Limits.defaults());
+        ChatSessionService.PrivateConversation conversation = privateConversation(UUID.randomUUID(), UUID.randomUUID());
+        fixture.service.submit(conversation, conversation.ownerId(), "认证失败测试");
+
+        fixture.provider.failNext(new CompletionException("sensitive wrapper text",
+                new IllegalStateException("sensitive nested text",
+                        new ModelCallException(ModelCallException.Category.AUTHENTICATION))));
+        fixture.drainServerTasks();
+
+        ChatSessionService.Failure failure = fixture.failures.getFirst();
+        assertEquals(ChatSessionService.FailureReason.PROVIDER, failure.reason());
+        assertEquals(ModelCallException.Category.AUTHENTICATION, failure.modelCategory());
+        assertFalse(failure.toString().contains("sensitive"));
+    }
+
+    @Test
+    void unknownProviderFailureDoesNotExposeOriginalMessage() {
+        Fixture fixture = new Fixture(ChatSessionService.Limits.defaults());
+        ChatSessionService.PrivateConversation conversation = privateConversation(UUID.randomUUID(), UUID.randomUUID());
+        fixture.service.submit(conversation, conversation.ownerId(), "未知失败测试");
+
+        fixture.provider.failNext(new IllegalStateException("sensitive provider detail"));
+        fixture.drainServerTasks();
+
+        ChatSessionService.Failure failure = fixture.failures.getFirst();
+        assertEquals(ChatSessionService.FailureReason.PROVIDER, failure.reason());
+        assertNull(failure.modelCategory());
+        assertFalse(failure.toString().contains("sensitive provider detail"));
     }
 
     @Test
@@ -239,6 +275,7 @@ class ChatSessionServiceTest {
         private final ManualProvider provider = new ManualProvider();
         private final Queue<Runnable> serverTasks = new ArrayDeque<>();
         private final List<ChatSessionService.Reply> replies = new ArrayList<>();
+        private final List<ChatSessionService.Failure> failures = new ArrayList<>();
         private final ChatSessionService service;
 
         private Fixture(ChatSessionService.Limits limits) {
@@ -258,6 +295,7 @@ class ChatSessionServiceTest {
 
                         @Override
                         public void onFailure(ChatSessionService.Failure failure) {
+                            failures.add(failure);
                         }
                     },
                     hooks,
@@ -293,6 +331,10 @@ class ChatSessionServiceTest {
 
         private synchronized void completeNext(String text) {
             futures.remove().complete(new ModelResponse(text));
+        }
+
+        private synchronized void failNext(Throwable failure) {
+            futures.remove().completeExceptionally(failure);
         }
     }
 

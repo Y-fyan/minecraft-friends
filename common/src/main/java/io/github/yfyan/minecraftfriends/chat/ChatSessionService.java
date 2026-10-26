@@ -2,6 +2,7 @@ package io.github.yfyan.minecraftfriends.chat;
 
 import io.github.yfyan.minecraftfriends.model.ChatMessage;
 import io.github.yfyan.minecraftfriends.model.ChatRole;
+import io.github.yfyan.minecraftfriends.model.ModelCallException;
 import io.github.yfyan.minecraftfriends.model.ModelProvider;
 import io.github.yfyan.minecraftfriends.model.ModelRequest;
 import io.github.yfyan.minecraftfriends.model.ModelResponse;
@@ -692,7 +693,9 @@ public final class ChatSessionService implements AutoCloseable {
         session.active = null;
         if (error != null) {
             removeHistoryMessage(session, requestId);
-            listener.onFailure(new Failure(conversation, turn.speakerId, requestId, classify(error)));
+            FailureClassification classification = classify(error);
+            listener.onFailure(new Failure(conversation, turn.speakerId, requestId,
+                    classification.reason(), classification.modelCategory()));
         } else if (response == null || response.content().isBlank()) {
             removeHistoryMessage(session, requestId);
             listener.onFailure(new Failure(conversation, turn.speakerId, requestId, FailureReason.EMPTY_RESPONSE));
@@ -733,14 +736,22 @@ public final class ChatSessionService implements AutoCloseable {
         pump(session);
     }
 
-    private static FailureReason classify(Throwable error) {
+    private static FailureClassification classify(Throwable error) {
+        Set<Throwable> visited = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         Throwable cause = error;
-        while (cause.getCause() != null && cause != cause.getCause()) {
+        while (cause != null && visited.add(cause)) {
+            if (cause instanceof ModelCallException modelFailure) {
+                ModelCallException.Category category = modelFailure.category();
+                return new FailureClassification(
+                        category == ModelCallException.Category.TIMEOUT ? FailureReason.TIMEOUT : FailureReason.PROVIDER,
+                        category);
+            }
+            if (cause instanceof java.util.concurrent.TimeoutException) {
+                return new FailureClassification(FailureReason.TIMEOUT, null);
+            }
             cause = cause.getCause();
         }
-        return cause instanceof java.util.concurrent.TimeoutException
-                ? FailureReason.TIMEOUT
-                : FailureReason.PROVIDER;
+        return new FailureClassification(FailureReason.PROVIDER, null);
     }
 
     private void invalidateActive(Session session) {
@@ -899,7 +910,19 @@ public final class ChatSessionService implements AutoCloseable {
         }
     }
 
-    public record Failure(ConversationRef conversation, UUID speakerId, UUID requestId, FailureReason reason) {
+    public record Failure(
+            ConversationRef conversation,
+            UUID speakerId,
+            UUID requestId,
+            FailureReason reason,
+            ModelCallException.Category modelCategory
+    ) {
+        public Failure(ConversationRef conversation, UUID speakerId, UUID requestId, FailureReason reason) {
+            this(conversation, speakerId, requestId, reason, null);
+        }
+    }
+
+    private record FailureClassification(FailureReason reason, ModelCallException.Category modelCategory) {
     }
 
     public record HookContext(List<ChatMessage> messages, Object state) {

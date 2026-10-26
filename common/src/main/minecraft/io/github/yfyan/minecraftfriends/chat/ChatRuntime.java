@@ -1271,11 +1271,15 @@ public final class ChatRuntime {
                 return;
             }
             String message = switch (failure.reason()) {
-                case TIMEOUT -> "伙伴思考超时，请稍后再试。";
+                case TIMEOUT -> failure.modelCategory() == null
+                        ? "伙伴思考超时，请稍后再试。"
+                        : failure.modelCategory().userMessage();
                 case BUSY -> "聊天服务当前繁忙，请稍后再试。";
                 case EMPTY_RESPONSE -> "伙伴暂时没有生成可用回复，请重试。";
                 case CONTEXT_HOOK -> "伙伴上下文暂时不可用，请稍后重试。";
-                case PROVIDER -> "模型暂时无法回复，请检查模型配置。";
+                case PROVIDER -> failure.modelCategory() == null
+                        ? "模型暂时无法回复，请检查模型配置。"
+                        : failure.modelCategory().userMessage();
             };
             player.sendSystemMessage(Component.literal(message));
         }

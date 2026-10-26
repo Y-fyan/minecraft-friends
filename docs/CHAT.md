@@ -50,6 +50,8 @@
 
 消息通过 `ModelProvider.complete(ModelRequest)` 异步提交到有界后台池；成功/失败回调统一经 `server.execute` 回到服务端线程，再复核运行时、会话代次、伙伴和接收成员。默认模型配置最多 24 条消息/12,000 字符，运行时为系统提示保留预算，并限制历史及附加上下文；每会话至多 1 个在途请求、4 条排队消息、512 字符输入、1,000 字符回复；全服务最多 128 个会话，每玩家每 10 秒最多 8 条。超限有中文反馈。
 
+模型失败仅把安全的 `ModelCallException.Category` 传到聊天提示，并使用该类别的固定中文文案；未知错误统一提示模型暂时无法回复，不显示异常信息。取消、清空或成员退出后，旧请求结果失效且不会再提示。
+
 ## 身份、记忆与线程
 
 每个世界的 UUID 独立保存在 `data/minecraft_friends_chat_world.uuid`，首次建立后随世界存档保存；会话和记忆按 `(world UUID, owner UUID, companion UUID)` 隔离，不使用 seed、临时进程 UUID 或目录名计算身份。已有身份文件必须是规范 UUID；若损坏或不可读取，运行时关闭聊天/记忆功能，保留原文件、不创建替代 UUID，也不会踢出玩家。长期记忆位于 `data/memory/<world UUID>/<owner UUID>/<companion UUID>/memory.properties`。
