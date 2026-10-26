@@ -426,7 +426,7 @@ public final class EventsClient {
             return null;
         }
         String tail = command.substring(prefix.length());
-        if (!tail.startsWith(suffix) || tail.length() != 36 + suffix.length()) {
+        if (!tail.endsWith(suffix) || tail.length() != 36 + suffix.length()) {
             return null;
         }
         String nonce = tail.substring(0, 36);
