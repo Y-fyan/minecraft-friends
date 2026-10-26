@@ -37,6 +37,14 @@ def run():
     production = ROOT / 'build/artifacts' / f'minecraft-friends-{loader}-1.21.1-0.1.0-SNAPSHOT.jar'
     if not production.is_file():
         parser.error('first build the production project with checkAll')
+    client_run = HERE / loader / 'build/run/client'
+    client_run.mkdir(parents=True, exist_ok=True)
+    options_file = client_run / 'options.txt'
+    if not options_file.exists():
+        options_file.write_text('onboardAccessibility:false\nmaxFps:30\n'
+                                'renderDistance:4\nsimulationDistance:4\n'
+                                'fullscreen:false\ntutorialStep:none\n'
+                                'skipMultiplayerWarning:true\nsoundCategory_master:0.0\n')
     evidence = HERE / 'build/evidence' / f'{options.target}-{time.time_ns()}'
     evidence.mkdir(parents=True)
     command = [str(ROOT / 'experiments/player-control/gradlew'), '-p', str(HERE),
@@ -51,6 +59,7 @@ def run():
     environment = dict(os.environ)
     environment['LIBGL_ALWAYS_SOFTWARE'] = 'true'
     environment['__GLX_VENDOR_LIBRARY_NAME'] = 'mesa'
+    environment['ALSOFT_DRIVERS'] = 'null'
     log_path = evidence / 'full.log'
     started = time.monotonic()
     timed_out = False
