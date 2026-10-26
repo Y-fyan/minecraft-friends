@@ -22,6 +22,12 @@ EVENTS = {
 }
 EVENT_PREFIX = '已确认的游戏事件：'
 EVENT_SUFFIX = '。请简短、自然地向主人问候，并明确你是 AI 伙伴。'
+PREFERENCE_LABEL = '用户明确偏好：'
+MEMORY_EVENT_LABEL = '已验证游戏事件：'
+RETAINED_FACTS = (PREFERENCE_LABEL + 'MF_KEEP_FACT',
+                  MEMORY_EVENT_LABEL + EVENTS['FIRST_MEETING'],
+                  MEMORY_EVENT_LABEL + EVENTS['INJURED'],
+                  MEMORY_EVENT_LABEL + EVENTS['REJOIN'])
 PROBE = re.compile(r'^MF_EVENTS_DELETE_PROBE:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\s|$)')
 EVENT_REPLY = ' | 协议模拟，非真实模型。你好，我是 AI 伙伴。'
 
@@ -120,11 +126,8 @@ class ProtocolState:
         if 'MF_DELETE_FACT' in all_context:
             self.record('DELETE_PROBE', 'deleted_fact_present')
             return 400, '已删除的事实仍出现在模型上下文。'
-        retained = ('已保存的PREFERENCE：MF_KEEP_FACT',
-                    '已保存的EVENT：' + EVENTS['FIRST_MEETING'],
-                    '已保存的EVENT：' + EVENTS['INJURED'],
-                    '已保存的EVENT：' + EVENTS['REJOIN'])
-        if any(value not in all_context for value in retained):
+        system_context = '\n'.join(systems)
+        if any(value not in system_context for value in RETAINED_FACTS):
             self.record('DELETE_PROBE', 'retained_memories_missing')
             return 400, '删除后应保留的记忆未出现在模型上下文。'
         self.record('DELETE_PROBE')
@@ -227,15 +230,23 @@ class ProtocolFixtureTests(unittest.TestCase):
         self.assertEqual(self.state.snapshot()['failures']['unmarked_request'], 1)
 
     def test_delete_probe_requires_retained_and_deleted_facts(self):
-        messages = [{'role': 'system', 'content': '已保存的PREFERENCE：MF_KEEP_FACT'}]
-        messages += [{'role': 'system', 'content': '已保存的EVENT：' + value} for value in EVENTS.values()]
-        messages.append({'role': 'user', 'content': 'MF_EVENTS_DELETE_PROBE:00000000-0000-0000-0000-000000000000 测试'})
+        probe = {'role': 'user',
+                 'content': 'MF_EVENTS_DELETE_PROBE:00000000-0000-0000-0000-000000000000 测试'}
+        messages = [{'role': 'system', 'content': value} for value in RETAINED_FACTS]
+        messages.append(probe)
         status, _ = self.state.validate(self.body(messages))
         self.assertEqual(status, 200)
-        messages[0]['content'] = '已保存的PREFERENCE：MF_KEEP_FACT；MF_DELETE_FACT'
-        status, _ = self.state.validate(self.body(messages))
+        for missing_index, missing_fact in enumerate(RETAINED_FACTS):
+            incomplete = [{'role': 'system', 'content': fact}
+                          for index, fact in enumerate(RETAINED_FACTS) if index != missing_index]
+            incomplete.extend([{'role': 'user', 'content': missing_fact}, probe])
+            status, _ = self.state.validate(self.body(incomplete))
+            self.assertEqual(status, 400)
+        with_deleted = [*messages[:-1], {'role': 'user', 'content': 'MF_DELETE_FACT'}, probe]
+        status, _ = self.state.validate(self.body(with_deleted))
         self.assertEqual(status, 400)
         self.assertEqual(self.state.snapshot()['failures']['deleted_fact_present'], 1)
+        self.assertEqual(self.state.snapshot()['failures']['retained_memories_missing'], 4)
 
     def test_rejects_auth_and_oversized_bodies(self):
         valid = self.body([{'role': 'user', 'content': 'unmarked'}])
