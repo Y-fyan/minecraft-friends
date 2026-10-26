@@ -48,8 +48,11 @@ public final class M1LifecycleBridge {
             for (Map.Entry<UUID, DamageSnapshot> entry : pending.entrySet()) {
                 DamageSnapshot before = entry.getValue();
                 ServerPlayer current = server.getPlayerList().getPlayer(entry.getKey());
+                int elapsedTicks = tick - before.tick();
                 // A respawn/reconnect with the same UUID is a different entity, not this hit.
-                if (before.tick() == tick && current == before.player()
+                // Network tasks and later END-tick listeners can damage a player after
+                // this observer ran; the next tick must still consume that real hit.
+                if (elapsedTicks >= 0 && elapsedTicks <= 1 && current == before.player()
                         && current.isAlive() && !current.isRemoved() && current.getHealth() < before.health()) {
                     ChatRuntime.onCompanionInjured(current);
                 }
