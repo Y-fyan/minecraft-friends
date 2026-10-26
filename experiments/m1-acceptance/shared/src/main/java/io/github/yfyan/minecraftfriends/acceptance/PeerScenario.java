@@ -19,6 +19,7 @@ import java.util.UUID;
 
 /** Server-side coordinator for two real offline development clients. */
 public final class PeerScenario {
+    private static final int CLIENT_STARTUP_TIMEOUT_TICKS = 6_000;
     private static final String A_NAME = "MFAcceptA";
     private static final String B_NAME = "MFAcceptB";
     private static final String A_ADDRESS = "MF_A_ADDRESS";
@@ -111,7 +112,8 @@ public final class PeerScenario {
     private void step() {
         if (finished) { return; }
         age++;
-        if (age - phaseStart > 1_200) { fail("phase_timeout_" + phase); return; }
+        int phaseTimeout = phase == 0 ? CLIENT_STARTUP_TIMEOUT_TICKS : 1_200;
+        if (age - phaseStart > phaseTimeout) { fail("phase_timeout_" + phase); return; }
         try {
             switch (phase) {
                 case 0 -> connectBoth();
@@ -296,6 +298,7 @@ public final class PeerScenario {
         afterLeaveNonce = UUID.fromString(nonce());
         afterLeaveText = "MF_PEER_SHARED_AFTER_LEAVE:" + afterLeaveNonce;
         expect(afterLeaveNonce.toString(), Set.of(a.getUUID()));
+        tell(a, "EXPECT " + afterLeaveNonce);
         tell(b, "WATCH echo " + "MF_PEER_SHARED_AFTER_LEAVE");
         tell(b, "WATCH reply " + afterLeaveNonce);
         advance();

@@ -314,11 +314,10 @@ def main():
 
     try:
         launch('a')
-        if wait_until(lambda: 'a' in client_ready):
-            launch('b')
-            if wait_until(lambda: 'b' in client_ready):
-                wait_until(lambda: client_pass == {'a', 'b'}
-                           and all(process.poll() is not None for process in clients.values()))
+        launch('b')
+        if wait_until(lambda: client_ready == {'a', 'b'}):
+            wait_until(lambda: client_pass == {'a', 'b'}
+                       and all(process.poll() is not None for process in clients.values()))
     except (OSError, ValueError) as error:
         launch_error = type(error).__name__
     finally:
