@@ -13,8 +13,9 @@
 | Fabric Loom | 1.7.4 | Fabric Gradle 插件 | MIT | [Fabric Loom](https://github.com/FabricMC/fabric-loom) |
 | Minecraft Forge | 52.1.20 | Forge 运行与入口 | LGPL-2.1，仓库另有数据条款 | [Minecraft Forge](https://github.com/MinecraftForge/MinecraftForge) |
 | ForgeGradle | 6.0.24 | Forge Gradle 插件 | LGPL-2.1 | [ForgeGradle](https://github.com/MinecraftForge/ForgeGradle) |
+| Gson | 2.10.1 | 模型请求 JSON 序列化与受限响应解析；使用目标游戏提供的运行时版本 | Apache-2.0 | [Gson](https://github.com/google/gson) |
 | JUnit Jupiter | 5.11.4 | 公共核心测试 | EPL-2.0 | [JUnit 5](https://github.com/junit-team/junit5) |
 | SLF4J API | 2.0.16 | 加载器入口编译依赖 | MIT | [SLF4J](https://github.com/qos-ch/slf4j) |
 | GitHub Actions 检出/Java/Gradle/上传组件 | 主版本标签 | CI | 各项目官方许可 | [GitHub Actions](https://github.com/actions) |
 
-JUnit 与 SLF4J API 仅用于构建和测试/入口编译。发行 JAR 不打包 Fabric Loader、Fabric API、Forge、JUnit 或 SLF4J 实现。Fabric 安装必须另装上表固定版本的 Fabric API；Forge 不依赖 Fabric API。
+JUnit 与 SLF4J API 仅用于构建和测试/入口编译。发行 JAR 不打包 Fabric Loader、Fabric API、Forge、Gson、JUnit 或 SLF4J 实现。Gson 由 Minecraft 1.21.1 运行时提供，公共模块单独测试使用同版依赖。Fabric 安装必须另装上表固定版本的 Fabric API；Forge 不依赖 Fabric API。
