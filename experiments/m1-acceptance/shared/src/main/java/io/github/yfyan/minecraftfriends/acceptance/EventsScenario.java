@@ -180,7 +180,7 @@ public final class EventsScenario {
 
     private void awaitFirstMeeting() {
         CompanionData.Entry entry = entry();
-        if (entry == null || live() == null || !status().memoryLoaded()) {
+        if (entry == null || !status().memoryLoaded()) {
             return;
         }
         if (seed.companionId == null) {
@@ -189,6 +189,9 @@ public final class EventsScenario {
             check(seed.worldId != null, "first_companion_identity");
         } else if (!seed.companionId.equals(entry.identity().companionId())) {
             throw new IllegalStateException("first_companion_identity");
+        }
+        if (live() == null) {
+            return;
         }
         if (!acknowledged()) {
             return;

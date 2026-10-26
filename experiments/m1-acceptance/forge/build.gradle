@@ -1,4 +1,7 @@
 plugins { id 'net.minecraftforge.gradle' version '6.0.24' }
+def acceptanceClientDirectory = project.hasProperty('acceptanceNegativeRunDir')
+        ? project.file(project.property('acceptanceNegativeRunDir'))
+        : project.layout.buildDirectory.dir('run/client').get().asFile
 def productionJar = rootProject.file('../../build/artifacts/minecraft-friends-forge-1.21.1-0.1.0-SNAPSHOT.jar')
 dependencies {
     minecraft 'net.minecraftforge:forge:1.21.1-52.1.20'
@@ -6,7 +9,7 @@ dependencies {
 }
 def prepareAcceptance = tasks.register('prepareAcceptance', Copy) {
     from productionJar
-    into project.hasProperty('acceptanceNegativeRunDir') ? project.file(project.property('acceptanceNegativeRunDir')).toPath().resolve('mods').toFile() : layout.buildDirectory.dir('run/client/mods')
+    into new File(acceptanceClientDirectory, 'mods')
 }
 def runtimeDirectory = layout.buildDirectory.dir('acceptanceMod')
 def acceptanceRuntime = sourceSets.create('acceptanceRuntime')
@@ -25,7 +28,7 @@ minecraft {
     reobf = false
     runs {
         client {
-            workingDirectory project.hasProperty('acceptanceNegativeRunDir') ? project.file(project.property('acceptanceNegativeRunDir')) : project.layout.buildDirectory.dir('run/client').get().asFile
+            workingDirectory acceptanceClientDirectory
             property 'mf.acceptance', 'true'
             property 'mf.acceptance.loader', 'forge'
             if (project.hasProperty('acceptanceEvents')) { property 'mf.acceptance.events', 'true' }

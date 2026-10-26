@@ -1,4 +1,7 @@
 plugins { id 'fabric-loom' version '1.7.4' }
+def acceptanceClientDirectory = project.hasProperty('acceptanceNegativeRunDir')
+        ? project.file(project.property('acceptanceNegativeRunDir'))
+        : project.layout.buildDirectory.dir('run/client').get().asFile
 dependencies {
     minecraft 'com.mojang:minecraft:1.21.1'
     mappings loom.officialMojangMappings()
@@ -10,7 +13,7 @@ loom {
     runs {
         acceptance {
             client()
-            runDir project.hasProperty('acceptanceNegativeRunDir') ? project.property('acceptanceNegativeRunDir') : project.layout.buildDirectory.dir('run/client').get().asFile.path
+            runDir project.relativePath(acceptanceClientDirectory)
             vmArg '-Dmf.acceptance=true'
             vmArg '-Dmf.acceptance.loader=fabric'
             if (project.hasProperty('acceptanceEvents')) { vmArg '-Dmf.acceptance.events=true' }
