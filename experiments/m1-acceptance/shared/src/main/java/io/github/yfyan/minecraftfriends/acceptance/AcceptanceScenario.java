@@ -87,6 +87,10 @@ public final class AcceptanceScenario {
             if (owner == null) { return; }
             owner.setInvulnerable(true);
             emit("server", server.getClass().getName());
+            String runtimeKind = server instanceof net.minecraft.server.dedicated.DedicatedServer
+                    ? "DEDICATED" : server.getClass().getName().equals("net.minecraft.client.server.IntegratedServer")
+                    ? "INTEGRATED" : "OTHER";
+            emit("server_kind", runtimeKind);
             phaseStart = age;
         }
         try {

@@ -48,6 +48,20 @@ def fixture_snapshot(path):
     return value
 
 
+def server_evidence(content, kind, required_checks):
+    # Production Fabric uses intermediary names; classify the actual server by the
+    # helper's instanceof check, and retain its raw name rather than inventing one.
+    observed = re.findall(r'MF_ACCEPTANCE_SERVER ([\w.$]+) server_kind ([A-Z]+)', content)
+    expected_kind = 'DEDICATED' if kind == 'dedicated' else 'INTEGRATED'
+    classes = sorted({name for name, actual_kind in observed if actual_kind == expected_kind})
+    role_ok = len(classes) == 1 and all(actual_kind == expected_kind for _, actual_kind in observed)
+    raw_class = classes[0] if role_ok else ''
+    missing = [name for name in required_checks
+               if not raw_class or f'MF_ACCEPTANCE_SERVER {raw_class} {name} PASS' not in content]
+    failed = any(f'MF_ACCEPTANCE_SERVER {name} result FAIL' in content for name, _ in observed)
+    return missing, classes, role_ok and not failed
+
+
 def run():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('target', choices=['fabric-integrated', 'forge-integrated', 'fabric-dedicated', 'forge-dedicated'])
@@ -57,6 +71,8 @@ def run():
     parser.add_argument('--lifecycle-only', action='store_true', help='Preserve the original lifecycle acceptance path')
     parser.add_argument('--username', help='Offline test identity, not a real account')
     parser.add_argument('--fixture-summary', type=Path, help='Dedicated mode: summary from protocol_stub.py --fixture')
+    parser.add_argument('--server-log', type=Path, help='Dedicated mode: console log of this isolated server')
+    parser.add_argument('--server-mod', type=Path, help='Dedicated mode: installed production mod JAR to verify')
     parser.add_argument('--skip-forge-build-cert-probe', action='store_true',
                         help='Skip only ForgeGradle environment preflight, not artifact/HTTP TLS validation')
     options = parser.parse_args()
@@ -65,10 +81,12 @@ def run():
         parser.error('username must be a short offline test identity')
     if not 30 <= options.timeout <= 1800:
         parser.error('timeout must be 30..1800 seconds')
-    if kind != 'dedicated' and (options.server or options.fixture_summary):
+    if kind != 'dedicated' and (options.server or options.fixture_summary or options.server_log or options.server_mod):
         parser.error('server/fixture-summary are dedicated-mode options')
     if kind == 'dedicated' and not options.server:
         parser.error('dedicated acceptance requires an already isolated --server')
+    if kind == 'dedicated' and not (options.server_log and options.server_mod):
+        parser.error('dedicated acceptance requires --server-log and --server-mod for independent evidence')
     if options.server and not re.fullmatch(r'(127\.0\.0\.1|localhost):([1-9][0-9]{0,4})', options.server):
         parser.error('only explicit loopback test servers are allowed')
     if options.server and not 1 <= int(options.server.rsplit(':', 1)[1]) <= 65535:
@@ -82,6 +100,11 @@ def run():
     if not production.is_file():
         parser.error('first build the production project with checkAll')
     artifact_hash = digest(production)
+    server_log_path = options.server_log.resolve() if options.server_log else None
+    server_log_prefix = server_log_path.read_bytes() if server_log_path else b''
+    server_mod_path = options.server_mod.resolve() if options.server_mod else None
+    if server_mod_path and (not server_mod_path.is_file() or digest(server_mod_path) != artifact_hash):
+        parser.error('installed server mod must match the production JAR')
     source_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     source_diff = subprocess.check_output(['git', 'diff', 'HEAD', '--'], cwd=ROOT)
     client_run = HERE / loader / 'build/run/client'
@@ -131,6 +154,10 @@ def run():
                'lifecycle_only': options.lifecycle_only,
                'protocol_endpoint': fixture.endpoint if fixture else None,
                'protocol_summary_path': str(protocol_summary) if protocol_summary else None}
+    startup.update(server_log=str(server_log_path) if server_log_path else None,
+                   server_log_start_offset=len(server_log_prefix),
+                   server_log_prefix_sha256=hashlib.sha256(server_log_prefix).hexdigest(),
+                   installed_server_mod=str(server_mod_path) if server_mod_path else None)
     (evidence / 'startup.json').write_text(json.dumps(startup, indent=2) + '\n')
     environment = dict(os.environ)
     environment.update(LIBGL_ALWAYS_SOFTWARE='true', __GLX_VENDOR_LIBRARY_NAME='mesa', ALSOFT_DRIVERS='null')
@@ -205,7 +232,15 @@ def run():
                             'world_reopen_chat_uuid', 'world_reopen_address', 'world_reopen_memory',
                             'rejoin_chinese_reply_ack', 'memory_clear_generation', 'memory_clear_address',
                             'memory_clear_facts', 'after_clear_chinese_reply_ack']
-    missing = [name for name in required_checks if f'{server_class} {name} PASS' not in content]
+    server_log_valid = True
+    server_content = content
+    if server_log_path:
+        raw_server_log = server_log_path.read_bytes()
+        server_log_valid = raw_server_log.startswith(server_log_prefix)
+        server_tail = raw_server_log[len(server_log_prefix):] if server_log_valid else b''
+        (evidence / 'server.log').write_bytes(server_tail)
+        server_content = server_tail.decode(errors='replace')
+    missing, observed_server_classes, server_role_ok = server_evidence(server_content, kind, required_checks)
     if options.lifecycle_only:
         client_result = 'INTEGRATED_LIFECYCLE_REOPEN_PASS' if kind == 'integrated' else 'DEDICATED_LIFECYCLE_PASS'
     else:
@@ -225,7 +260,9 @@ def run():
     source_unchanged = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip() == source_commit
     source_unchanged &= subprocess.check_output(['git', 'diff', 'HEAD', '--'], cwd=ROOT) == source_diff
     helper_unchanged = helper_digest() == helper_hash
+    installed_mod_unchanged = server_mod_path is None or (server_mod_path.is_file() and digest(server_mod_path) == artifact_hash)
     passed = (exit_code == 0 and not timed_out and not launch_error and not missing and artifact_unchanged
+              and server_log_valid and server_role_ok and installed_mod_unchanged
               and source_unchanged and helper_unchanged and (options.lifecycle_only or protocol_ok is True) and f'MF_ACCEPTANCE_CLIENT PASS {client_result}' in content
               and 'MF_ACCEPTANCE_CLIENT FAIL' not in content and f'{server_class} result FAIL' not in content)
     not_covered = ['真实模型', '双玩家私聊隔离与共享邀请/退出', '三类主动事件与冷却',
@@ -237,6 +274,10 @@ def run():
                    artifact_unchanged=artifact_unchanged, source_unchanged=source_unchanged, helper_unchanged=helper_unchanged,
                    log_sha256=digest(log_path) if log_path.exists() else None,
                    expected_server_class=server_class, missing_checks=missing, protocol_checks_passed=protocol_ok,
+                   observed_server_classes=observed_server_classes, server_role_verified=server_role_ok,
+                   server_log_prefix_unchanged=server_log_valid,
+                   server_log_sha256=digest(evidence / 'server.log') if server_log_path else None,
+                   installed_server_mod_unchanged=installed_mod_unchanged,
                    protocol_count_delta=protocol_delta, client_completion=f'MF_ACCEPTANCE_CLIENT PASS {client_result}' in content,
                    m1_complete=False, not_covered=not_covered)
     (evidence / 'summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n')
