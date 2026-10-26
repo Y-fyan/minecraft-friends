@@ -49,3 +49,18 @@ model.api-key-env=用户选择的环境变量名
 公共模块固定使用 [Gson 2.10.1](https://github.com/google/gson)，许可证为 Apache-2.0，用于序列化有界请求和流式解析受限响应；版本与 Minecraft 1.21.1 运行时自带版本一致，避免加载器环境出现 Gson API 冲突。Java 21 没有稳定的内置 JSON API；Gson 避免手写 JSON 编码器/解析器。
 
 自动化协议测试仅绑定本机 `127.0.0.1` 的 JDK `HttpServer` stub，覆盖成功、畸形响应、401、429、有界重试、拒绝连接、超时、取消、上下文上限和响应字节上限。它们不访问真实服务、不使用真实凭据，也不构成真实模型或游戏内聊天验收。真实服务验证需由用户提供端点和模型配置，并自行决定是否提供环境变量凭据。
+
+## 已验证的 DeepSeek 配置
+
+2026-10-26 已完成官方 API 的真实验收，见 [0010](validation/0010-m1-real-model.md)。默认仍使用离线演示；启用真实模型时由启动游戏的进程继承环境变量 `DEEPSEEK_API_KEY`，配置如下（不含密钥）：
+
+```properties
+model.provider=chat-completions
+model.endpoint=https://api.deepseek.com/chat/completions
+model.name=deepseek-flash
+model.api-key-env=DEEPSEEK_API_KEY
+model.timeout-seconds=30
+model.retries=0
+```
+
+使用者自行提供自己的凭据。测试临时凭据不随项目分发。网络或模型超时会显示中文错误，不阻塞游戏；具体回复质量与服务可用性仍受所选模型影响。

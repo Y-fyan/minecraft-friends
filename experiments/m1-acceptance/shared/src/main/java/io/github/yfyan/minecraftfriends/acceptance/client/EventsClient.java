@@ -26,6 +26,10 @@ public final class EventsClient {
             "^([0-9a-fA-F-]{36}) / (PREFERENCE|EVENT) / (.{1,600})$");
     private static final String BOT_PREFIX = "MF_EventsBot：";
     private static final String REPLY_SUFFIX = " | 协议模拟，非真实模型。你好，我是 AI 伙伴。";
+    private static final boolean REAL_MODE = Boolean.getBoolean("mf.acceptance.real");
+    private static final String TIMEOUT_FEEDBACK = "模型请求超时。";
+    private static final String SESSION_TIMEOUT_FEEDBACK = "伙伴思考超时，请稍后再试。";
+    private static final String DISCONNECT_FEEDBACK = "无法连接模型服务，请检查端点和网络。";
     private static final Object LIST_LOCK = new Object();
 
     private static volatile boolean listing;
@@ -60,12 +64,26 @@ public final class EventsClient {
             parseReply(text.substring(BOT_PREFIX.length()));
             return;
         }
+        if (REAL_MODE && text.startsWith(BOT_PREFIX)) {
+            parseRealReply(text.substring(BOT_PREFIX.length()));
+            return;
+        }
+        if (REAL_MODE && (text.equals(TIMEOUT_FEEDBACK) || text.equals(SESSION_TIMEOUT_FEEDBACK)
+                || text.equals(DISCONNECT_FEEDBACK))) {
+            parseFaultFeedback(text);
+            return;
+        }
         if (listing) {
             parseMemoryLine(text);
         }
     }
 
     public static void tick(Minecraft client) {
+        // The isolated harness must keep ticking across background world reopen screens.
+        client.options.pauseOnLostFocus = false;
+        if (client.level != null && client.screen instanceof net.minecraft.client.gui.screens.PauseScreen) {
+            client.setScreen(null);
+        }
         if (finished) {
             return;
         }
@@ -163,6 +181,35 @@ public final class EventsClient {
         enqueue(new Action("FAIL", "unknown_control", ""));
     }
 
+    private static void parseRealReply(String body) {
+        if (expectedEvent == null || expectedNonce == null) {
+            enqueue(new Action("FAIL", "unexpected_real_reply", ""));
+            return;
+        }
+        String reply = body.strip();
+        if (reply.isEmpty()) {
+            enqueue(new Action("FAIL", "empty_real_reply", ""));
+            return;
+        }
+        if ("REAL_CHAT".equals(expectedEvent)) {
+            if (!reply.contains(expectedNonce.toString())) {
+                enqueue(new Action("FAIL", "real_chat_marker_absent", ""));
+                return;
+            }
+        }
+        enqueue(new Action("ACK", expectedEvent, ""));
+    }
+
+    private static void parseFaultFeedback(String text) {
+        String expected = (TIMEOUT_FEEDBACK.equals(text) || SESSION_TIMEOUT_FEEDBACK.equals(text))
+                ? "TIMEOUT" : "DISCONNECT";
+        if (!expected.equals(expectedEvent)) {
+            enqueue(new Action("FAIL", "unexpected_fault_feedback", ""));
+            return;
+        }
+        enqueue(new Action("ACK", expected, ""));
+    }
+
     private static void parseReply(String body) {
         int delimiter = body.indexOf(" |");
         if (delimiter < 0) {
@@ -194,6 +241,15 @@ public final class EventsClient {
         if (command.startsWith(prefix) && validUuid(command.substring(prefix.length()))) {
             return new CommandAction("DELETE", command.substring(prefix.length()));
         }
+        prefix = "mf chat MF_REAL_CHAT:";
+        CommandAction probe = chatProbe(command, prefix, " 请确认你是 AI 伙伴，并完整保留验证码。", "REAL_CHAT");
+        if (probe != null) { return probe; }
+        prefix = "mf chat MF_REAL_TIMEOUT:";
+        probe = chatProbe(command, prefix, " 触发受控超时验收。", "TIMEOUT");
+        if (probe != null) { return probe; }
+        prefix = "mf chat MF_REAL_DISCONNECT:";
+        probe = chatProbe(command, prefix, " 触发受控断连验收。", "DISCONNECT");
+        if (probe != null) { return probe; }
         prefix = "mf chat MF_EVENTS_DELETE_PROBE:";
         if (command.startsWith(prefix)) {
             String tail = command.substring(prefix.length());
@@ -282,6 +338,9 @@ public final class EventsClient {
             case "REMEMBER_DELETE" -> "mf memory remember MF_DELETE_FACT";
             case "DELETE" -> "mf memory delete " + argument;
             case "DELETE_PROBE" -> "mf chat MF_EVENTS_DELETE_PROBE:" + argument + " 请用中文简短回复。";
+            case "REAL_CHAT" -> "mf chat MF_REAL_CHAT:" + argument + " 请确认你是 AI 伙伴，并完整保留验证码。";
+            case "TIMEOUT" -> "mf chat MF_REAL_TIMEOUT:" + argument + " 触发受控超时验收。";
+            case "DISCONNECT" -> "mf chat MF_REAL_DISCONNECT:" + argument + " 触发受控断连验收。";
             default -> null;
         };
         if (command == null) {
@@ -362,6 +421,18 @@ public final class EventsClient {
         expectedNonce = null;
     }
 
+    private static CommandAction chatProbe(String command, String prefix, String suffix, String kind) {
+        if (!command.startsWith(prefix)) {
+            return null;
+        }
+        String tail = command.substring(prefix.length());
+        if (!tail.endsWith(suffix) || tail.length() != 36 + suffix.length()) {
+            return null;
+        }
+        String nonce = tail.substring(0, 36);
+        return validUuid(nonce) ? new CommandAction(kind, nonce) : null;
+    }
+
     private static void enqueue(Action action) {
         if (ACTIONS.size() >= ACTION_LIMIT) {
             ACTIONS.clear();
@@ -373,7 +444,8 @@ public final class EventsClient {
 
     private static boolean validEvent(String value) {
         return value.equals("FIRST_MEETING") || value.equals("INJURED") || value.equals("REJOIN")
-                || value.equals("DELETE_PROBE");
+                || value.equals("DELETE_PROBE") || value.equals("REAL_CHAT")
+                || value.equals("TIMEOUT") || value.equals("DISCONNECT");
     }
 
     private static boolean validUuid(String value) {

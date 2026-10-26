@@ -17,6 +17,7 @@ loom {
             vmArg '-Dmf.acceptance=true'
             vmArg '-Dmf.acceptance.loader=fabric'
             if (project.hasProperty('acceptanceEvents')) { vmArg '-Dmf.acceptance.events=true' }
+            if (project.hasProperty('acceptanceReal')) { vmArg '-Dmf.acceptance.real=true' }
             if (project.hasProperty('acceptanceNegative')) {
                 vmArg '-Dmf.acceptance.negative=true'
                 vmArg '-Dmf.acceptance.negative.scenario=' + project.property('acceptanceNegativeScenario')

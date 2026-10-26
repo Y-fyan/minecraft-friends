@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-26",
+  "m1_accepted": true,
+  "real_service": "DeepSeek official Chat Completions",
+  "endpoint": "https://api.deepseek.com/chat/completions",
+  "model": "deepseek-flash",
+  "production_code_changed": false,
+  "direct_production_provider": {
+    "passed": true,
+    "official_https_and_env_bearer_auth": true,
+    "synthetic_address_confirmed": true,
+    "private_result_sha256": "13ba20f8bd02b7df5b121a9e7a320996eeda27456e192e3ee0f9c7daeef350c2"
+  },
+  "real_game_runs": [
+    {
+      "target": "fabric-integrated",
+      "passed": true,
+      "parent_review_completed": true,
+      "reviewer": "统筹 Codex 助手；未冒充创作者或新增人类审查者",
+      "review_basis": {
+        "FIRST_MEETING": "自然欢迎首次相遇，明确AI身份，允许玩家自行选择",
+        "INJURED": "确认伙伴实际受到伤害，不声称玩家受伤；安抚且不要求玩家必须照料",
+        "REJOIN": "欢迎主人回来，与实际重登一致，无排他或内疚要求",
+        "DELETE_PROBE": "只用于验证已删除事实不再发送、保留事实和事件仍在；不是自然语言操作说明质量测试",
+        "REAL_CHAT": "真实中文回复确认AI身份并保留本轮唯一验证码"
+      },
+      "mechanical_keyword_advisories": {
+        "INJURED": 1
+      },
+      "local_evidence_id": "fabric-integrated-1793025486615351146",
+      "source_commit": "9fc4361f6451bf91dc00c94a0c526e8e84c1ae84",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "production_jar_sha256": "e3278b45c1f77755ce35b1ba73e6a9a1aaa3376778153bc59fe3a2dd4633a336",
+      "client_exit_code": 0,
+      "automated_checks_passed": true,
+      "missing_checks": [],
+      "request_counts": {
+        "FIRST_MEETING": 1,
+        "INJURED": 1,
+        "REJOIN": 1,
+        "DELETE_PROBE": 1,
+        "REAL_CHAT": 1,
+        "TIMEOUT": 1,
+        "DISCONNECT": 1
+      },
+      "protocol_summary_sha256": "ffc83ba8b7f6e86cde0a467de8aed61dbb524015881c23ac78c363e8edf622ee",
+      "checks_sha256": "2176923ddaa81c4c02ad43489a9f7c89a2d2ed23eeec083959e23080a86440f9",
+      "private_review_sha256": "25fcfbddc3f4f7143ba6af05d78f7b1f38586137baf425f7104dfe2a9a5b5761",
+      "raw_runner_passed": false,
+      "runner_exit_explanation": "命令退出1表示等待统筹审阅；子进程退出0、自动检查全部通过。原始summary未改写，本文件记录随后作出的最终审阅。",
+      "artifact_source_helper_unchanged": true,
+      "client_and_server_completed": true
+    },
+    {
+      "target": "forge-integrated",
+      "passed": true,
+      "parent_review_completed": true,
+      "reviewer": "统筹 Codex 助手；未冒充创作者或新增人类审查者",
+      "review_basis": {
+        "FIRST_MEETING": "自然欢迎首次相遇，明确AI身份，允许玩家自行选择",
+        "INJURED": "确认伙伴实际受到伤害，不声称玩家受伤；安抚且不要求玩家必须照料",
+        "REJOIN": "欢迎主人回来，与实际重登一致，无排他或内疚要求",
+        "DELETE_PROBE": "只用于验证已删除事实不再发送、保留事实和事件仍在；不是自然语言操作说明质量测试",
+        "REAL_CHAT": "真实中文回复确认AI身份并保留本轮唯一验证码"
+      },
+      "mechanical_keyword_advisories": {
+        "INJURED": 1
+      },
+      "local_evidence_id": "forge-integrated-1793025600791402490",
+      "source_commit": "9fc4361f6451bf91dc00c94a0c526e8e84c1ae84",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "production_jar_sha256": "bfad1766bcfb44f8077fc625908ca1dd152c2d76ae4efb7241ab9efa6024cfe6",
+      "client_exit_code": 0,
+      "automated_checks_passed": true,
+      "missing_checks": [],
+      "request_counts": {
+        "FIRST_MEETING": 1,
+        "INJURED": 1,
+        "REJOIN": 1,
+        "DELETE_PROBE": 1,
+        "REAL_CHAT": 1,
+        "TIMEOUT": 1,
+        "DISCONNECT": 1
+      },
+      "protocol_summary_sha256": "ffc83ba8b7f6e86cde0a467de8aed61dbb524015881c23ac78c363e8edf622ee",
+      "checks_sha256": "2176923ddaa81c4c02ad43489a9f7c89a2d2ed23eeec083959e23080a86440f9",
+      "private_review_sha256": "13354d88eca0946816802ff617a739e717df58b41a582e80085be9ad43c7e735",
+      "raw_runner_passed": false,
+      "runner_exit_explanation": "命令退出1表示等待统筹审阅；子进程退出0、自动检查全部通过。原始summary未改写，本文件记录随后作出的最终审阅。",
+      "artifact_source_helper_unchanged": true,
+      "client_and_server_completed": true
+    }
+  ],
+  "real_service_requests_this_session": 24,
+  "account_balance_or_cost_not_queried": true,
+  "generation_cap_per_request": 512,
+  "explicit_retries": 0,
+  "retained_earlier_failures": true,
+  "limitations": [
+    "本次短时合成场景由统筹助手审阅，不是长期玩家体验或所有模型质量保证",
+    "受控断连/超时仅作用于测试代理，没有关闭系统网络",
+    "本次真实服务验证为双加载器单机；普通专服与双玩家隔离沿用0009同字节正式JAR证据",
+    "未验证专服JVM冷重启、M2跟随/采集/性能或完整Alpha发布",
+    "诊断标记探针不作为模型解释记忆管理操作的准确性验收"
+  ]
+}

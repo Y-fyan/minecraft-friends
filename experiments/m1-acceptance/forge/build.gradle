@@ -32,6 +32,7 @@ minecraft {
             property 'mf.acceptance', 'true'
             property 'mf.acceptance.loader', 'forge'
             if (project.hasProperty('acceptanceEvents')) { property 'mf.acceptance.events', 'true' }
+            if (project.hasProperty('acceptanceReal')) { property 'mf.acceptance.real', 'true' }
             if (project.hasProperty('acceptanceNegative')) {
                 property 'mf.acceptance.negative', 'true'
                 property 'mf.acceptance.negative.scenario', project.property('acceptanceNegativeScenario')

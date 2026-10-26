@@ -50,4 +50,4 @@ boolean accepted = memory.commitResponse(request.token(), userText, responseText
 
 `tryClaimProactiveEvent` 只接受 `FIRST_MEETING`、`REJOIN`、`INJURED` 三类事件。冷却默认开启，可通过 `setProactiveEnabled(false)` 关闭。适配层只能在游戏确实确认对应事件时调用；本服务不会监听全服聊天、不生成事件、不编造任务完成，也不调用网络。
 
-短期上下文只保存在当前 store 实例内存中，重建实例后为空；长期记忆和主动事件的冷却时间会持久化。此实现尚未接入 Fabric/Forge 游戏事件或聊天入口，也没有真实游戏内验证。目录由调用方选择，文件权限遵循操作系统；POSIX 文件会将新临时文件设为仅所有者可读写。
+短期上下文只保存在当前 store 实例内存中，重建实例后为空；长期记忆和主动事件的冷却时间会持久化。已接入 Fabric/Forge 游戏事件和聊天入口，协议与真实模型验证见 [0009](validation/0009-m1-acceptance.md) 和 [0010](validation/0010-m1-real-model.md)。目录由调用方选择，文件权限遵循操作系统；POSIX 文件会将新临时文件设为仅所有者可读写。

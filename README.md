@@ -4,7 +4,7 @@
 
 Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Minecraft Forge** 两个版本。目标是让 AI 操控具有玩家身份、背包和生存能力的伙伴，通过原版聊天框与玩家交流，在实际游戏规则下执行任务。
 
-> **项目状态：M0 已完成，M1 陪伴聊天代码进入集成验收。** 当前分支已实现伙伴身份与生命周期、异步 Chat Completions 适配、私聊与显式共享会话、可管理记忆和事件问候。默认使用明确标注的离线演示，不调用真实模型。双加载器单机/独立专服主流程、关闭与坏存档、事件和记忆删除验收已通过；双人私聊/共享隔离也已通过，真实模型服务与陪伴体验仍待验收。导航、采集与正式 Alpha 尚未完成。Forge 不等于 NeoForge。
+> **项目状态：M0 已完成，M1 陪伴聊天代码进入集成验收。** 当前分支已实现伙伴身份与生命周期、异步 Chat Completions 适配、私聊与显式共享会话、可管理记忆和事件问候。默认使用明确标注的离线演示，不调用真实模型。双加载器单机/独立专服主流程、关闭与坏存档、事件和记忆删除验收已通过；双人私聊/共享隔离及 DeepSeek 真实聊天、三类事件与故障恢复均已验收。导航、采集与正式 Alpha 尚未完成。Forge 不等于 NeoForge。
 
 ## 我们希望带来的体验
 
@@ -27,7 +27,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | 伙伴身份、主人归属与生命周期 | 已实现；双加载器实际单机/专服验证创建、恢复与死亡规则，坏存档保护通过 |
 | 私聊、共享会话、称呼与记忆 | 私聊、显式共享与双人隔离、称呼及记忆恢复/删除均通过 |
 | 导航、采集与交付 | 尚未实现，属于 M2 |
-| 模型服务 | 异步适配器已实现；本机协议模拟测试通过，真实模型尚未验收 |
+| 模型服务 | 已通过 DeepSeek 官方 API 真实聊天和故障恢复验收；默认仍为离线演示 |
 | 客户端内运行 | Fabric / Forge 实际客户端主流程通过，模型后端为明确标注的协议模拟 |
 
 构建、测试和开发运行步骤见 [构建指南](docs/BUILD.md)。
@@ -49,7 +49,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | 阶段 | 目标 | 对应任务 |
 | --- | --- | --- |
 | M0 技术验证与协作基础（已完成） | 已验证玩家控制基础路径，建立双加载器工程和协作约定 | [#1](https://github.com/Y-fyan/minecraft-friends/issues/1)、[#2](https://github.com/Y-fyan/minecraft-friends/issues/2)、[#3](https://github.com/Y-fyan/minecraft-friends/issues/3) |
-| M1 陪伴聊天闭环（验收中） | 伙伴身份、模型接入、聊天、人设与记忆 | [#4](https://github.com/Y-fyan/minecraft-friends/issues/4)、[#5](https://github.com/Y-fyan/minecraft-friends/issues/5)、[#6](https://github.com/Y-fyan/minecraft-friends/issues/6)、[#7](https://github.com/Y-fyan/minecraft-friends/issues/7) |
+| M1 陪伴聊天闭环（已验收） | 伙伴身份、模型接入、聊天、人设与记忆 | [#4](https://github.com/Y-fyan/minecraft-friends/issues/4)、[#5](https://github.com/Y-fyan/minecraft-friends/issues/5)、[#6](https://github.com/Y-fyan/minecraft-friends/issues/6)、[#7](https://github.com/Y-fyan/minecraft-friends/issues/7) |
 | M2 干活能力与 Alpha（待实现） | 感知、动作调度、跟随、采集交付及双加载器验收 | [#8](https://github.com/Y-fyan/minecraft-friends/issues/8)、[#9](https://github.com/Y-fyan/minecraft-friends/issues/9)、[#10](https://github.com/Y-fyan/minecraft-friends/issues/10)、[#11](https://github.com/Y-fyan/minecraft-friends/issues/11) |
 
 完整计划见 [路线图 #12](https://github.com/Y-fyan/minecraft-friends/issues/12)，进度以 [Issues](https://github.com/Y-fyan/minecraft-friends/issues) 和 [里程碑](https://github.com/Y-fyan/minecraft-friends/milestones) 为准。
@@ -81,8 +81,9 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | [M0 收尾记录](docs/validation/0006-m0-closeout.md) | 阶段交付、证据复核、已知限制与 M1 入口 |
 | [伙伴生命周期验证](docs/validation/0007-companion-lifecycle.md) | 原始部分验收与历史限制 |
 | [生命周期修复](docs/validation/0008-lifecycle-fixes.md) | 重生时机、严格掉落、冲突及坏存档保护 |
-| [M1 验收](docs/validation/0009-m1-acceptance.md) | 双加载器主流程、双人共享隔离、事件与记忆删除证据及剩余项 |
+| [M1 协议与联机验收](docs/validation/0009-m1-acceptance.md) | 双加载器主流程、双人共享隔离、事件与记忆删除证据及剩余项 |
 | [模型配置](docs/MODEL.md) | 异步协议、凭据、预算、取消和失败反馈 |
+| [M1 真实模型验收](docs/validation/0010-m1-real-model.md) | DeepSeek 官方 API、双加载器三类事件、故障恢复及最终审阅 |
 | [聊天入口](docs/CHAT.md) | 私聊、共享会话、命令和数据范围 |
 | [记忆核心](docs/MEMORY.md) | 来源、持久化、删除、隔离和冷却 |
 | [项目统筹](docs/COORDINATION.md) | 近期交付、依赖、职责、状态与推进节奏 |

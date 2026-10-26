@@ -28,6 +28,7 @@ public final class EventsScenario {
     private static final int FIRST_EVENT = 4;
     private static final int INJURED_EVENT = 8;
     private static final int REJOIN_EVENT = 16;
+    private static final boolean REAL_MODE = Boolean.getBoolean("mf.acceptance.real");
 
     private final MinecraftServer server;
     private ServerPlayer owner;
@@ -147,6 +148,12 @@ public final class EventsScenario {
                 case 24 -> awaitDelete();
                 case 25 -> awaitPostDeleteList();
                 case 26 -> awaitDeleteContextProbe();
+                case 27 -> startRealChat();
+                case 28 -> awaitRealChat();
+                case 29 -> startFault("TIMEOUT");
+                case 30 -> awaitFault("real_model_timeout_feedback_ack", "TIMEOUT");
+                case 31 -> startFault("DISCONNECT");
+                case 32 -> awaitFault("real_model_disconnect_feedback_ack", "DISCONNECT");
                 default -> throw new IllegalStateException("invalid_phase");
             }
         } catch (RuntimeException failure) {
@@ -376,9 +383,59 @@ public final class EventsScenario {
         check(status().memoryCount() == memoryCountBeforeDelete - 1,
                 "memory_delete_context_probe_count_stable");
         seed.reopenPending = false;
+        if (REAL_MODE) {
+            phase(27);
+            return;
+        }
         finished = true;
         emit("result", "EVENTS_PASS");
         owner.sendSystemMessage(Component.literal("MF_EVENTS PASS EVENTS_PASS"));
+    }
+
+    private void startRealChat() {
+        if (!idle()) {
+            return;
+        }
+        check(status().memoryCount() == memoryCountBeforeDelete - 1, "real_chat_before_memory_stable");
+        expect("REAL_CHAT");
+        command("mf chat MF_REAL_CHAT:" + seed.expectedNonce
+                + " 请确认你是 AI 伙伴，并完整保留验证码。");
+        phase(28);
+    }
+
+    private void awaitRealChat() {
+        if (!acknowledged() || !idle()) {
+            return;
+        }
+        check(status().memoryCount() == memoryCountBeforeDelete - 1, "real_chat_after_memory_stable");
+        check(true, "real_chat_reply_ack");
+        phase(29);
+    }
+
+    private void startFault(String kind) {
+        if (!idle()) {
+            return;
+        }
+        expect(kind);
+        command("mf chat MF_REAL_" + kind + ":" + seed.expectedNonce
+                + ("TIMEOUT".equals(kind) ? " 触发受控超时验收。" : " 触发受控断连验收。"));
+        phase("TIMEOUT".equals(kind) ? 30 : 32);
+    }
+
+    private void awaitFault(String assertion, String kind) {
+        if (!acknowledged() || !idle()) {
+            return;
+        }
+        check(status().memoryCount() == memoryCountBeforeDelete - 1, "fault_recovery_memory_stable");
+        check(true, assertion);
+        if ("TIMEOUT".equals(kind)) {
+            phase(31);
+        } else {
+            seed.reopenPending = false;
+            finished = true;
+            emit("result", "EVENTS_PASS");
+            owner.sendSystemMessage(Component.literal("MF_EVENTS PASS EVENTS_PASS"));
+        }
     }
 
     private void realHurt(String assertion) {
