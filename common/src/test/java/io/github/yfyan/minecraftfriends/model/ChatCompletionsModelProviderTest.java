@@ -142,16 +142,17 @@ class ChatCompletionsModelProviderTest {
         CountDownLatch releaseResponse = new CountDownLatch(1);
         CountDownLatch clientDisconnected = new CountDownLatch(1);
         try (StubServer stub = new StubServer(exchange -> {
+            exchange.sendResponseHeaders(200, 0);
             requestReceived.countDown();
             await(releaseResponse);
             try {
-                reply(exchange, 200, success("late response"));
+                writeUntilPeerCloses(exchange);
             } catch (IOException ignored) {
                 clientDisconnected.countDown();
             }
         })) {
             ModelProvider provider = create(stub.endpoint(), 0, 65_536);
-            var result = provider.complete(request(Duration.ofMillis(150))).toCompletableFuture();
+            var result = provider.complete(request(Duration.ofSeconds(1))).toCompletableFuture();
             assertTrue(requestReceived.await(2, TimeUnit.SECONDS));
 
             ExecutionException error = assertThrows(
@@ -173,10 +174,11 @@ class ChatCompletionsModelProviderTest {
         CountDownLatch releaseResponse = new CountDownLatch(1);
         CountDownLatch clientDisconnected = new CountDownLatch(1);
         try (StubServer stub = new StubServer(exchange -> {
+            exchange.sendResponseHeaders(200, 0);
             requestReceived.countDown();
             await(releaseResponse);
             try {
-                reply(exchange, 200, success("late response"));
+                writeUntilPeerCloses(exchange);
             } catch (IOException ignored) {
                 clientDisconnected.countDown();
             }
@@ -356,6 +358,18 @@ class ChatCompletionsModelProviderTest {
         exchange.sendResponseHeaders(status, bytes.length);
         try (var output = exchange.getResponseBody()) {
             output.write(bytes);
+        }
+    }
+
+    private static void writeUntilPeerCloses(HttpExchange exchange) throws IOException {
+        // A small late response can fit in the OS send buffer even after cancellation.
+        // Flush bounded chunks so the test observes the peer closing the actual HTTP stream.
+        byte[] chunk = new byte[16_384];
+        try (var output = exchange.getResponseBody()) {
+            for (int index = 0; index < 2_048; index++) {
+                output.write(chunk);
+                output.flush();
+            }
         }
     }
 
