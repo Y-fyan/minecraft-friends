@@ -277,6 +277,7 @@ def run():
         options_path.write_text(
             'onboardAccessibility:false\nmaxFps:30\nrenderDistance:4\n'
             'simulationDistance:5\nfullscreen:false\ntutorialStep:none\n'
+            'pauseOnLostFocus:false\n'
             'soundCategory_master:0.0\n', encoding='utf-8')
         options_written = True
         if config_path.exists():
