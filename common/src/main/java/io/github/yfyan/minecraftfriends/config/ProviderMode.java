@@ -4,6 +4,7 @@ import java.util.Locale;
 
 public enum ProviderMode {
     MOCK("mock"),
+    CHAT_COMPLETIONS("chat-completions"),
     DISABLED("disabled");
 
     private final String configValue;
@@ -24,7 +25,7 @@ public enum ProviderMode {
             }
         }
         throw new IllegalArgumentException(
-                "Unsupported model.provider '" + raw + "'; M0 supports only mock and disabled"
+                "Unsupported model.provider; supported values are mock, chat-completions and disabled"
         );
     }
 }

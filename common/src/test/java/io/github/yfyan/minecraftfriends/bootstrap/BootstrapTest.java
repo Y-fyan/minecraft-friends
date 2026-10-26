@@ -29,7 +29,7 @@ class BootstrapTest {
         assertTrue(report.notices().stream()
                 .anyMatch(notice -> notice.message().contains("Mock mode remains offline")));
         assertTrue(adapter.messages.stream()
-                .anyMatch(message -> message.contains("Startup completed without model credentials")));
+                .anyMatch(message -> message.contains("Startup completed without sending a model request")));
         assertFalse(adapter.warnings);
     }
 

@@ -33,16 +33,15 @@ public final class Bootstrap {
             adapter.logInfo("Model provider: " + loaded.config().provider()
                     + " (no network request or paid call is made during startup)");
             adapter.logInfo("Diagnostics enabled: " + loaded.config().diagnosticsEnabled());
-            adapter.logInfo("Startup completed without model credentials.");
+            adapter.logInfo("Startup completed without sending a model request.");
             return new StartupReport(loaded.config(), loaded.path(), loaded.created(), loaded.notices());
-        } catch (IOException exception) {
+        } catch (IOException ignored) {
             ModConfig fallback = ModConfig.defaults();
             StartupNotice warning = new StartupNotice(
                     StartupNotice.Level.WARNING,
-                    "Could not read or create the configuration file. Using safe defaults: "
-                            + exception.getMessage()
+                    "Could not read or create the configuration file. Using safe defaults."
             );
-            adapter.logWarn(warning.message(), exception);
+            adapter.logWarn(warning.message(), null);
             adapter.logInfo("Model provider: " + fallback.provider()
                     + " (safe fallback; no network request is made)");
             return new StartupReport(

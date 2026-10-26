@@ -21,7 +21,7 @@ class ModelProtocolTest {
 
         ModelResponse response = new MockModelProvider().complete(request).toCompletableFuture().get();
 
-        assertEquals("Mock response", response.content());
+        assertEquals("我是离线演示中的 AI 伙伴，当前未连接真实模型。", response.content());
     }
 
     @Test
