@@ -42,6 +42,18 @@ CLIENT_MARKER = re.compile(
     r'|^MF_PEER_CLIENT FAIL role=([ab]) code=([A-Za-z0-9_-]+)$'
     r'|^MF_PEER_CLIENT ASSERT role=([ab]) check=([A-Za-z0-9_-]{1,64})$'
 )
+ANSI_ESCAPE = re.compile(r'\x1b\[[0-9;]*m')
+
+
+def peer_marker_line(raw_line):
+    line = ANSI_ESCAPE.sub('', raw_line.strip())
+    marker = line.find('MF_PEER_')
+    if marker < 0:
+        return None
+    prefix = line[:marker]
+    if prefix and ('[STDOUT]:' not in prefix or '[CHAT]' in prefix):
+        return None
+    return line[marker:]
 
 
 def digest(path):
@@ -195,7 +207,9 @@ def main():
         try:
             with path.open('w', encoding='utf-8') as marker_log:
                 for raw in process.stdout:
-                    line = raw.decode('utf-8', errors='replace').strip()
+                    line = peer_marker_line(raw.decode('utf-8', errors='replace'))
+                    if line is None:
+                        continue
                     server_match = SERVER_MARKER.fullmatch(line)
                     if server_match:
                         check, result, reason = server_match.groups()
