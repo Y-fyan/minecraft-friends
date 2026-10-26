@@ -34,5 +34,11 @@ class ActionPlanParserTest {
                 () -> ActionPlanParser.parse("{\"action\":\"follow\",\"count\":1}"));
         assertThrows(IllegalArgumentException.class,
                 () -> ActionPlanParser.parse("{\"action\":\"follow\"} {}"));
+        assertThrows(IllegalArgumentException.class, () -> ActionPlanParser.parse("[]"));
+        assertThrows(IllegalArgumentException.class, () -> ActionPlanParser.parse("null"));
+        assertThrows(IllegalArgumentException.class,
+                () -> ActionPlanParser.parse("{\"action\":\"collect_oak_logs\",\"count\":1.5}"));
+        assertThrows(IllegalArgumentException.class,
+                () -> ActionPlanParser.parse("{\"action\":\"collect_oak_logs\",\"count\":2147483648}"));
     }
 }

@@ -1,6 +1,7 @@
 package io.github.yfyan.minecraftfriends.task;
 
 public enum TaskState {
+    IDLE(true),
     QUEUED(false),
     RUNNING(false),
     SUCCEEDED(true),

@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import io.github.yfyan.minecraftfriends.chat.ChatRuntime;
+import io.github.yfyan.minecraftfriends.action.ActionRuntime;
 import net.minecraft.SharedConstants;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.nbt.CompoundTag;
@@ -53,6 +54,10 @@ public final class CompanionRuntime {
         featureEnabled = enabled;
     }
 
+    public static boolean isEnabled() {
+        return featureEnabled;
+    }
+
     private static void requireEnabled() {
         if (!featureEnabled) {
             throw new IllegalStateException("Minecraft Friends 已在配置中关闭。");
@@ -99,6 +104,11 @@ public final class CompanionRuntime {
                         .then(literal("summon").executes(context -> summon(context.getSource())))
                         .then(literal("dismiss").executes(context -> dismiss(context.getSource())))
                         .then(literal("status").executes(context -> status(context.getSource())))));
+        ActionRuntime.registerCommands(dispatcher);
+    }
+
+    public static void onServerStarted(MinecraftServer server) {
+        ActionRuntime.onServerStarted(server);
     }
 
     public static void onOwnerLogin(ServerPlayer owner) {
@@ -168,6 +178,7 @@ public final class CompanionRuntime {
     }
 
     public static void onOwnerLogout(ServerPlayer owner) {
+        ActionRuntime.onOwnerLogout(owner);
         if (isCompanion(owner)) {
             if (owner.server.getPlayerList().getPlayer(owner.getUUID()) != owner) {
                 forgetCompanion(owner);
@@ -188,6 +199,7 @@ public final class CompanionRuntime {
     }
 
     public static void onServerStopping(MinecraftServer server) {
+        ActionRuntime.onServerStopping(server);
         ChatRuntime.stop(server);
         try {
             for (CompanionData.Entry entry : data(server).entries()) {
@@ -208,6 +220,7 @@ public final class CompanionRuntime {
         if (!isCompanion(dead)) {
             return;
         }
+        ActionRuntime.onCompanionDeath(dead);
         CompanionData.Entry entry = data(dead.server).findByCompanion(dead.getUUID()).orElse(null);
         if (entry == null || !entry.active()) {
             return;
@@ -219,6 +232,7 @@ public final class CompanionRuntime {
 
     /** Processes registered deaths at END_SERVER_TICK, after vanilla drops and event cancellation. */
     public static void onServerTick(MinecraftServer server) {
+        ActionRuntime.onTick(server);
         Map<UUID, PendingDeath> pending = PENDING_DEATHS.get(server);
         if (pending == null || pending.isEmpty()) {
             return;

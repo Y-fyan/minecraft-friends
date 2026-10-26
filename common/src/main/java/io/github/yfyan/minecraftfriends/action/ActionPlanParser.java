@@ -60,7 +60,7 @@ public final class ActionPlanParser {
                 throw new IllegalArgumentException("count is allowed only for collect_oak_logs.");
             }
             return new ActionPlan(type, count);
-        } catch (IOException | NumberFormatException failure) {
+        } catch (IOException | ArithmeticException | IllegalStateException failure) {
             throw new IllegalArgumentException("Malformed action plan JSON.", failure);
         }
     }

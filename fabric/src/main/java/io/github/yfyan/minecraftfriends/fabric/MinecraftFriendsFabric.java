@@ -32,6 +32,7 @@ public final class MinecraftFriendsFabric implements ModInitializer {
             }
         });
         ServerTickEvents.END_SERVER_TICK.register(CompanionRuntime::onServerTick);
+        ServerLifecycleEvents.SERVER_STARTED.register(CompanionRuntime::onServerStarted);
         ServerLifecycleEvents.SERVER_STOPPING.register(CompanionRuntime::onServerStopping);
         ChatIntegrationFabric.register();
     }
