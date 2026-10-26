@@ -46,7 +46,7 @@
 - `isEnabled(MinecraftServer)`：只反映全局 `enabled` 配置，供伙伴创建入口门控；Provider 关闭或世界 UUID 损坏不会阻止普通伙伴创建。
 - `status(ServerPlayer)` 或 `status(MinecraftServer, UUID)`：只读、无磁盘 I/O 的验收快照。
 
-`ChatStatus` 提供全局 `enabled` 与聊天/Provider 状态、持久 `worldId`、伙伴 UUID/名称/活动及在线状态、会话数、在途数、队列数、共享成员数、记忆代次/条数、称呼、口吻和主动问候状态。验收可在客户端发起命令后，从服务端读取相同的状态 API。运行时默认使用 #5 的 `ModelProviders.create(ModConfig)`；工厂构造时不得联网。`setProviderFactory` 只用于明确的集成覆盖。
+`ChatStatus` 提供全局 `enabled` 与聊天/Provider 状态、持久 `worldId`、`companionDataAvailable`、伙伴 UUID/名称/活动及在线状态、会话数、在途数、队列数、共享成员数、记忆代次/条数、称呼、口吻和主动问候状态。伙伴数据预检或后续读取失败时该字段为 `false`，聊天和记忆局部关闭，`disabledReason` 说明数据不可用；不会把失败伪装为“未创建伙伴”，也不删除或重写原伙伴文件。验收可在客户端发起命令后，从服务端读取相同的状态 API。运行时默认使用 #5 的 `ModelProviders.create(ModConfig)`；工厂构造时不得联网。`setProviderFactory` 只用于明确的集成覆盖。
 
 消息通过 `ModelProvider.complete(ModelRequest)` 异步提交到有界后台池；成功/失败回调统一经 `server.execute` 回到服务端线程，再复核运行时、会话代次、伙伴和接收成员。默认模型配置最多 24 条消息/12,000 字符，运行时为系统提示保留预算，并限制历史及附加上下文；每会话至多 1 个在途请求、4 条排队消息、512 字符输入、1,000 字符回复；全服务最多 128 个会话，每玩家每 10 秒最多 8 条。超限有中文反馈。
 

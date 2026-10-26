@@ -62,6 +62,7 @@ import static net.minecraft.commands.Commands.literal;
 public final class ChatRuntime {
     private static final Logger LOGGER = LoggerFactory.getLogger("minecraft-friends/chat");
     private static final String DEFAULT_PREFIX = "@";
+    private static final String COMPANION_DATA_DISABLED_REASON = "伙伴数据文件不可用，聊天与记忆已关闭";
     private static final Map<MinecraftServer, RuntimeState> STATES =
             Collections.synchronizedMap(new WeakHashMap<>());
     private static volatile ProviderFactory providerFactory = ModelProviders::create;
@@ -99,9 +100,19 @@ public final class ChatRuntime {
                     failure.getClass().getSimpleName());
         }
 
+        boolean companionDataAvailable = true;
+        try {
+            CompanionRuntime.data(server);
+        } catch (RuntimeException failure) {
+            companionDataAvailable = false;
+            disabledReason = COMPANION_DATA_DISABLED_REASON;
+            LOGGER.warn("Chat and memory disabled because companion data could not be loaded ({})",
+                    failure.getClass().getSimpleName());
+        }
+
         ModelProvider provider = null;
         boolean enabled = config.enabled() && config.provider() != ProviderMode.DISABLED
-                && worldId != null && disabledReason.isEmpty();
+                && worldId != null && companionDataAvailable && disabledReason.isEmpty();
         if (enabled && config.provider() == ProviderMode.CHAT_COMPLETIONS
                 && (config.modelMaxContextMessages() < 2 || config.modelMaxContextCharacters() < 128)) {
             enabled = false;
@@ -134,7 +145,8 @@ public final class ChatRuntime {
                 worldRoot.resolve("data").resolve("memory"),
                 enabled,
                 disabledReason,
-                provider
+                provider,
+                companionDataAvailable
         );
         synchronized (STATES) {
             STATES.put(server, state);
@@ -190,7 +202,11 @@ public final class ChatRuntime {
                     || state.server.getPlayerList().getPlayer(owner.getUUID()) != owner) {
                 return;
             }
-            CompanionData.Entry entry = CompanionRuntime.data(state.server).find(owner.getUUID()).orElse(null);
+            CompanionData data = companionData(state);
+            if (data == null) {
+                return;
+            }
+            CompanionData.Entry entry = data.find(owner.getUUID()).orElse(null);
             if (entry == null || !companionAvailable(state.server, entry)) {
                 return;
             }
@@ -221,8 +237,11 @@ public final class ChatRuntime {
         if (state == null || !state.chatEnabled || state.worldId == null || !companion.isAlive()) {
             return;
         }
-        CompanionData.Entry entry = CompanionRuntime.data(companion.server)
-                .findByCompanion(companion.getUUID()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            return;
+        }
+        CompanionData.Entry entry = data.findByCompanion(companion.getUUID()).orElse(null);
         if (entry == null || !entry.active()) {
             return;
         }
@@ -279,15 +298,20 @@ public final class ChatRuntime {
             return false;
         }
         ChatPrefix.Address address = parsed.orElseThrow();
+        CompanionData data = companionData(state);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(companionDataUnavailableMessage(state)));
+            return true;
+        }
         if (state.worldId == null) {
-            CompanionData.Entry owned = CompanionRuntime.data(state.server).find(player.getUUID()).orElse(null);
+            CompanionData.Entry owned = data.find(player.getUUID()).orElse(null);
             if (owned != null && sameName(owned.identity().name(), address.companionName())) {
                 player.sendSystemMessage(Component.literal("聊天功能当前已关闭：" + state.disabledReason + "。"));
                 return true;
             }
             return false;
         }
-        List<Target> matches = findAddressTargets(state, player, address.companionName());
+        List<Target> matches = findAddressTargets(state, player, address.companionName(), data);
         if (matches.isEmpty()) {
             return false;
         }
@@ -377,7 +401,8 @@ public final class ChatRuntime {
         if (state == null) {
             return ChatStatus.notStarted();
         }
-        CompanionData.Entry entry = CompanionRuntime.data(server).find(ownerId).orElse(null);
+        CompanionData data = companionData(state);
+        CompanionData.Entry entry = data == null ? null : data.find(ownerId).orElse(null);
         boolean online = entry != null && server.getPlayerList().getPlayer(entry.identity().companionId()) != null;
         ChatSessionService.OwnerMetrics metrics = state.sessions == null
                 ? new ChatSessionService.OwnerMetrics(0, 0, 0, 0, 0)
@@ -406,7 +431,8 @@ public final class ChatRuntime {
                 memory.memoryCount(),
                 memory.persona().preferredAddress(),
                 memory.persona().tone(),
-                memory.proactiveEnabled()
+                memory.proactiveEnabled(),
+                state.companionDataAvailable
         );
     }
 
@@ -420,10 +446,17 @@ public final class ChatRuntime {
         ServerPlayer player = source.getPlayerOrException();
         RuntimeState state = state(player.server);
         if (state == null || !state.chatEnabled || state.sessions == null) {
-            player.sendSystemMessage(Component.literal("聊天功能当前已关闭"));
+            player.sendSystemMessage(Component.literal(state == null
+                    ? "服务端聊天运行时尚未启动。"
+                    : "聊天功能当前已关闭：" + state.disabledReason + "。"));
             return 0;
         }
-        CompanionData.Entry entry = CompanionRuntime.data(player.server).find(player.getUUID()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(companionDataUnavailableMessage(state)));
+            return 0;
+        }
+        CompanionData.Entry entry = data.find(player.getUUID()).orElse(null);
         if (entry == null) {
             player.sendSystemMessage(Component.literal("你还没有伙伴，请先使用 /mf companion create。"));
             return 0;
@@ -504,7 +537,12 @@ public final class ChatRuntime {
     private static int clearChatCommand(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         RuntimeState state = state(player.server);
-        CompanionData.Entry entry = CompanionRuntime.data(player.server).find(player.getUUID()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(companionDataUnavailableMessage(state)));
+            return 0;
+        }
+        CompanionData.Entry entry = data.find(player.getUUID()).orElse(null);
         if (state == null || entry == null || state.worldId == null || state.memory == null) {
             player.sendSystemMessage(Component.literal("没有可清空的伙伴聊天。"));
             return 0;
@@ -544,7 +582,8 @@ public final class ChatRuntime {
                 + " / Provider " + status.providerId()
                 + " / World UUID " + status.worldId()
                 + " / 前缀 " + status.prefix()
-                + " / 伙伴 " + (status.companionName().isEmpty() ? "未创建" : status.companionName())
+                + " / 伙伴 " + (!status.companionDataAvailable() ? "数据不可用"
+                        : status.companionName().isEmpty() ? "未创建" : status.companionName())
                 + " / 在线 " + status.companionOnline()
                 + " / 会话 " + status.sessionCount()
                 + " / 在途 " + status.inFlightCount()
@@ -564,7 +603,12 @@ public final class ChatRuntime {
     private static int createSharedCommand(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         RuntimeState state = state(player.server);
-        CompanionData.Entry entry = CompanionRuntime.data(player.server).find(player.getUUID()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(companionDataUnavailableMessage(state)));
+            return 0;
+        }
+        CompanionData.Entry entry = data.find(player.getUUID()).orElse(null);
         if (state == null || state.sessions == null || !state.chatEnabled) {
             player.sendSystemMessage(Component.literal("聊天功能当前已关闭。"));
             return 0;
@@ -593,7 +637,9 @@ public final class ChatRuntime {
         UUID sessionId = parseUuid(sessionText);
         if (state == null || state.sessions == null || !state.chatEnabled
                 || state.worldId == null || sessionId == null) {
-            player.sendSystemMessage(Component.literal("共享会话编号无效，或聊天功能当前已关闭。"));
+            player.sendSystemMessage(Component.literal(state == null
+                    ? "服务端聊天运行时尚未启动。"
+                    : "共享会话编号无效，或聊天功能当前已关闭：" + state.disabledReason + "。"));
             return 0;
         }
         ChatSessionService.SharedConversation shared = state.sessions
@@ -606,7 +652,12 @@ public final class ChatRuntime {
             player.sendSystemMessage(Component.literal("你的玩家 UUID 尚未加入这个共享会话。"));
             return 0;
         }
-        CompanionData.Entry entry = CompanionRuntime.data(player.server).find(shared.ownerId()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(companionDataUnavailableMessage(state)));
+            return 0;
+        }
+        CompanionData.Entry entry = data.find(shared.ownerId()).orElse(null);
         if (entry == null || !entry.identity().companionId().equals(shared.companionId())
                 || !companionAvailable(player.server, entry)) {
             player.sendSystemMessage(Component.literal("共享会话中的伙伴当前暂离或离线。"));
@@ -628,7 +679,12 @@ public final class ChatRuntime {
     private static int inviteCommand(CommandSourceStack source, String playerName) throws CommandSyntaxException {
         ServerPlayer owner = source.getPlayerOrException();
         RuntimeState state = state(owner.server);
-        CompanionData.Entry entry = CompanionRuntime.data(owner.server).find(owner.getUUID()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            owner.sendSystemMessage(Component.literal(companionDataUnavailableMessage(state)));
+            return 0;
+        }
+        CompanionData.Entry entry = data.find(owner.getUUID()).orElse(null);
         if (state == null || state.sessions == null || entry == null) {
             owner.sendSystemMessage(Component.literal("没有可邀请的共享会话；先使用 /mf chat shared create。"));
             return 0;
@@ -683,7 +739,12 @@ public final class ChatRuntime {
     private static int listMemoryCommand(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         RuntimeState state = state(player.server);
-        CompanionData.Entry entry = CompanionRuntime.data(player.server).find(player.getUUID()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(companionDataUnavailableMessage(state)));
+            return 0;
+        }
+        CompanionData.Entry entry = data.find(player.getUUID()).orElse(null);
         if (state == null || entry == null || state.worldId == null || state.memory == null) {
             player.sendSystemMessage(Component.literal("你还没有可查看的伙伴记忆。"));
             return 0;
@@ -705,7 +766,12 @@ public final class ChatRuntime {
     private static int rememberCommand(CommandSourceStack source, String text) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         RuntimeState state = state(player.server);
-        CompanionData.Entry entry = CompanionRuntime.data(player.server).find(player.getUUID()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(companionDataUnavailableMessage(state)));
+            return 0;
+        }
+        CompanionData.Entry entry = data.find(player.getUUID()).orElse(null);
         if (state == null || entry == null || state.worldId == null || state.memory == null) {
             player.sendSystemMessage(Component.literal("你还没有可保存记忆的伙伴。"));
             return 0;
@@ -718,7 +784,12 @@ public final class ChatRuntime {
     private static int deleteMemoryCommand(CommandSourceStack source, String idText) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         RuntimeState state = state(player.server);
-        CompanionData.Entry entry = CompanionRuntime.data(player.server).find(player.getUUID()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(companionDataUnavailableMessage(state)));
+            return 0;
+        }
+        CompanionData.Entry entry = data.find(player.getUUID()).orElse(null);
         UUID id = parseUuid(idText);
         if (state == null || entry == null || state.worldId == null || state.memory == null || id == null) {
             player.sendSystemMessage(Component.literal("记忆编号无效，或你还没有可管理记忆的伙伴。"));
@@ -733,7 +804,12 @@ public final class ChatRuntime {
     private static int clearMemoryCommand(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         RuntimeState state = state(player.server);
-        CompanionData.Entry entry = CompanionRuntime.data(player.server).find(player.getUUID()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(companionDataUnavailableMessage(state)));
+            return 0;
+        }
+        CompanionData.Entry entry = data.find(player.getUUID()).orElse(null);
         if (state == null || entry == null || state.worldId == null || state.memory == null) {
             player.sendSystemMessage(Component.literal("你还没有可清空记忆的伙伴。"));
             return 0;
@@ -748,7 +824,12 @@ public final class ChatRuntime {
     private static int addressCommand(CommandSourceStack source, String address) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         RuntimeState state = state(player.server);
-        CompanionData.Entry entry = CompanionRuntime.data(player.server).find(player.getUUID()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(companionDataUnavailableMessage(state)));
+            return 0;
+        }
+        CompanionData.Entry entry = data.find(player.getUUID()).orElse(null);
         if (state == null || entry == null || state.worldId == null || state.memory == null) {
             player.sendSystemMessage(Component.literal("你还没有可设置称呼的伙伴。"));
             return 0;
@@ -767,7 +848,12 @@ public final class ChatRuntime {
     private static int toneCommand(CommandSourceStack source, String tone) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         RuntimeState state = state(player.server);
-        CompanionData.Entry entry = CompanionRuntime.data(player.server).find(player.getUUID()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(companionDataUnavailableMessage(state)));
+            return 0;
+        }
+        CompanionData.Entry entry = data.find(player.getUUID()).orElse(null);
         if (state == null || entry == null || state.worldId == null || state.memory == null) {
             player.sendSystemMessage(Component.literal("你还没有可设置口吻的伙伴。"));
             return 0;
@@ -785,7 +871,12 @@ public final class ChatRuntime {
     private static int proactiveCommand(CommandSourceStack source, boolean enabled) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         RuntimeState state = state(player.server);
-        CompanionData.Entry entry = CompanionRuntime.data(player.server).find(player.getUUID()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(companionDataUnavailableMessage(state)));
+            return 0;
+        }
+        CompanionData.Entry entry = data.find(player.getUUID()).orElse(null);
         if (state == null || entry == null || state.worldId == null || state.memory == null) {
             player.sendSystemMessage(Component.literal("你还没有可设置主动问候的伙伴。"));
             return 0;
@@ -806,7 +897,11 @@ public final class ChatRuntime {
         if (state.firstMeetingClaimedSinceLogin.contains(player.getUUID())) {
             return;
         }
-        CompanionData.Entry entry = CompanionRuntime.data(state.server).find(player.getUUID()).orElse(null);
+        CompanionData data = companionData(state);
+        if (data == null) {
+            return;
+        }
+        CompanionData.Entry entry = data.find(player.getUUID()).orElse(null);
         if (entry == null || !companionAvailable(state.server, entry)) {
             return;
         }
@@ -885,9 +980,13 @@ public final class ChatRuntime {
         };
     }
 
-    private static List<Target> findAddressTargets(RuntimeState state, ServerPlayer player, String name) {
+    private static List<Target> findAddressTargets(
+            RuntimeState state,
+            ServerPlayer player,
+            String name,
+            CompanionData data
+    ) {
         List<Target> matches = new ArrayList<>();
-        CompanionData data = CompanionRuntime.data(state.server);
         CompanionData.Entry owned = data.find(player.getUUID()).orElse(null);
         Target ownedTarget = null;
         if (owned != null && sameName(owned.identity().name(), name)) {
@@ -972,10 +1071,30 @@ public final class ChatRuntime {
     }
 
     private static void sendIfOnline(RuntimeState state, ServerPlayer player, String message, boolean currentStateRequired) {
-        if ((!currentStateRequired || isCurrent(state))
+        if (state.companionDataAvailable && (!currentStateRequired || isCurrent(state))
                 && state.server.getPlayerList().getPlayer(player.getUUID()) == player) {
             player.sendSystemMessage(Component.literal(message));
         }
+    }
+
+    private static CompanionData companionData(RuntimeState state) {
+        if (state == null || !state.companionDataAvailable) {
+            return null;
+        }
+        try {
+            CompanionData data = CompanionRuntime.data(state.server);
+            return state.companionDataAvailable ? data : null;
+        } catch (RuntimeException failure) {
+            if (state.disableForCompanionDataFailure()) {
+                LOGGER.warn("Chat and memory disabled because companion data could not be loaded ({})",
+                        failure.getClass().getSimpleName());
+            }
+            return null;
+        }
+    }
+
+    private static String companionDataUnavailableMessage(RuntimeState state) {
+        return state == null ? "服务端聊天运行时尚未启动。" : state.disabledReason;
     }
 
     private static MemoryScope scope(RuntimeState state, CompanionData.Entry entry) {
@@ -1059,12 +1178,13 @@ public final class ChatRuntime {
             int memoryCount,
             String preferredAddress,
             String tone,
-            boolean proactiveEnabled
+            boolean proactiveEnabled,
+            boolean companionDataAvailable
     ) {
         private static ChatStatus notStarted() {
             return new ChatStatus(false, false, "服务端聊天运行时尚未启动", null, "disabled", DEFAULT_PREFIX,
                     null, "", false, false, 0, 0, 0, 0, 0,
-                    false, 0, 0, "", "", false);
+                    false, 0, 0, "", "", false, false);
         }
     }
 
@@ -1084,8 +1204,9 @@ public final class ChatRuntime {
         private final boolean globalEnabled;
         private final UUID worldId;
         private final String prefix;
-        private final boolean chatEnabled;
-        private final String disabledReason;
+        private volatile boolean chatEnabled;
+        private volatile String disabledReason;
+        private volatile boolean companionDataAvailable;
         private final ModelProvider provider;
         private final ExecutorService memoryExecutor;
         private final ExecutorService modelExecutor;
@@ -1104,7 +1225,8 @@ public final class ChatRuntime {
                 Path memoryRoot,
                 boolean chatEnabled,
                 String disabledReason,
-                ModelProvider provider
+                ModelProvider provider,
+                boolean companionDataAvailable
         ) {
             this.server = server;
             this.config = config;
@@ -1113,11 +1235,15 @@ public final class ChatRuntime {
             this.prefix = prefix;
             this.chatEnabled = chatEnabled;
             this.disabledReason = disabledReason;
+            this.companionDataAvailable = companionDataAvailable;
             this.provider = provider;
             this.memoryExecutor = new ThreadPoolExecutor(
                     2, 2, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(128),
                     namedThreads("mf-memory"), new ThreadPoolExecutor.AbortPolicy());
             this.memory = new ChatMemoryCoordinator(memoryRoot, memoryExecutor);
+            if (!companionDataAvailable) {
+                this.memory.shutdownWhenIdle();
+            }
             if (chatEnabled && provider != null) {
                 this.modelExecutor = new ThreadPoolExecutor(
                         2, 2, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(64),
@@ -1166,6 +1292,28 @@ public final class ChatRuntime {
             return memoryMutations.contains(scope);
         }
 
+        private synchronized boolean disableForCompanionDataFailure() {
+            if (!companionDataAvailable) {
+                return false;
+            }
+            companionDataAvailable = false;
+            chatEnabled = false;
+            disabledReason = COMPANION_DATA_DISABLED_REASON;
+            for (LoginToken token : loginTokens.values()) {
+                token.active = false;
+            }
+            loginTokens.clear();
+            firstMeetingClaimedSinceLogin.clear();
+            if (sessions != null) {
+                sessions.close();
+            }
+            if (modelExecutor != null) {
+                modelExecutor.shutdownNow();
+            }
+            memory.shutdownWhenIdle();
+            return true;
+        }
+
         private boolean isCurrentLogin(UUID ownerId, LoginToken token) {
             return token != null && token.active && loginTokens.get(ownerId) == token;
         }
@@ -1190,7 +1338,8 @@ public final class ChatRuntime {
                                     ChatMemoryCoordinator.StoreOperation<T> operation,
                                     java.util.function.Consumer<T> success) {
             boolean queued = memory.submit(scope, operation, (value, failure) -> executeMain(() -> {
-                if (!isCurrent(this) || server.getPlayerList().getPlayer(player.getUUID()) != player) {
+                if (!companionDataAvailable || !isCurrent(this)
+                        || server.getPlayerList().getPlayer(player.getUUID()) != player) {
                     return;
                 }
                 if (failure != null) {
@@ -1223,7 +1372,8 @@ public final class ChatRuntime {
             }
             boolean queued = memory.submit(scope, operation, (value, failure) -> executeMain(() -> {
                 endMemoryMutation(scope);
-                if (!isCurrent(this) || server.getPlayerList().getPlayer(player.getUUID()) != player) {
+                if (!companionDataAvailable || !isCurrent(this)
+                        || server.getPlayerList().getPlayer(player.getUUID()) != player) {
                     return;
                 }
                 if (failure != null) {
@@ -1241,11 +1391,15 @@ public final class ChatRuntime {
         }
 
         private void deliver(ChatSessionService.Reply reply) {
-            if (!isCurrent(this) || worldId == null || !worldId.equals(reply.conversation().worldId())) {
+            if (!companionDataAvailable || !isCurrent(this) || worldId == null
+                    || !worldId.equals(reply.conversation().worldId())) {
                 return;
             }
-            CompanionData.Entry entry = CompanionRuntime.data(server)
-                    .find(reply.conversation().ownerId()).orElse(null);
+            CompanionData data = companionData(this);
+            if (data == null) {
+                return;
+            }
+            CompanionData.Entry entry = data.find(reply.conversation().ownerId()).orElse(null);
             if (entry == null || !entry.active()
                     || !entry.identity().companionId().equals(reply.conversation().companionId())
                     || !companionAvailable(server, entry)) {
@@ -1263,7 +1417,8 @@ public final class ChatRuntime {
         }
 
         private void reportFailure(ChatSessionService.Failure failure) {
-            if (!isCurrent(this) || !sessions.isMember(failure.conversation(), failure.speakerId())) {
+            if (!companionDataAvailable || !isCurrent(this)
+                    || !sessions.isMember(failure.conversation(), failure.speakerId())) {
                 return;
             }
             ServerPlayer player = server.getPlayerList().getPlayer(failure.speakerId());
