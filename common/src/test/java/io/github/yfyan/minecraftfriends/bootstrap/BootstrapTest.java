@@ -1,10 +1,13 @@
 package io.github.yfyan.minecraftfriends.bootstrap;
 
 import io.github.yfyan.minecraftfriends.adapter.LoaderAdapter;
+import io.github.yfyan.minecraftfriends.config.ConfigLoader;
+import io.github.yfyan.minecraftfriends.config.ProviderMode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +32,7 @@ class BootstrapTest {
         assertTrue(report.notices().stream()
                 .anyMatch(notice -> notice.message().contains("Mock mode remains offline")));
         assertTrue(adapter.messages.stream()
-                .anyMatch(message -> message.contains("Startup completed without model credentials")));
+                .anyMatch(message -> message.contains("Startup completed without sending a model request")));
         assertFalse(adapter.warnings);
     }
 
@@ -44,6 +47,22 @@ class BootstrapTest {
         assertEquals("MOCK", report.config().provider().name());
         assertTrue(report.config().enabled());
         assertTrue(adapter.warnings);
+    }
+
+    @Test
+    void fallsBackSafelyForMalformedUnicodeWithoutChangingOrLoggingTheFile() throws IOException {
+        Path config = temporaryDirectory.resolve(ConfigLoader.FILE_NAME);
+        String secretSentinel = "bootstrap-config-sentinel";
+        String original = "model.name=" + secretSentinel + (char) 92 + "u12X4\n";
+        Files.writeString(config, original);
+        RecordingAdapter adapter = new RecordingAdapter(temporaryDirectory);
+
+        StartupReport report = Bootstrap.initialize(adapter);
+
+        assertEquals(ProviderMode.MOCK, report.config().provider());
+        assertTrue(adapter.warnings);
+        assertFalse(String.join("\n", adapter.messages).contains(secretSentinel));
+        assertEquals(original, Files.readString(config));
     }
 
     private static final class RecordingAdapter implements LoaderAdapter {

@@ -11,6 +11,7 @@ base {
 sourceSets {
     main {
         java.srcDir rootProject.file('common/src/main/java')
+        java.srcDir rootProject.file('common/src/main/minecraft')
     }
 }
 
@@ -46,15 +47,18 @@ minecraft {
         }
 
         client {
+            workingDirectory project.file('build/run/client')
             property 'forge.enabledGameTestNamespaces', 'minecraft_friends'
         }
 
         server {
+            workingDirectory project.file('build/run/server')
             property 'forge.enabledGameTestNamespaces', 'minecraft_friends'
             args '--nogui'
         }
 
         gameTestServer {
+            workingDirectory project.file('build/run/gametest')
             property 'forge.enabledGameTestNamespaces', 'minecraft_friends'
         }
     }

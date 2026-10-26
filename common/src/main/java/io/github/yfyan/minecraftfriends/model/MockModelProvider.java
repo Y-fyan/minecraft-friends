@@ -13,6 +13,6 @@ public final class MockModelProvider implements ModelProvider {
     @Override
     public CompletionStage<ModelResponse> complete(ModelRequest request) {
         Objects.requireNonNull(request, "request");
-        return CompletableFuture.completedFuture(new ModelResponse("Mock response"));
+        return CompletableFuture.completedFuture(new ModelResponse("我是离线演示中的 AI 伙伴，当前未连接真实模型。"));
     }
 }

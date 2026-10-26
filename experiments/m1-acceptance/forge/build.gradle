@@ -1,0 +1,59 @@
+plugins { id 'net.minecraftforge.gradle' version '6.0.24' }
+def acceptanceClientDirectory = project.hasProperty('acceptanceNegativeRunDir')
+        ? project.file(project.property('acceptanceNegativeRunDir'))
+        : project.layout.buildDirectory.dir('run/client').get().asFile
+def productionJar = rootProject.file('../../build/artifacts/minecraft-friends-forge-1.21.1-0.1.0-SNAPSHOT.jar')
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.21.1-52.1.20'
+    compileOnly files(productionJar)
+}
+def prepareAcceptance = tasks.register('prepareAcceptance', Copy) {
+    from productionJar
+    into new File(acceptanceClientDirectory, 'mods')
+}
+def runtimeDirectory = layout.buildDirectory.dir('acceptanceMod')
+def acceptanceRuntime = sourceSets.create('acceptanceRuntime')
+acceptanceRuntime.java.setSrcDirs([])
+acceptanceRuntime.resources.setSrcDirs([])
+acceptanceRuntime.output.classesDirs.setFrom(runtimeDirectory)
+acceptanceRuntime.runtimeClasspath = files(runtimeDirectory) +
+        (sourceSets.main.runtimeClasspath - sourceSets.main.output)
+def prepareRuntime = tasks.register('prepareAcceptanceMod', Sync) {
+    dependsOn tasks.named('classes'), tasks.named(acceptanceRuntime.classesTaskName)
+    from sourceSets.main.output
+    into runtimeDirectory
+}
+minecraft {
+    mappings channel: 'official', version: '1.21.1'
+    reobf = false
+    runs {
+        client {
+            workingDirectory acceptanceClientDirectory
+            property 'mf.acceptance', 'true'
+            property 'mf.acceptance.loader', 'forge'
+            if (project.hasProperty('acceptanceEvents')) { property 'mf.acceptance.events', 'true' }
+            if (project.hasProperty('acceptanceNegative')) {
+                property 'mf.acceptance.negative', 'true'
+                property 'mf.acceptance.negative.scenario', project.property('acceptanceNegativeScenario')
+                property 'mf.acceptance.negative.runDir', project.property('acceptanceNegativeRunDir')
+            }
+            if (project.hasProperty('acceptancePeer')) {
+                property 'mf.acceptance.peer', 'true'
+                property 'mf.acceptance.peer.role', project.property('acceptancePeerRole')
+            }
+            if (project.hasProperty('acceptanceLifecycleOnly')) { property 'mf.acceptance.lifecycleOnly', 'true' }
+            if (project.hasProperty('acceptanceUsername')) { args '--username', project.property('acceptanceUsername') }
+            if (project.hasProperty('acceptancePeerRole')) {
+                def username = project.property('acceptancePeerRole') == 'a' ? 'MFAcceptA' : 'MFAcceptB'
+                args '--username', username
+            }
+            if (project.hasProperty('acceptanceServer')) {
+                property 'mf.acceptance.server', project.property('acceptanceServer')
+            }
+            mods { mf_m1_acceptance { source acceptanceRuntime } }
+        }
+    }
+}
+tasks.matching { it.name == 'runClient' }.configureEach {
+    dependsOn prepareAcceptance, prepareRuntime
+}

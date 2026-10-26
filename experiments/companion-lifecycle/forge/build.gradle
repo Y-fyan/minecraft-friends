@@ -1,0 +1,25 @@
+plugins { id 'net.minecraftforge.gradle' version '6.0.24' }
+
+minecraft {
+    mappings channel: 'official', version: '1.21.1'
+    reobf = false
+    runs {
+        gameTestServer {
+            workingDirectory project.file('build/run/gametest')
+            property 'mf.lifecycle.loader', 'forge'
+            property 'forge.enabledGameTestNamespaces', 'minecraft_friends'
+            mods { minecraft_friends { source sourceSets.main } }
+        }
+    }
+}
+
+dependencies { minecraft 'net.minecraftforge:forge:1.21.1-52.1.20' }
+
+sourceSets.main.java.srcDir rootProject.file('../../forge/src/main/java')
+sourceSets.main.java.srcDir rootProject.file('../../forge/src/main/java')
+
+sourceSets.each {
+    def combined = layout.buildDirectory.dir("sourceSets/${it.name}")
+    it.output.resourcesDir = combined
+    it.java.destinationDirectory = combined
+}

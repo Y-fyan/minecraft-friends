@@ -1,0 +1,40 @@
+plugins { id 'fabric-loom' version '1.7.4' }
+def acceptanceClientDirectory = project.hasProperty('acceptanceNegativeRunDir')
+        ? project.file(project.property('acceptanceNegativeRunDir'))
+        : project.layout.buildDirectory.dir('run/client').get().asFile
+dependencies {
+    minecraft 'com.mojang:minecraft:1.21.1'
+    mappings loom.officialMojangMappings()
+    modImplementation 'net.fabricmc:fabric-loader:0.20.1'
+    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.116.17+1.21.1'
+    modImplementation files(rootProject.file('../../build/artifacts/minecraft-friends-fabric-1.21.1-0.1.0-SNAPSHOT.jar'))
+}
+loom {
+    runs {
+        acceptance {
+            client()
+            runDir project.relativePath(acceptanceClientDirectory)
+            vmArg '-Dmf.acceptance=true'
+            vmArg '-Dmf.acceptance.loader=fabric'
+            if (project.hasProperty('acceptanceEvents')) { vmArg '-Dmf.acceptance.events=true' }
+            if (project.hasProperty('acceptanceNegative')) {
+                vmArg '-Dmf.acceptance.negative=true'
+                vmArg '-Dmf.acceptance.negative.scenario=' + project.property('acceptanceNegativeScenario')
+                vmArg '-Dmf.acceptance.negative.runDir=' + project.property('acceptanceNegativeRunDir')
+            }
+            if (project.hasProperty('acceptancePeer')) {
+                vmArg '-Dmf.acceptance.peer=true'
+                vmArg '-Dmf.acceptance.peer.role=' + project.property('acceptancePeerRole')
+            }
+            if (project.hasProperty('acceptanceLifecycleOnly')) { vmArg '-Dmf.acceptance.lifecycleOnly=true' }
+            if (project.hasProperty('acceptanceUsername')) { programArgs '--username', project.property('acceptanceUsername') }
+            if (project.hasProperty('acceptancePeerRole')) {
+                def username = project.property('acceptancePeerRole') == 'a' ? 'MFAcceptA' : 'MFAcceptB'
+                programArgs '--username', username
+            }
+            if (project.hasProperty('acceptanceServer')) {
+                vmArg '-Dmf.acceptance.server=' + project.property('acceptanceServer')
+            }
+        }
+    }
+}

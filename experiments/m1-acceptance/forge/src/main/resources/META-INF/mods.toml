@@ -1,0 +1,14 @@
+modLoader="javafml"
+loaderVersion="[52,)"
+license="GPL-3.0-only"
+[[mods]]
+modId="mf_m1_acceptance"
+version="1.0.0"
+displayName="Minecraft Friends isolated M1 acceptance"
+description="Isolated acceptance helper; never install in real worlds."
+[[dependencies.mf_m1_acceptance]]
+modId="minecraft_friends"
+mandatory=true
+versionRange="[0.1.0-SNAPSHOT,)"
+ordering="AFTER"
+side="BOTH"

@@ -1,0 +1,41 @@
+plugins { id 'base' }
+subprojects {
+    group = 'io.github.yfyan.minecraftfriends.acceptance'
+    version = '1.0.0'
+    repositories { mavenCentral() }
+    plugins.withId('java') {
+        java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+        tasks.withType(JavaCompile).configureEach {
+            options.release = 21
+            options.encoding = 'UTF-8'
+        }
+        sourceSets.main.java.srcDir rootProject.file('shared/src/main/java')
+        sourceSets.main.java.srcDir rootProject.file('negative/src/main/java')
+        tasks.withType(Jar).configureEach {
+            from(rootProject.file('../../LICENSE')) { into 'META-INF' }
+        }
+    }
+}
+
+def acceptanceInstance = providers.gradleProperty('acceptanceInstance').orNull
+if (acceptanceInstance != null) {
+    if (!(acceptanceInstance in ['a', 'b'])) {
+        throw new GradleException('acceptanceInstance must be a or b')
+    }
+    def acceptanceRunId = providers.gradleProperty('acceptanceRunId').orElse('manual').get()
+    if (!acceptanceRunId.matches('[A-Za-z0-9-]{1,64}')) {
+        throw new GradleException('acceptanceRunId must contain only letters, digits and hyphens')
+    }
+    subprojects {
+        layout.buildDirectory.set(layout.projectDirectory.dir("build/peer/${acceptanceRunId}/${acceptanceInstance}"))
+    }
+}
+
+def negativeRunDirectory = providers.gradleProperty('acceptanceNegativeRunDir').orNull
+if (negativeRunDirectory != null) {
+    def allowed = rootProject.file('negative/build/run').toPath().toAbsolutePath().normalize()
+    def requested = rootProject.file(negativeRunDirectory).toPath().toAbsolutePath().normalize()
+    if (!requested.startsWith(allowed)) {
+        throw new GradleException('Negative acceptance must use its isolated negative/build/run directory')
+    }
+}

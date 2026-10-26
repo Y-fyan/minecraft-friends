@@ -1,6 +1,6 @@
 # 架构草案
 
-状态：**M0 双加载器骨架已实现；伙伴和游戏玩法仍为提案**。公共配置、模型契约、任务状态和最小加载器入口已通过本地构建与专服初始化验证。玩家控制路线已按 [ADR 0001](decisions/0001-player-control-route.md) 接受，依据为 [独立基础探针](validation/0002-player-control-reproduction.md)；其余模块仍需实现和验证。
+状态：**M0 已完成，M1 代码进入集成验收**。当前包含服务端伙伴生命周期、异步模型协议、会话隔离与可管理记忆；移动和世界任务仍为 M2 规划。纯 Java 核心位于 `common/src/main/java`；共享 Minecraft 服务端适配位于 `common/src/main/minecraft`，只由两个加载器工程编译。Fabric/Forge 各自注册事件与入口，不将 Minecraft 类型引入纯核心。玩家控制路线保持 [ADR 0001](decisions/0001-player-control-route.md) 的服务端玩家实体；具体接口见 [聊天](CHAT.md)、[模型](MODEL.md) 和 [记忆](MEMORY.md)。
 
 当前模块为 `common`、`fabric`、`forge`。两个发行 JAR 把同一份公共源码编入各自产物，避免玩家额外安装公共 JAR；决策见 [ADR 0002](decisions/0002-multiloader-layout.md)。
 
@@ -38,7 +38,7 @@
 | 契约 | 最少需要说明的内容 |
 | --- | --- |
 | 模型服务 | 输入上下文、请求 ID、超时、取消、类型化结果和错误 |
-| 伙伴生命周期 | 身份/归属、创建移除、死亡重生、持久化及重复请求处理 |
+| 伙伴生命周期 | 已实现 `CompanionIdentity`：独立伙伴 UUID、主人 UUID 与受限名称；服务端 `CompanionRuntime` 提供幂等创建、召唤、暂离、状态和登录/断线/死亡/关服钩子；世界 `SavedData` 保存归属、名称和活动状态，玩家数据保存背包、生命、维度和位置。#5/#6 通过主人 UUID 与伙伴 UUID 对齐接口，不以显示名称寻址所有权。正式单机与死亡掉落实体验仍待验收 |
 | 世界感知 | 快照范围、生成线程、时效、体积预算和不可见信息边界 |
 | 动作执行 | 动作 schema、权限、游戏线程、结果、停止和超时 |
 | 任务调度 | 任务 ID、队列与状态、优先停止、终态和去重 |

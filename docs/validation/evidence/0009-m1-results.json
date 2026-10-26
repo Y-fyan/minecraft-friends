@@ -1,0 +1,707 @@
+{
+  "date": "2026-10-26",
+  "scope": "M1 protocol-simulation verification; not real model acceptance",
+  "production_source_commit": "6084db3 (production code unchanged through fd09632)",
+  "mainflow": [
+    {
+      "target": "fabric-integrated",
+      "source_commit": "fd096324659f725293635c7823f1c2fa22c14a38",
+      "production_jar_sha256": "e3278b45c1f77755ce35b1ba73e6a9a1aaa3376778153bc59fe3a2dd4633a336",
+      "helper_sources_sha256": "52250122fa0ba1b995e5a778415b00f51a341b4e79237f4aa63137c02b9e8c5e",
+      "passed": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": false,
+      "artifact_unchanged": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "log_sha256": "b18a80d084e42230820e072aa900c136f1af0bcb853edd55e066952fae9d63af",
+      "expected_server_class": "net.minecraft.client.server.IntegratedServer",
+      "observed_server_classes": [
+        "net.minecraft.client.server.IntegratedServer"
+      ],
+      "server_role_verified": true,
+      "server_log_sha256": null,
+      "server_log_prefix_unchanged": true,
+      "installed_server_mod_unchanged": true,
+      "missing_checks": [],
+      "protocol_checks_passed": true,
+      "protocol_count_delta": {
+        "PRIVATE": 1,
+        "PREFIX": 1,
+        "REJOIN": 1,
+        "AFTER_CLEAR": 1
+      },
+      "client_completion": true,
+      "local_evidence_id": "fabric-integrated-1793011978814926653"
+    },
+    {
+      "target": "forge-integrated",
+      "source_commit": "fd096324659f725293635c7823f1c2fa22c14a38",
+      "production_jar_sha256": "bfad1766bcfb44f8077fc625908ca1dd152c2d76ae4efb7241ab9efa6024cfe6",
+      "helper_sources_sha256": "52250122fa0ba1b995e5a778415b00f51a341b4e79237f4aa63137c02b9e8c5e",
+      "passed": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": false,
+      "artifact_unchanged": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "log_sha256": "cf41ed237485800826ac5f641e7184832909961745f4dc5d3677794574acc36a",
+      "expected_server_class": "net.minecraft.client.server.IntegratedServer",
+      "observed_server_classes": [
+        "net.minecraft.client.server.IntegratedServer"
+      ],
+      "server_role_verified": true,
+      "server_log_sha256": null,
+      "server_log_prefix_unchanged": true,
+      "installed_server_mod_unchanged": true,
+      "missing_checks": [],
+      "protocol_checks_passed": true,
+      "protocol_count_delta": {
+        "PRIVATE": 1,
+        "PREFIX": 1,
+        "REJOIN": 1,
+        "AFTER_CLEAR": 1
+      },
+      "client_completion": true,
+      "local_evidence_id": "forge-integrated-1793011998594134009"
+    },
+    {
+      "target": "fabric-dedicated",
+      "source_commit": "fd096324659f725293635c7823f1c2fa22c14a38",
+      "production_jar_sha256": "e3278b45c1f77755ce35b1ba73e6a9a1aaa3376778153bc59fe3a2dd4633a336",
+      "helper_sources_sha256": "52250122fa0ba1b995e5a778415b00f51a341b4e79237f4aa63137c02b9e8c5e",
+      "passed": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": false,
+      "artifact_unchanged": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "log_sha256": "5008013e9405293a9bb873a4785771a1baf75d971cd72a32a5f1b06242a771fe",
+      "expected_server_class": "net.minecraft.server.dedicated.DedicatedServer",
+      "observed_server_classes": [
+        "net.minecraft.class_3176"
+      ],
+      "server_role_verified": true,
+      "server_log_sha256": "aca589c83afd39c87dea4837d36d93ff0723a0e6b8a9bd00bdea8ea09f503fd6",
+      "server_log_prefix_unchanged": true,
+      "installed_server_mod_unchanged": true,
+      "missing_checks": [],
+      "protocol_checks_passed": true,
+      "protocol_count_delta": {
+        "PRIVATE": 1,
+        "PREFIX": 1,
+        "REJOIN": 1,
+        "AFTER_CLEAR": 1
+      },
+      "client_completion": true,
+      "local_evidence_id": "fabric-dedicated-1793012150140205874"
+    },
+    {
+      "target": "forge-dedicated",
+      "source_commit": "fd096324659f725293635c7823f1c2fa22c14a38",
+      "production_jar_sha256": "bfad1766bcfb44f8077fc625908ca1dd152c2d76ae4efb7241ab9efa6024cfe6",
+      "helper_sources_sha256": "52250122fa0ba1b995e5a778415b00f51a341b4e79237f4aa63137c02b9e8c5e",
+      "passed": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": false,
+      "artifact_unchanged": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "log_sha256": "a073978f97ce87d6a6fc4059c86d05d0a3d6e2f284b648239cfe58edd60339a8",
+      "expected_server_class": "net.minecraft.server.dedicated.DedicatedServer",
+      "observed_server_classes": [
+        "net.minecraft.server.dedicated.DedicatedServer"
+      ],
+      "server_role_verified": true,
+      "server_log_sha256": "25ad55ae5aeab917f290827840e5f4c2b258324949d21bfa4467ee3962174308",
+      "server_log_prefix_unchanged": true,
+      "installed_server_mod_unchanged": true,
+      "missing_checks": [],
+      "protocol_checks_passed": true,
+      "protocol_count_delta": {
+        "PRIVATE": 1,
+        "PREFIX": 1,
+        "REJOIN": 1,
+        "AFTER_CLEAR": 1
+      },
+      "client_completion": true,
+      "local_evidence_id": "forge-dedicated-1793012170718843937"
+    }
+  ],
+  "negative": [
+    {
+      "target": "fabric-disabled",
+      "source_commit": "fd096324659f725293635c7823f1c2fa22c14a38",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_diff_present": false,
+      "helper_sources_sha256": "52250122fa0ba1b995e5a778415b00f51a341b4e79237f4aa63137c02b9e8c5e",
+      "production_jar": "minecraft-friends-fabric-1.21.1-0.1.0-SNAPSHOT.jar",
+      "production_jar_sha256": "e3278b45c1f77755ce35b1ba73e6a9a1aaa3376778153bc59fe3a2dd4633a336",
+      "config_sha256": "030c953e6ea10d748b434cf056f669306bdbf358aae654e9b6990211811f057e",
+      "probe_endpoint": "http://127.0.0.1:41755/v1/chat/completions",
+      "probe_summary": "/home/mdfz/.codex/worktrees/m1-integration/minecraft-friends/experiments/m1-acceptance/negative/build/evidence/fabric-disabled-1793011786387062043/no-call-probe.json",
+      "request_data_stored": false,
+      "passed": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": false,
+      "seconds": 18.18,
+      "server_class": "net.minecraft.client.server.IntegratedServer",
+      "actual_server_role": "IntegratedServer",
+      "required_checks": [
+        "integrated_server_instance",
+        "world_path_isolated",
+        "world_name_safe",
+        "target_was_absent",
+        "owner_login",
+        "status_chat_disabled",
+        "provider_not_initialized",
+        "status_no_companion",
+        "status_global_disabled",
+        "companion_data_available",
+        "status_disabled_reason",
+        "player_remained_connected",
+        "no_companion_after_command",
+        "disabled_state_preserved"
+      ],
+      "missing_checks": [],
+      "client_completion": true,
+      "fixture_connections": 0,
+      "no_model_http_calls": true,
+      "corrupt_file_sha256_after_exit": null,
+      "corrupt_file_unchanged_after_exit": null,
+      "config_restored": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "production_jar_unchanged": true,
+      "m1_complete": false,
+      "local_evidence_id": "fabric-disabled-1793011786387062043"
+    },
+    {
+      "target": "forge-disabled",
+      "source_commit": "fd096324659f725293635c7823f1c2fa22c14a38",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_diff_present": false,
+      "helper_sources_sha256": "52250122fa0ba1b995e5a778415b00f51a341b4e79237f4aa63137c02b9e8c5e",
+      "production_jar": "minecraft-friends-forge-1.21.1-0.1.0-SNAPSHOT.jar",
+      "production_jar_sha256": "bfad1766bcfb44f8077fc625908ca1dd152c2d76ae4efb7241ab9efa6024cfe6",
+      "config_sha256": "df500a72d783a65c932a94c7c88b0da80250e8b713cae8007eb2a1b5675b7c62",
+      "probe_endpoint": "http://127.0.0.1:33517/v1/chat/completions",
+      "probe_summary": "/home/mdfz/.codex/worktrees/m1-integration/minecraft-friends/experiments/m1-acceptance/negative/build/evidence/forge-disabled-1793011804988235643/no-call-probe.json",
+      "request_data_stored": false,
+      "passed": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": false,
+      "seconds": 15.7,
+      "server_class": "net.minecraft.client.server.IntegratedServer",
+      "actual_server_role": "IntegratedServer",
+      "required_checks": [
+        "integrated_server_instance",
+        "world_path_isolated",
+        "world_name_safe",
+        "target_was_absent",
+        "owner_login",
+        "status_chat_disabled",
+        "provider_not_initialized",
+        "status_no_companion",
+        "status_global_disabled",
+        "companion_data_available",
+        "status_disabled_reason",
+        "player_remained_connected",
+        "no_companion_after_command",
+        "disabled_state_preserved"
+      ],
+      "missing_checks": [],
+      "client_completion": true,
+      "fixture_connections": 0,
+      "no_model_http_calls": true,
+      "corrupt_file_sha256_after_exit": null,
+      "corrupt_file_unchanged_after_exit": null,
+      "config_restored": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "production_jar_unchanged": true,
+      "m1_complete": false,
+      "local_evidence_id": "forge-disabled-1793011804988235643"
+    },
+    {
+      "target": "fabric-corrupt",
+      "source_commit": "fd096324659f725293635c7823f1c2fa22c14a38",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_diff_present": false,
+      "helper_sources_sha256": "52250122fa0ba1b995e5a778415b00f51a341b4e79237f4aa63137c02b9e8c5e",
+      "production_jar": "minecraft-friends-fabric-1.21.1-0.1.0-SNAPSHOT.jar",
+      "production_jar_sha256": "e3278b45c1f77755ce35b1ba73e6a9a1aaa3376778153bc59fe3a2dd4633a336",
+      "config_sha256": "958c63388fd499304c404af2d054d0b338bebebce23e65f92c2c1cdcbb2df7cb",
+      "probe_endpoint": "http://127.0.0.1:33285/v1/chat/completions",
+      "probe_summary": "/home/mdfz/.codex/worktrees/m1-integration/minecraft-friends/experiments/m1-acceptance/negative/build/evidence/fabric-corrupt-1793011821087196074/no-call-probe.json",
+      "request_data_stored": false,
+      "passed": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": false,
+      "seconds": 19.61,
+      "server_class": "net.minecraft.client.server.IntegratedServer",
+      "actual_server_role": "IntegratedServer",
+      "required_checks": [
+        "integrated_server_instance",
+        "world_path_isolated",
+        "world_name_safe",
+        "target_was_absent",
+        "corrupt_data_sample_written",
+        "owner_login",
+        "status_chat_disabled",
+        "provider_not_initialized",
+        "status_no_companion",
+        "status_global_enabled_for_data_failure",
+        "status_data_unavailable",
+        "status_disabled_reason",
+        "corrupt_data_unchanged_after_start",
+        "player_remained_connected",
+        "no_companion_after_command",
+        "corrupt_data_safe_state_preserved",
+        "corrupt_data_unchanged_during_run",
+        "corrupt_data_unchanged_after_stop"
+      ],
+      "missing_checks": [],
+      "client_completion": true,
+      "fixture_connections": 0,
+      "no_model_http_calls": true,
+      "corrupt_file_sha256_after_exit": "d77ea7b90b87026ffcf749808494055d6d017ae8efee01c45b2e8a3b3c30964a",
+      "corrupt_file_unchanged_after_exit": true,
+      "config_restored": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "production_jar_unchanged": true,
+      "m1_complete": false,
+      "local_evidence_id": "fabric-corrupt-1793011821087196074"
+    },
+    {
+      "target": "forge-corrupt",
+      "source_commit": "fd096324659f725293635c7823f1c2fa22c14a38",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_diff_present": false,
+      "helper_sources_sha256": "52250122fa0ba1b995e5a778415b00f51a341b4e79237f4aa63137c02b9e8c5e",
+      "production_jar": "minecraft-friends-forge-1.21.1-0.1.0-SNAPSHOT.jar",
+      "production_jar_sha256": "bfad1766bcfb44f8077fc625908ca1dd152c2d76ae4efb7241ab9efa6024cfe6",
+      "config_sha256": "cfdcb0f3aa0b178e8166789d4fe2f082852d74a64db6b001090b0d164a11dd7e",
+      "probe_endpoint": "http://127.0.0.1:44799/v1/chat/completions",
+      "probe_summary": "/home/mdfz/.codex/worktrees/m1-integration/minecraft-friends/experiments/m1-acceptance/negative/build/evidence/forge-corrupt-1793011841186629839/no-call-probe.json",
+      "request_data_stored": false,
+      "passed": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": false,
+      "seconds": 15.77,
+      "server_class": "net.minecraft.client.server.IntegratedServer",
+      "actual_server_role": "IntegratedServer",
+      "required_checks": [
+        "integrated_server_instance",
+        "world_path_isolated",
+        "world_name_safe",
+        "target_was_absent",
+        "corrupt_data_sample_written",
+        "owner_login",
+        "status_chat_disabled",
+        "provider_not_initialized",
+        "status_no_companion",
+        "status_global_enabled_for_data_failure",
+        "status_data_unavailable",
+        "status_disabled_reason",
+        "corrupt_data_unchanged_after_start",
+        "player_remained_connected",
+        "no_companion_after_command",
+        "corrupt_data_safe_state_preserved",
+        "corrupt_data_unchanged_during_run",
+        "corrupt_data_unchanged_after_stop"
+      ],
+      "missing_checks": [],
+      "client_completion": true,
+      "fixture_connections": 0,
+      "no_model_http_calls": true,
+      "corrupt_file_sha256_after_exit": "d77ea7b90b87026ffcf749808494055d6d017ae8efee01c45b2e8a3b3c30964a",
+      "corrupt_file_unchanged_after_exit": true,
+      "config_restored": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "production_jar_unchanged": true,
+      "m1_complete": false,
+      "local_evidence_id": "forge-corrupt-1793011841186629839"
+    }
+  ],
+  "real_model_verified": false,
+  "multiplayer_and_events": "Both loaders passed events/list/delete and two-real-client DedicatedServer isolation; real service and experience acceptance pending",
+  "incremental_and_restore": [
+    {
+      "jar": "minecraft-friends-forge-1.21.1-0.1.0-SNAPSHOT.jar",
+      "all_entries_identical": true,
+      "proven_sha256": "bfad1766bcfb44f8077fc625908ca1dd152c2d76ae4efb7241ab9efa6024cfe6",
+      "rebuilt_sha256": "31fbfdba0f8f40b6984d0260d76acfc56c6c7d436e560ad592d67e6b4d8244d2"
+    },
+    {
+      "jar": "minecraft-friends-fabric-1.21.1-0.1.0-SNAPSHOT.jar",
+      "all_entries_identical": true,
+      "proven_sha256": "e3278b45c1f77755ce35b1ba73e6a9a1aaa3376778153bc59fe3a2dd4633a336",
+      "rebuilt_sha256": "e3278b45c1f77755ce35b1ba73e6a9a1aaa3376778153bc59fe3a2dd4633a336"
+    }
+  ],
+  "checks": {
+    "unit_tests": 59,
+    "failures": 0,
+    "errors": 0,
+    "config_example_matches_defaults": true,
+    "local_markdown_paths_checked": 106,
+    "forbidden_client_class_references": 0,
+    "licenses_match": true,
+    "ci_run": 40310970489,
+    "peer_fixture_tests": 11
+  },
+  "events_and_list_delete": [
+    {
+      "target": "fabric-integrated",
+      "source_commit": "4fbcfc79beff212e7d8b0a94f435ef3f55fdb172",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "helper_sources_sha256": "05fa71398e0eb66df8116f12698cc392b19962dad5420a35a885a5d42b61eca3",
+      "production_jar_sha256": "e3278b45c1f77755ce35b1ba73e6a9a1aaa3376778153bc59fe3a2dd4633a336",
+      "protocol_simulation_not_real_model": true,
+      "request_body_stored": false,
+      "log_policy": "only fixed MF_EVENTS assertion lines are retained",
+      "passed": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": false,
+      "seconds": 28.41,
+      "artifact_unchanged": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "checks_sha256": "d3a606fcede606f6a3e50ea6665cbf7649ee9fef232684980cc560f9d064f27b",
+      "missing_checks": [],
+      "protocol_count_delta": {
+        "FIRST_MEETING": 1,
+        "INJURED": 1,
+        "REJOIN": 1,
+        "DELETE_PROBE": 1
+      },
+      "protocol_counts_passed": true,
+      "protocol_failures_unchanged": true,
+      "fixture_state_matches_summary": true,
+      "client_completion": true,
+      "server_completion": true,
+      "m1_events_complete": true,
+      "not_covered": [
+        "真实模型服务",
+        "DedicatedServer重启后恢复",
+        "完整人工游戏体验"
+      ],
+      "local_evidence_id": "fabric-integrated-1793012914185165751"
+    },
+    {
+      "target": "forge-integrated",
+      "source_commit": "4fbcfc79beff212e7d8b0a94f435ef3f55fdb172",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "helper_sources_sha256": "05fa71398e0eb66df8116f12698cc392b19962dad5420a35a885a5d42b61eca3",
+      "production_jar_sha256": "bfad1766bcfb44f8077fc625908ca1dd152c2d76ae4efb7241ab9efa6024cfe6",
+      "protocol_simulation_not_real_model": true,
+      "request_body_stored": false,
+      "log_policy": "only fixed MF_EVENTS assertion lines are retained",
+      "passed": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "launch_error": false,
+      "seconds": 33.21,
+      "artifact_unchanged": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "checks_sha256": "d3a606fcede606f6a3e50ea6665cbf7649ee9fef232684980cc560f9d064f27b",
+      "missing_checks": [],
+      "protocol_count_delta": {
+        "FIRST_MEETING": 1,
+        "INJURED": 1,
+        "REJOIN": 1,
+        "DELETE_PROBE": 1
+      },
+      "protocol_counts_passed": true,
+      "protocol_failures_unchanged": true,
+      "fixture_state_matches_summary": true,
+      "client_completion": true,
+      "server_completion": true,
+      "m1_events_complete": true,
+      "not_covered": [
+        "真实模型服务",
+        "DedicatedServer重启后恢复",
+        "完整人工游戏体验"
+      ],
+      "local_evidence_id": "forge-integrated-1793012821555182923"
+    }
+  ],
+  "multiplayer": [
+    {
+      "passed": true,
+      "target": "fabric-dedicated",
+      "protocol_simulation_not_real_model": true,
+      "server_process_managed": false,
+      "client_processes": {
+        "a": {
+          "pid": 337321,
+          "exit_code": 0,
+          "ready": true,
+          "pass_marker": true
+        },
+        "b": {
+          "pid": 337324,
+          "exit_code": 0,
+          "ready": true,
+          "pass_marker": true
+        }
+      },
+      "server_checks_seen_by_clients": {
+        "both_shared_requests_replied_to_both_real_clients": [
+          "a",
+          "b"
+        ],
+        "client_b_dismissed_only_its_companion": [
+          "a",
+          "b"
+        ],
+        "client_b_memory_clear_left_client_a_state_unchanged": [
+          "a",
+          "b"
+        ],
+        "distinct_private_facts_saved": [
+          "a",
+          "b"
+        ],
+        "invite_uuid_parsed_by_invited_client": [
+          "a",
+          "b"
+        ],
+        "invitee_explicitly_joined_by_client_command": [
+          "a",
+          "b"
+        ],
+        "left_client_saw_no_echo_or_reply_during_observation": [
+          "a",
+          "b"
+        ],
+        "memory_list_completed": [
+          "a"
+        ],
+        "private_command_reply_ack_by_owner_a": [
+          "a",
+          "b"
+        ],
+        "private_ordinary_prefix_reply_ack_by_owner_b": [
+          "a",
+          "b"
+        ],
+        "proactive_disabled_and_private_addresses_set": [
+          "a",
+          "b"
+        ],
+        "result": [
+          "a",
+          "b"
+        ],
+        "shared_uuid_parsed_from_real_create_message": [
+          "a",
+          "b"
+        ],
+        "two_independent_companions_created_by_clients": [
+          "a",
+          "b"
+        ],
+        "two_real_offline_clients": [
+          "a",
+          "b"
+        ],
+        "uninvited_join_rejected_for_real_client_uuid": [
+          "a",
+          "b"
+        ],
+        "uninvited_shared_send_rejected": [
+          "a",
+          "b"
+        ]
+      },
+      "missing_server_checks": [],
+      "fixture_call_delta": {
+        "PRIVATE_A": 1,
+        "PRIVATE_B": 1,
+        "SHARED_A": 1,
+        "SHARED_B": 1,
+        "SHARED_AFTER_LEAVE": 1,
+        "SETUP_GREETING": 2
+      },
+      "fixture_failures_delta": {},
+      "fixture_isolation_assertions_passed": true,
+      "setup_greeting_count_delta": 2,
+      "exit_codes": {
+        "a": 0,
+        "b": 0
+      },
+      "timed_out": false,
+      "launch_error": null,
+      "termination_errors": [],
+      "sources_and_jar_unchanged": true,
+      "elapsed_seconds": 59.31,
+      "limitations": [
+        "真实模型服务未验证",
+        "仅执行已选加载器的 DedicatedServer 双客户端流程",
+        "不验证真实账号、DedicatedServer 重启恢复或主动事件冷却"
+      ],
+      "local_evidence_id": "fabric-dedicated-peer-1793015257257074821",
+      "source_commit": "e8c2e03db03d67a0a5b381ec63fe2c2ffac23913",
+      "source_diff_sha256": "838a9cf1f0f472c0b21ddf454b9d51be02f92ee917bd28495c0a808aa7298995",
+      "source_diff_present": true,
+      "helper_sources_sha256": "53ae8dd008d16f2f964b19720b78abf9c606e2fe74f42ed36e3b70f15f23e122",
+      "production_jar_sha256": "e3278b45c1f77755ce35b1ba73e6a9a1aaa3376778153bc59fe3a2dd4633a336",
+      "committed_helper_equivalent": "297b75df38706031822cf1f2c05130ac1d1672d6",
+      "server_log_sha256": "b5947721bfdb5910b5ba700d498a4cfefc16fe5320f29e3e5cdb8680544b948c",
+      "server_saved_all_dimensions": true,
+      "server_exit_code": 0,
+      "fixture_stopped": true,
+      "marker_sha256": {
+        "a": "5a61ef6896642b72d1effcd0318eada9101dd10f8291ac81ba76730b39f35a07",
+        "b": "9f299b456a5a76f3d344fa2f0d20e1299b6dfec670bbf851960642e3ac3489e4"
+      },
+      "protocol_summary_sha256": "55d1512906e0dc8618840c5ccbd282afb2214f53af25c91c7f9d2482a7ee209c"
+    },
+    {
+      "passed": true,
+      "target": "forge-dedicated",
+      "protocol_simulation_not_real_model": true,
+      "server_process_managed": false,
+      "client_processes": {
+        "a": {
+          "pid": 340278,
+          "exit_code": 0,
+          "ready": true,
+          "pass_marker": true
+        },
+        "b": {
+          "pid": 340282,
+          "exit_code": 0,
+          "ready": true,
+          "pass_marker": true
+        }
+      },
+      "server_checks_seen_by_clients": {
+        "both_shared_requests_replied_to_both_real_clients": [
+          "a",
+          "b"
+        ],
+        "client_b_dismissed_only_its_companion": [
+          "a",
+          "b"
+        ],
+        "client_b_memory_clear_left_client_a_state_unchanged": [
+          "a",
+          "b"
+        ],
+        "distinct_private_facts_saved": [
+          "a",
+          "b"
+        ],
+        "invite_uuid_parsed_by_invited_client": [
+          "a",
+          "b"
+        ],
+        "invitee_explicitly_joined_by_client_command": [
+          "a",
+          "b"
+        ],
+        "left_client_saw_no_echo_or_reply_during_observation": [
+          "a",
+          "b"
+        ],
+        "memory_list_completed": [
+          "a"
+        ],
+        "private_command_reply_ack_by_owner_a": [
+          "a",
+          "b"
+        ],
+        "private_ordinary_prefix_reply_ack_by_owner_b": [
+          "a",
+          "b"
+        ],
+        "proactive_disabled_and_private_addresses_set": [
+          "a",
+          "b"
+        ],
+        "result": [
+          "a",
+          "b"
+        ],
+        "shared_uuid_parsed_from_real_create_message": [
+          "a",
+          "b"
+        ],
+        "two_independent_companions_created_by_clients": [
+          "a",
+          "b"
+        ],
+        "two_real_offline_clients": [
+          "a",
+          "b"
+        ],
+        "uninvited_join_rejected_for_real_client_uuid": [
+          "a",
+          "b"
+        ],
+        "uninvited_shared_send_rejected": [
+          "a",
+          "b"
+        ]
+      },
+      "missing_server_checks": [],
+      "fixture_call_delta": {
+        "PRIVATE_A": 1,
+        "PRIVATE_B": 1,
+        "SHARED_A": 1,
+        "SHARED_B": 1,
+        "SHARED_AFTER_LEAVE": 1,
+        "SETUP_GREETING": 2
+      },
+      "fixture_failures_delta": {},
+      "fixture_isolation_assertions_passed": true,
+      "setup_greeting_count_delta": 2,
+      "exit_codes": {
+        "a": 0,
+        "b": 0
+      },
+      "timed_out": false,
+      "launch_error": null,
+      "termination_errors": [],
+      "sources_and_jar_unchanged": true,
+      "elapsed_seconds": 59.03,
+      "limitations": [
+        "真实模型服务未验证",
+        "仅执行已选加载器的 DedicatedServer 双客户端流程",
+        "不验证真实账号、DedicatedServer 重启恢复或主动事件冷却"
+      ],
+      "local_evidence_id": "forge-dedicated-peer-1793015373047626913",
+      "source_commit": "e8c2e03db03d67a0a5b381ec63fe2c2ffac23913",
+      "source_diff_sha256": "838a9cf1f0f472c0b21ddf454b9d51be02f92ee917bd28495c0a808aa7298995",
+      "source_diff_present": true,
+      "helper_sources_sha256": "53ae8dd008d16f2f964b19720b78abf9c606e2fe74f42ed36e3b70f15f23e122",
+      "production_jar_sha256": "bfad1766bcfb44f8077fc625908ca1dd152c2d76ae4efb7241ab9efa6024cfe6",
+      "committed_helper_equivalent": "297b75df38706031822cf1f2c05130ac1d1672d6",
+      "server_log_sha256": "1c5cefb7306013033398fd256dfcb7428a476d0d24b3c4bbe96be78be24cbb79",
+      "server_saved_all_dimensions": true,
+      "server_exit_code": 0,
+      "fixture_stopped": true,
+      "marker_sha256": {
+        "a": "5a61ef6896642b72d1effcd0318eada9101dd10f8291ac81ba76730b39f35a07",
+        "b": "9f299b456a5a76f3d344fa2f0d20e1299b6dfec670bbf851960642e3ac3489e4"
+      },
+      "protocol_summary_sha256": "c0e50581207b18d5d50673f853cca453afc91e8eb5dda99108dcaa3e30558cc3"
+    }
+  ],
+  "m1_complete": false
+}
