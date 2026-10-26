@@ -1,0 +1,21 @@
+plugins { id 'fabric-loom' version '1.7.4' }
+dependencies {
+    minecraft 'com.mojang:minecraft:1.21.1'
+    mappings loom.officialMojangMappings()
+    modImplementation 'net.fabricmc:fabric-loader:0.20.1'
+    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.116.17+1.21.1'
+    modImplementation files(rootProject.file('../../build/artifacts/minecraft-friends-fabric-1.21.1-0.1.0-SNAPSHOT.jar'))
+}
+loom {
+    runs {
+        acceptance {
+            client()
+            runDir 'build/run/client'
+            vmArg '-Dmf.acceptance=true'
+            vmArg '-Dmf.acceptance.loader=fabric'
+            if (project.hasProperty('acceptanceServer')) {
+                vmArg '-Dmf.acceptance.server=' + project.property('acceptanceServer')
+            }
+        }
+    }
+}

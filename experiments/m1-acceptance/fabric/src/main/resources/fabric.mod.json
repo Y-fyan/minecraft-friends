@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "mf_m1_acceptance",
+  "version": "1.0.0",
+  "name": "Minecraft Friends isolated M1 acceptance",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["io.github.yfyan.minecraftfriends.acceptance.fabric.FabricAcceptance"],
+    "client": ["io.github.yfyan.minecraftfriends.acceptance.fabric.FabricAcceptanceClient"]
+  },
+  "depends": {"fabricloader": ">=0.20.1", "fabric-api": "*", "minecraft": "1.21.1", "minecraft_friends": "*", "java": ">=21"},
+  "license": "GPL-3.0-only"
+}

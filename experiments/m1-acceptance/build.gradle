@@ -1,0 +1,17 @@
+plugins { id 'base' }
+subprojects {
+    group = 'io.github.yfyan.minecraftfriends.acceptance'
+    version = '1.0.0'
+    repositories { mavenCentral() }
+    plugins.withId('java') {
+        java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+        tasks.withType(JavaCompile).configureEach {
+            options.release = 21
+            options.encoding = 'UTF-8'
+        }
+        sourceSets.main.java.srcDir rootProject.file('shared/src/main/java')
+        tasks.withType(Jar).configureEach {
+            from(rootProject.file('../../LICENSE')) { into 'META-INF' }
+        }
+    }
+}

@@ -31,3 +31,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Python acceptance runners
+__pycache__/
+*.pyc
