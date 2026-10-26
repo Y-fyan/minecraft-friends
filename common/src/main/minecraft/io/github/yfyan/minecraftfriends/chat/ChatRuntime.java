@@ -11,15 +11,13 @@ import io.github.yfyan.minecraftfriends.config.ConfigLoader;
 import io.github.yfyan.minecraftfriends.config.ModConfig;
 import io.github.yfyan.minecraftfriends.config.ProviderMode;
 import io.github.yfyan.minecraftfriends.memory.CompanionMemoryStore;
-import io.github.yfyan.minecraftfriends.memory.ContextMessage;
-import io.github.yfyan.minecraftfriends.memory.ContextSpeaker;
 import io.github.yfyan.minecraftfriends.memory.MemoryEntry;
+import io.github.yfyan.minecraftfriends.memory.MemoryPromptComposer;
 import io.github.yfyan.minecraftfriends.memory.MemoryScope;
 import io.github.yfyan.minecraftfriends.memory.PersonaSettings;
 import io.github.yfyan.minecraftfriends.memory.ProactiveEvent;
 import io.github.yfyan.minecraftfriends.memory.RequestContext;
 import io.github.yfyan.minecraftfriends.model.ChatMessage;
-import io.github.yfyan.minecraftfriends.model.ChatRole;
 import io.github.yfyan.minecraftfriends.model.ModelProvider;
 import io.github.yfyan.minecraftfriends.model.ModelProviders;
 import net.minecraft.commands.CommandSourceStack;
@@ -1316,6 +1314,7 @@ public final class ChatRuntime {
                 this.modelExecutor = new ThreadPoolExecutor(
                         2, 2, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(64),
                         namedThreads("mf-chat"), new ThreadPoolExecutor.AbortPolicy());
+                ChatSessionService.Limits limits = chatLimits(config);
                 this.sessions = new ChatSessionService(
                         provider,
                         modelExecutor,
@@ -1339,8 +1338,8 @@ public final class ChatRuntime {
                                 LOGGER.warn("Chat context hook failed ({})", reason);
                             }
                         },
-                        new MemoryHooks(this),
-                        chatLimits(config)
+                        new MemoryHooks(this, limits),
+                        limits
                 );
             } else {
                 this.modelExecutor = null;
@@ -1553,9 +1552,11 @@ public final class ChatRuntime {
 
     private static final class MemoryHooks implements ChatSessionService.ContextHooks {
         private final RuntimeState state;
+        private final ChatSessionService.Limits limits;
 
-        private MemoryHooks(RuntimeState state) {
+        private MemoryHooks(RuntimeState state, ChatSessionService.Limits limits) {
             this.state = state;
+            this.limits = limits;
         }
 
         @Override
@@ -1567,16 +1568,8 @@ public final class ChatRuntime {
         ) {
             MemoryScope scope = new MemoryScope(conversation.worldId(), conversation.ownerId(), conversation.companionId());
             RequestContext request = state.memory.call(scope, CompanionMemoryStore::beginRequest);
-            List<ChatMessage> context = new ArrayList<>();
-            context.add(new ChatMessage(ChatRole.SYSTEM, request.persona().systemInstructions()));
-            for (MemoryEntry memory : request.memories()) {
-                context.add(new ChatMessage(ChatRole.SYSTEM, "已保存的" + memory.kind() + "：" + memory.text()));
-            }
-            for (ContextMessage message : request.shortTermContext()) {
-                context.add(new ChatMessage(
-                        message.speaker() == ContextSpeaker.USER ? ChatRole.USER : ChatRole.ASSISTANT,
-                        message.text()));
-            }
+            List<ChatMessage> context = MemoryPromptComposer.compose(request,
+                    limits.maxContextMessages(), limits.maxContextChars(), limits.maxMessageChars());
             return new ChatSessionService.HookContext(context, request);
         }
 

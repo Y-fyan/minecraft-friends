@@ -27,6 +27,8 @@ boolean accepted = memory.commitResponse(request.token(), userText, responseText
 
 `commitResponse` 只更新短期上下文；它不写长期事实。`clear()` 和 `deleteMemory(id)` 都先原子保存递增后的 generation，再清除短期上下文。删除不存在的 ID 仍会推进 generation 并使在途 token 失效，返回值为 `false`。旧 token、其他 store 实例的 token，以及范围不匹配的 token 都不能提交响应。每个 store 实例的方法同步；游戏适配层应为每个范围复用一个实例，避免不同实例并发写同一文件。
 
+私聊提示词由纯 Java `MemoryPromptComposer` 从一次 `RequestContext` 快照组装。默认先放完整人设，再把长期记忆合并为带来源标签的行：最新的用户明确偏好优先，其后是最新的已验证游戏事件。组装使用 `chatLimits` 的上下文消息数、上下文总字符数和单条消息字符数；超长事实会在末尾标记省略号，剩余预算耗尽后跳过较低优先级事实。预算不足以容纳完整人设时使用保留 AI 身份、自主性和防操控约束的精简人设；若连精简版也放不下，则不注入私人记忆。默认预算下，短偏好与三条事件可合并在一条事实消息中。短期记忆不再重复注入，因为同一私聊请求已携带有界的会话近期历史。共享会话只走共享上下文钩子，不读取该私聊快照。
+
 长期记忆通过两个有来源约束的入口写入：
 
 - `rememberPreference(text, time)` 记录用户明确说出的称呼或偏好，来源固定为 `USER_EXPLICIT`。
