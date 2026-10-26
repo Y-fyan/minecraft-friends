@@ -28,6 +28,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Check acceptance tools without external model calls
+        run: |
+          python3 -m unittest discover -s experiments/m1-acceptance -p 'test_*.py'
+          python3 experiments/m1-acceptance/real_model_observer.py --endpoint http://127.0.0.1:1/v1/chat/completions --model self-test --api-key-env MF_SELF_TEST_UNUSED --self-test
+
       - name: Run tests and build both loaders
         run: ./gradlew checkAll --no-daemon --stacktrace
 
