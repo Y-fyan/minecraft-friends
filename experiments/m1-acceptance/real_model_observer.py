@@ -3,9 +3,12 @@
 
 The observer is not a model. It transparently forwards validated requests to the
 explicit endpoint, applies deterministic semantic gates before a reply reaches the
-game, and records counters/hashes only. Request and response bodies are never written.
+game, and records counters/hashes only. The structured summary never contains a request
+or response body. Only an explicit, 0600 local human-review output may retain model
+reply text for the parent reviewer; it is never committed automatically.
 """
 import argparse
+from dataclasses import dataclass
 import hashlib
 import json
 import os
@@ -52,12 +55,30 @@ DISCONNECT_PROBE = re.compile(r"^MF_REAL_DISCONNECT:(" + UUID_TEXT + r") 触发�
 CJK = re.compile(r"[\u3400-\u9fff]")
 
 
-class RealState:
-    """In-memory acceptance state; the only persisted state is a bounded summary."""
+@dataclass(frozen=True)
+class RequestGate:
+    """Request-local classification; a gate must never share mutable prompt state."""
+    label: str | None
+    marker: str | None = None
+    errors: tuple[str, ...] = ()
 
-    def __init__(self, summary_path, api_key_present=True):
+
+class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Refuse redirects so an Authorization credential cannot follow another origin."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+class RealState:
+    """In-memory acceptance state; the only default output is a bounded summary."""
+
+    def __init__(self, summary_path, api_key_present=True, human_review_path=None):
         self.summary_path = Path(summary_path)
+        self.human_review_path = Path(human_review_path) if human_review_path else None
+        self.human_review_records = 0
         self.lock = threading.Lock()
+        self.review_lock = threading.Lock()
         self.counts = {name: 0 for name in REQUEST_LABELS}
         self.semantic_passes = {name: 0 for name in REQUEST_LABELS}
         self.semantic_failures = {name: 0 for name in REQUEST_LABELS}
@@ -84,6 +105,9 @@ class RealState:
                 "semantic_failure_reasons": dict(self.semantic_failure_reasons),
                 "transport": dict(self.transport),
                 "failures": dict(self.failures),
+                "human_review_output_opt_in": self.human_review_path is not None,
+                "human_review_records": self.human_review_records,
+                "human_review_completed": False,
             }
 
     def _write(self):
@@ -95,6 +119,55 @@ class RealState:
         except OSError:
             self.failures["summary_write_failed"] += 1
 
+    def _prepare_human_review_file(self):
+        path = self.human_review_path
+        if path is None:
+            return
+        parent = path.parent
+        created = not parent.exists()
+        parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        if created:
+            parent.chmod(0o700)
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT, 0o600)
+        os.close(descriptor)
+        path.chmod(0o600)
+
+    def record_human_review(self, label, ok, reasons, request_hash, response_hash, content):
+        """Append reply text only after explicit opt-in; the file stays 0600."""
+        if self.human_review_path is None:
+            return False
+        value = {
+            "kind": "m1-real-model-human-review-output",
+            "recorded_at_ns": time.time_ns(),
+            "label": label,
+            "automated_semantic_ok": ok,
+            "automated_reasons": list(reasons),
+            "request_sha256": request_hash,
+            "response_sha256": response_hash,
+            "assistant_reply": content,
+            "human_review_completed": False,
+        }
+        raw = (json.dumps(value, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
+        with self.review_lock:
+            try:
+                self._prepare_human_review_file()
+                descriptor = os.open(self.human_review_path,
+                                     os.O_WRONLY | os.O_APPEND, 0o600)
+                try:
+                    os.write(descriptor, raw)
+                finally:
+                    os.close(descriptor)
+                os.chmod(self.human_review_path, 0o600)
+                with self.lock:
+                    self.human_review_records += 1
+            except OSError:
+                with self.lock:
+                    self.failures["summary_write_failed"] += 1
+                self._write()
+                return False
+        self._write()
+        return True
+
     def record(self, label="proxy_started", failure=None):
         with self.lock:
             if failure is not None:
@@ -105,66 +178,63 @@ class RealState:
         self._write()
 
     def classify_request(self, body):
-        """Return (label, errors) without retaining the request."""
+        """Return request-local (label, marker, errors) without retaining the request."""
         errors = []
         try:
             data = json.loads(body.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError):
-            return None, ["invalid_json"]
+            return None, None, ("invalid_json",)
         if not isinstance(data, dict) or isinstance(data.get("model", {}), (dict, list)):
-            return None, ["invalid_model"]
+            return None, None, ("invalid_model",)
         if data.get("model") != self.model:
             errors.append("invalid_model")
         messages = data.get("messages")
         if not isinstance(messages, list) or not 2 <= len(messages) <= MAX_MESSAGES:
-            return None, sorted(set(errors + ["invalid_context"]))
+            return None, None, tuple(sorted(set(errors + ["invalid_context"])))
         used = 0
         for message in messages:
             if not isinstance(message, dict) or message.get("role") not in ("system", "user", "assistant") \
                     or not isinstance(message.get("content"), str):
-                return None, sorted(set(errors + ["invalid_context"]))
+                return None, None, tuple(sorted(set(errors + ["invalid_context"])))
             content = message["content"]
             if not content or len(content) > MAX_MESSAGE_CHARS:
-                return None, sorted(set(errors + ["invalid_context"]))
+                return None, None, tuple(sorted(set(errors + ["invalid_context"])))
             used += len(content)
             if used > MAX_CONTEXT_CHARS:
-                return None, sorted(set(errors + ["context_too_large"]))
+                return None, None, tuple(sorted(set(errors + ["context_too_large"])))
         if not messages or messages[0].get("role") != "system" or messages[0]["content"] != SYSTEM_PROMPT:
-            return None, sorted(set(errors + ["invalid_context"]))
+            return None, None, tuple(sorted(set(errors + ["invalid_context"])))
         context = "\n".join(message["content"] for message in messages)
         if any(part not in context for part in DEFAULT_PERSONA_PARTS):
-            return None, sorted(set(errors + ["invalid_context"]))
-        label = self._label(messages, context)
+            return None, None, tuple(sorted(set(errors + ["invalid_context"])))
+        label, marker = self._label(messages)
         if label is None:
-            return None, sorted(set(errors + ["invalid_context"]))
+            return None, None, tuple(sorted(set(errors + ["invalid_context"])))
         if label == "DELETE_PROBE" and (
                 "用户明确偏好：MF_KEEP_FACT" not in context
                 or "用户明确偏好：MF_DELETE_FACT" in context
                 or any("已验证游戏事件：" + phrase not in context for phrase in EVENTS.values())):
-            return None, sorted(set(errors + ["invalid_context"]))
-        return label, sorted(set(errors))
+            return None, None, tuple(sorted(set(errors + ["invalid_context"])))
+        return label, marker, tuple(sorted(set(errors)))
 
-    def _label(self, messages, context):
+    def _label(self, messages):
         final = messages[-1]
         if final["role"] == "system" and final["content"].startswith(EVENT_PREFIX):
             for name, phrase in EVENTS.items():
                 if final["content"] == EVENT_PREFIX + phrase + EVENT_SUFFIX:
-                    return name
-            return None
+                    return name, None
+            return None, None
         if final["role"] != "user":
-            return None
-        if DELETE_PROBE.fullmatch(final["content"]):
-            return "DELETE_PROBE"
-        if REAL_CHAT.fullmatch(final["content"]):
-            return "REAL_CHAT"
-        if TIMEOUT_PROBE.fullmatch(final["content"]):
-            return "TIMEOUT"
-        if DISCONNECT_PROBE.fullmatch(final["content"]):
-            return "DISCONNECT"
-        return None
+            return None, None
+        for label, pattern in (("DELETE_PROBE", DELETE_PROBE), ("REAL_CHAT", REAL_CHAT),
+                               ("TIMEOUT", TIMEOUT_PROBE), ("DISCONNECT", DISCONNECT_PROBE)):
+            marker = pattern.fullmatch(final["content"])
+            if marker:
+                return label, marker.group(1)
+        return None, None
 
-    def inspect_response(self, label, body):
-        """Validate the upstream reply and return (ok, content, reasons)."""
+    def inspect_response(self, label, body, expected_marker=None):
+        """Validate an upstream reply and return (ok, content, reasons)."""
         reasons = []
         try:
             data = json.loads(body.decode("utf-8"))
@@ -186,28 +256,24 @@ class RealState:
             reasons.append("test_marker_in_natural_reply")
         if len(CJK.findall(content)) < 3:
             reasons.append("not_meaningful_chinese")
-        if not any(hint.lower() in content.lower() for hint in IDENTITY_HINTS):
+        requires_identity = label in EVENT_HINTS or label == "REAL_CHAT"
+        if requires_identity and not any(hint.lower() in content.lower()
+                                                for hint in IDENTITY_HINTS):
             reasons.append("ai_identity_absent")
         if label in EVENT_HINTS and not any(hint in content for hint in EVENT_HINTS[label]):
             reasons.append("event_context_absent")
-        marker_patterns = {"DELETE_PROBE": DELETE_PROBE, "REAL_CHAT": REAL_CHAT,
-                           "TIMEOUT": TIMEOUT_PROBE, "DISCONNECT": DISCONNECT_PROBE}
-        if label in marker_patterns:
-            marker = marker_patterns[label].fullmatch(self._last_user_content)
-            if marker is None or marker.group(1) not in content:
-                reasons.append("request_marker_absent")
+        if label == "REAL_CHAT" and (not expected_marker or expected_marker not in content):
+            reasons.append("request_marker_absent")
         return not reasons, content, reasons
 
-    _last_user_content = ""
-
     def prepare_gate(self, body):
-        label, errors = self.classify_request(body)
+        label, marker, errors = self.classify_request(body)
+        gate = RequestGate(label, marker, errors)
         if errors:
             self.record(label, errors[0])
-            return None, errors
-        self._last_user_content = json.loads(body.decode("utf-8"))["messages"][-1]["content"]
+            return gate
         self.record(label)
-        return label, errors
+        return gate
 
     def accept_reply(self, label, ok, reasons):
         with self.lock:
@@ -244,6 +310,7 @@ class RealObserver:
         self.model = model
         self.api_key = api_key
         self.timeout_seconds = timeout_seconds
+        self.opener = urllib.request.build_opener(NoRedirectHandler)
         state.model = model
 
     def forward(self, body):
@@ -254,7 +321,7 @@ class RealObserver:
         if self.api_key:
             request.add_header("Authorization", "Bearer " + self.api_key)
         try:
-            with urllib.request.urlopen(request, timeout=self.timeout_seconds) as response:
+            with self.opener.open(request, timeout=self.timeout_seconds) as response:
                 raw = response.read(1024 * 1024 + 1)
                 status = response.status
         except urllib.error.HTTPError as error:
@@ -289,10 +356,12 @@ class ObserverHandler(BaseHTTPRequestHandler):
             self._json(413, {"error": {"message": "request exceeds observer bound"}})
             return
         body = self.rfile.read(length)
-        label, errors = self.observer.state.prepare_gate(body)
-        if errors:
+        gate = self.observer.state.prepare_gate(body)
+        if gate.errors:
             self._json(400, {"error": {"message": "request rejected by acceptance gate"}})
             return
+        label = gate.label
+        request_hash = hashlib.sha256(body).hexdigest()
         if label == "TIMEOUT":
             self.observer.state.controlled("TIMEOUT")
             time.sleep(max(1, self.observer.timeout_seconds + 5))
@@ -304,6 +373,8 @@ class ObserverHandler(BaseHTTPRequestHandler):
             return
         status, raw = self.observer.forward(body)
         if status >= 400:
+            self.observer.state.record_human_review(label, False, ["upstream_http_error"],
+                                                    request_hash, hashlib.sha256(raw).hexdigest(), "")
             self.send_response(status)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(raw)))
@@ -314,8 +385,10 @@ class ObserverHandler(BaseHTTPRequestHandler):
                 except BrokenPipeError:
                     pass
             return
-        ok, _content, _reasons = self.observer.state.inspect_response(label, raw)
-        if not self.observer.state.accept_reply(label, ok, _reasons):
+        ok, content, reasons = self.observer.state.inspect_response(label, raw, gate.marker)
+        self.observer.state.record_human_review(label, ok, reasons, request_hash,
+                                                hashlib.sha256(raw).hexdigest(), content)
+        if not self.observer.state.accept_reply(label, ok, reasons):
             self._json(502, {"error": {"message": "semantic acceptance gate rejected response"}})
             return
         self.send_response(status)
@@ -366,6 +439,8 @@ def parse_args():
     parser.add_argument("--allow-unauthenticated-local", action="store_true")
     parser.add_argument("--timeout-seconds", type=int, default=6)
     parser.add_argument("--summary")
+    parser.add_argument("--human-review", type=Path,
+                        help="explicit local 0600 output path for parent reply review")
     parser.add_argument("--self-test", action="store_true")
     options = parser.parse_args()
     if not endpoint_is_allowed(options.endpoint):
@@ -376,66 +451,120 @@ def parse_args():
 
 
 def self_test():
+    import stat
     import tempfile
     import unittest
-
-    class ObserverStateTests(unittest.TestCase):
-        def test_accepts_event_context_and_rejects_empty_reply(self):
-            with tempfile.TemporaryDirectory() as directory:
-                state = RealState(Path(directory) / "summary.json")
-                state.model = "test-model"
-                label, errors = state.prepare_gate(request_body(
-                    [system()] + persona() + [event_tail("FIRST_MEETING")]))
-                self.assertEqual((label, errors), ("FIRST_MEETING", []))
-                ok, _content, reasons = state.inspect_response(
-                    label, response("你好，我是 AI 伙伴，初次见面请多指教。"))
-                self.assertTrue(ok)
-                self.assertEqual(reasons, [])
-
-        def test_delete_probe_requires_memory_context(self):
-            messages = [system(), persona()[0],
-                        {"role": "system", "content": "用户明确偏好：MF_KEEP_FACT"},
-                        {"role": "user", "content": "MF_EVENTS_DELETE_PROBE:"
-                         + "00000000-0000-0000-0000-000000000000 请用中文简短回复。"}]
-            with tempfile.TemporaryDirectory() as directory:
-                state = RealState(Path(directory) / "summary.json")
-                state.model = "test-model"
-                label, errors = state.prepare_gate(request_body(messages))
-                self.assertEqual(label, None)
-                self.assertIn("invalid_context", errors)
-
-        def test_real_chat_requires_marker_and_identity(self):
-            nonce = "00000000-0000-0000-0000-000000000001"
-            messages = [system(), persona()[0],
-                        {"role": "user", "content": f"MF_REAL_CHAT:{nonce} 请确认你是 AI 伙伴，并完整保留验证码。"}]
-            with tempfile.TemporaryDirectory() as directory:
-                state = RealState(Path(directory) / "summary.json")
-                state.model = "test-model"
-                label, errors = state.prepare_gate(request_body(messages))
-                self.assertEqual((label, errors), ("REAL_CHAT", []))
-                ok, _content, reasons = state.inspect_response(
-                    label, response(f"MF_REAL_OK {nonce} 我是 AI 伙伴，可以帮你查看世界。"))
-                self.assertTrue(ok)
 
     def system():
         return {"role": "system", "content": SYSTEM_PROMPT}
 
     def persona():
-        return [{"role": "system", "content": "\n".join(DEFAULT_PERSONA_PARTS)}]
+        return {"role": "system", "content": "\n".join(DEFAULT_PERSONA_PARTS)}
 
     def event_tail(name):
         return {"role": "system", "content": EVENT_PREFIX + EVENTS[name] + EVENT_SUFFIX}
 
     def request_body(messages):
-        return json.dumps({"model": "test-model", "messages": messages}).encode("utf-8")
+        return json.dumps({"model": "test-model", "messages": messages}, ensure_ascii=False).encode("utf-8")
 
     def response(content):
-        return json.dumps({"choices": [{"message": {"role": "assistant", "content": content}}]}).encode("utf-8")
+        return json.dumps({"choices": [{"message": {"role": "assistant", "content": content}}]},
+                          ensure_ascii=False).encode("utf-8")
+
+    class ObserverStateTests(unittest.TestCase):
+        def test_event_context_and_natural_reply(self):
+            with tempfile.TemporaryDirectory() as directory:
+                state = RealState(Path(directory) / "summary.json")
+                state.model = "test-model"
+                gate = state.prepare_gate(request_body(
+                    [system(), persona(), event_tail("FIRST_MEETING")]))
+                self.assertEqual(gate.label, "FIRST_MEETING")
+                self.assertEqual(gate.errors, ())
+                ok, _content, reasons = state.inspect_response(
+                    gate.label, response("你好，我是 AI 伙伴，初次见面请多指教。"))
+                self.assertTrue(ok)
+                self.assertEqual(reasons, [])
+
+        def test_delete_probe_does_not_demand_nonce_or_repeated_identity(self):
+            nonce = "00000000-0000-0000-0000-000000000000"
+            messages = [
+                system(),
+                persona(),
+                {"role": "system", "content": "用户明确偏好：MF_KEEP_FACT"},
+                {"role": "system", "content": "已验证游戏事件：" + EVENTS["FIRST_MEETING"]},
+                {"role": "system", "content": "已验证游戏事件：" + EVENTS["INJURED"]},
+                {"role": "system", "content": "已验证游戏事件：" + EVENTS["REJOIN"]},
+                {"role": "user", "content": f"MF_EVENTS_DELETE_PROBE:{nonce} 请用中文简短回复。"},
+            ]
+            with tempfile.TemporaryDirectory() as directory:
+                state = RealState(Path(directory) / "summary.json")
+                state.model = "test-model"
+                gate = state.prepare_gate(request_body(messages))
+                self.assertEqual(gate.label, "DELETE_PROBE")
+                self.assertEqual(gate.errors, ())
+                ok, _content, reasons = state.inspect_response(
+                    gate.label, response("好的，我记住了保留的内容。"))
+                self.assertTrue(ok)
+                self.assertEqual(reasons, [])
+
+        def test_request_context_stays_local_under_interleaving(self):
+            first = "00000000-0000-0000-0000-000000000001"
+            second = "00000000-0000-0000-0000-000000000002"
+            def chat(nonce):
+                return [system(), persona(),
+                        {"role": "user", "content":
+                         f"MF_REAL_CHAT:{nonce} 请确认你是 AI 伙伴，并完整保留验证码。"}]
+            with tempfile.TemporaryDirectory() as directory:
+                state = RealState(Path(directory) / "summary.json")
+                state.model = "test-model"
+                gate_a = state.prepare_gate(request_body(chat(first)))
+                gate_b = state.prepare_gate(request_body(chat(second)))
+                ok_b, _content, reasons_b = state.inspect_response(
+                    gate_b.label, response(f"MF_REAL_OK {second} 我是 AI 伙伴。"), gate_b.marker)
+                ok_a, _content, reasons_a = state.inspect_response(
+                    gate_a.label, response(f"MF_REAL_OK {first} 我是 AI 伙伴。"), gate_a.marker)
+                self.assertTrue(ok_b)
+                self.assertTrue(ok_a)
+                self.assertEqual((reasons_a, reasons_b), ([], []))
+                mismatched, _content, reasons = state.inspect_response(
+                    gate_a.label, response(f"MF_REAL_OK {second} 我是 AI 伙伴。"), gate_a.marker)
+                self.assertFalse(mismatched)
+                self.assertIn("request_marker_absent", reasons)
+
+        def test_human_review_is_explicit_0600_and_body_free(self):
+            nonce = "00000000-0000-0000-0000-000000000003"
+            with tempfile.TemporaryDirectory() as directory:
+                review = Path(directory) / "restricted" / "replies.jsonl"
+                state = RealState(Path(directory) / "summary.json",
+                                  human_review_path=review)
+                state.model = "test-model"
+                body = request_body([system(), persona(),
+                                     {"role": "user", "content":
+                                      f"MF_REAL_CHAT:{nonce} 请确认你是 AI 伙伴，并完整保留验证码。"}])
+                gate = state.prepare_gate(body)
+                ok, content, reasons = state.inspect_response(
+                    gate.label, response(f"MF_REAL_OK {nonce} 我是 AI 伙伴。"), gate.marker)
+                self.assertTrue(state.record_human_review(
+                    gate.label, ok, reasons, hashlib.sha256(body).hexdigest(),
+                    hashlib.sha256(response(f"MF_REAL_OK {nonce} 我是 AI 伙伴。")).hexdigest(),
+                    content))
+                self.assertEqual(stat.S_IMODE(review.stat().st_mode), 0o600)
+                value = json.loads(review.read_text(encoding="utf-8").splitlines()[0])
+                self.assertEqual(value["assistant_reply"], f"MF_REAL_OK {nonce} 我是 AI 伙伴。")
+                self.assertNotIn("messages", value)
+                self.assertNotIn("Authorization", value)
+
+        def test_redirect_is_rejected_before_credential_follows(self):
+            request = urllib.request.Request("https://original.example/v1/chat/completions",
+                                             headers={"Authorization": "Bearer restricted"})
+            target = "https://other.example/v1/chat/completions"
+            handler = NoRedirectHandler()
+            self.assertIsNone(handler.redirect_request(
+                request, None, 302, "Found", {"Location": target}, target))
 
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(ObserverStateTests)
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     return 0 if result.wasSuccessful() else 1
-
 
 def main():
     options = parse_args()
@@ -451,7 +580,7 @@ def main():
     evidence = Path(options.summary).resolve() if options.summary else (
         Path(__file__).resolve().parent / "build/evidence" / f"real-model-{time.time_ns()}" / "observer-summary.json")
     evidence.parent.mkdir(parents=True, exist_ok=True)
-    state = RealState(evidence, bool(api_key))
+    state = RealState(evidence, bool(api_key), options.human_review)
     observer = RealObserver(state, options.endpoint, options.model, api_key, options.timeout_seconds)
     ObserverHandler.observer = observer
     server = ObserverServer(("127.0.0.1", 0), ObserverHandler)

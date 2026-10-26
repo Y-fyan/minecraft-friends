@@ -38,6 +38,51 @@ REAL_MODEL_CHECKS = (
     'fault_recovery_memory_stable',
 )
 REQUIRED_CHECKS = BASE_REQUIRED_CHECKS + REAL_MODEL_CHECKS
+REAL_MODEL_REPLY_LABELS = ('FIRST_MEETING', 'INJURED', 'REJOIN',
+                           'DELETE_PROBE', 'REAL_CHAT')
+REAL_MODEL_FAULT_LABELS = ('TIMEOUT', 'DISCONNECT')
+REAL_MODEL_REQUEST_LABELS = REAL_MODEL_REPLY_LABELS + REAL_MODEL_FAULT_LABELS
+
+
+def evaluate_real_model_summary(baseline, result, live_state):
+    """Pure verdict for the real-model observer summary; no filesystem or process access."""
+    empty = {
+        'state_matches': False, 'counts_passed': False, 'failures_clean': False,
+        'semantic_checks_passed': False, 'fault_transports_observed': False,
+        'count_delta': {}, 'observer_result': result if isinstance(result, dict) else {},
+    }
+    if not all(isinstance(value, dict) for value in (baseline, result, live_state)):
+        return empty
+    state_matches = (
+        result.get('counts') == live_state.get('counts')
+        and result.get('failures') == live_state.get('failures')
+        and result.get('request_body_stored') is False
+        and result.get('response_body_stored') is False)
+    delta = {tag: result.get('counts', {}).get(tag, 0) - baseline.get('counts', {}).get(tag, 0)
+             for tag in REAL_MODEL_REQUEST_LABELS}
+    counts_passed = all(value == 1 for value in delta.values())
+    failures_clean = (sum(result.get('failures', {}).values())
+                      == sum(baseline.get('failures', {}).values()))
+    passes = result.get('semantic_passes', {})
+    failures = result.get('semantic_failures', {})
+    semantic_passed = (
+        all(passes.get(tag) == 1 for tag in REAL_MODEL_REPLY_LABELS)
+        and all(failures.get(tag) == 0
+                for tag in REAL_MODEL_REPLY_LABELS + REAL_MODEL_FAULT_LABELS))
+    transport = result.get('transport', {})
+    faults_observed = (transport.get('controlled_timeout') == 1
+                       and transport.get('controlled_disconnect') == 1
+                       and result.get('failures', {}).get('network_error', 0) == 0
+                       and result.get('failures', {}).get('upstream_http_error', 0) == 0)
+    return {
+        'state_matches': state_matches,
+        'counts_passed': counts_passed,
+        'failures_clean': failures_clean,
+        'semantic_checks_passed': semantic_passed,
+        'fault_transports_observed': faults_observed,
+        'count_delta': delta,
+        'observer_result': result,
+    }
 EVENT_LOG = re.compile(
     r'^(?:MF_EVENTS_SERVER [A-Za-z0-9_.$]+ [a-z0-9_]+ (?:PASS|FAIL(?: [a-z0-9_]+)?)|'
     r'MF_EVENTS_SERVER [A-Za-z0-9_.$]+ result (?:EVENTS_PASS|FAIL [a-z0-9_]+)|'
@@ -111,6 +156,8 @@ def run():
     parser.add_argument('--api-key-env', help='only this environment variable may contain the credential')
     parser.add_argument('--allow-unauthenticated-local', action='store_true')
     parser.add_argument('--model-timeout-seconds', type=int, default=6)
+    parser.add_argument('--human-review', type=Path,
+                        help='explicit local 0600 output path for parent reply review')
     options = parser.parse_args()
     loader = options.target.split('-', 1)[0]
     if not re.fullmatch(r'[A-Za-z0-9_]{1,16}', options.username):
@@ -159,7 +206,7 @@ def run():
                 api_key = None
             else:
                 parser.error(f'environment variable {options.api_key_env} is absent')
-        state = RealState(summary_path)
+        state = RealState(summary_path, human_review_path=options.human_review)
         observer = RealObserver(state, options.endpoint, options.model, api_key,
                                 options.model_timeout_seconds)
         ObserverHandler.observer = observer
@@ -194,6 +241,8 @@ def run():
         'model_endpoint': model_endpoint,
         'request_body_stored': False,
         'log_policy': 'only fixed MF_EVENTS assertion lines are retained',
+        'human_review_output_opt_in': bool(options.human_review),
+        'human_review_completed': False,
     }
     (evidence / 'startup.json').write_text(json.dumps(startup, ensure_ascii=False, indent=2) + '\n',
                                            encoding='utf-8')
@@ -326,27 +375,13 @@ def run():
         if options.real:
             result = observer_snapshot(summary_path)
             live_state = observer_state.snapshot()
-            fixture_state_matches_summary = (
-                result.get('counts') == live_state.get('counts')
-                and result.get('failures') == live_state.get('failures')
-                and result.get('request_body_stored') is False
-                and result.get('response_body_stored') is False)
-            deltas = {tag: result['counts'].get(tag, 0) - baseline['counts'].get(tag, 0)
-                      for tag in REQUIRED_COUNTS}
-            counts_ok = all(value == 1 for value in deltas.values())
-            failures_added = sum(result['failures'].values()) == sum(baseline['failures'].values())
-            semantic_passes = result.get('semantic_passes', {})
-            semantic_failures = result.get('semantic_failures', {})
-            semantic_ok = (
-                all(semantic_passes.get(tag) == 1
-                    for tag in (*EVENTS, 'DELETE_PROBE', 'REAL_CHAT'))
-                and all(semantic_failures.get(tag) == 0
-                        for tag in (*EVENTS, 'DELETE_PROBE', 'REAL_CHAT', 'TIMEOUT', 'DISCONNECT')))
-            transport = result.get('transport', {})
-            controlled_ok = (transport.get('controlled_timeout') == 1
-                             and transport.get('controlled_disconnect') == 1
-                             and result.get('failures', {}).get('network_error', 0) == 0
-                             and result.get('failures', {}).get('upstream_http_error', 0) == 0)
+            verdict = evaluate_real_model_summary(baseline, result, live_state)
+            fixture_state_matches_summary = verdict['state_matches']
+            counts_ok = verdict['counts_passed']
+            failures_added = verdict['failures_clean']
+            semantic_ok = verdict['semantic_checks_passed']
+            controlled_ok = verdict['fault_transports_observed']
+            deltas = verdict['count_delta']
         else:
             result = fixture_snapshot(summary_path)
             memory_snapshot = fixture.state.snapshot()
@@ -371,11 +406,13 @@ def run():
     helper_unchanged = helper_digest() == helper_hash
     client_pass = 'MF_EVENTS_CLIENT PASS EVENTS_PASS' in evidence_log
     server_pass = f'MF_EVENTS_SERVER {server_class} result EVENTS_PASS' in evidence_log
-    passed = (exit_code == 0 and not timed_out and not launch_error and not missing and counts_ok
-              and failures_added and fixture_state_matches_summary and semantic_ok and controlled_ok
-              and artifact_unchanged and source_unchanged and helper_unchanged
-              and client_pass and server_pass and 'MF_EVENTS_CLIENT FAIL ' not in evidence_log
-              and ' result FAIL ' not in evidence_log)
+    automated_passed = (exit_code == 0 and not timed_out and not launch_error and not missing and counts_ok
+                        and failures_added and fixture_state_matches_summary and semantic_ok and controlled_ok
+                        and artifact_unchanged and source_unchanged and helper_unchanged
+                        and client_pass and server_pass and 'MF_EVENTS_CLIENT FAIL ' not in evidence_log
+                        and ' result FAIL ' not in evidence_log)
+    # Real-model automation remains pending until the parent reviews actual replies.
+    passed = automated_passed if not options.real else False
     summary = dict(startup, passed=passed, exit_code=exit_code, timed_out=timed_out,
                    launch_error=launch_error, seconds=round(time.monotonic() - start, 2),
                    artifact_unchanged=artifact_unchanged, source_unchanged=source_unchanged,
@@ -389,7 +426,14 @@ def run():
                    client_completion=client_pass,
                    server_completion=server_pass,
                    m1_events_complete=passed,
-                   m1_real_model_integrated_complete=passed if options.real else False,
+                   m1_real_model_automated_checks_complete=automated_passed if options.real else False,
+                   human_review_required=options.real,
+                   human_review_output_records=result.get('human_review_records', 0) if options.real else 0,
+                   human_review_output_complete=(
+                       bool(options.human_review)
+                       and result.get('human_review_records', 0) >= len(REAL_MODEL_REPLY_LABELS)
+                   ) if options.real else False,
+                   m1_real_model_integrated_complete=False,
                    not_covered=([] if options.real else ['真实模型服务'])
                                + ['DedicatedServer重启后恢复', '完整人工游戏体验'])
     (evidence / 'summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n',
@@ -398,7 +442,10 @@ def run():
                       'missing_checks': missing, 'protocol_count_delta': deltas,
                       'protocol_failures_unchanged': failures_added,
                       'real_model_semantic_checks_passed': semantic_ok,
-                      'real_model_fault_transports_observed': controlled_ok}, ensure_ascii=False))
+                      'real_model_fault_transports_observed': controlled_ok,
+                      'human_review_required': options.real,
+                      'automated_checks_passed': automated_passed if options.real else passed,
+                      'automated_only': True}, ensure_ascii=False))
     return 0 if passed else 1
 
 
