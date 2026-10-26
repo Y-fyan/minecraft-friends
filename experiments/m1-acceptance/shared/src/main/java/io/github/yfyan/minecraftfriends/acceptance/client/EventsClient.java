@@ -79,6 +79,11 @@ public final class EventsClient {
     }
 
     public static void tick(Minecraft client) {
+        // The isolated harness must keep ticking across background world reopen screens.
+        client.options.pauseOnLostFocus = false;
+        if (client.level != null && client.screen instanceof net.minecraft.client.gui.screens.PauseScreen) {
+            client.setScreen(null);
+        }
         if (finished) {
             return;
         }
