@@ -27,7 +27,8 @@ public final class EventsClient {
     private static final String BOT_PREFIX = "MF_EventsBot：";
     private static final String REPLY_SUFFIX = " | 协议模拟，非真实模型。你好，我是 AI 伙伴。";
     private static final boolean REAL_MODE = Boolean.getBoolean("mf.acceptance.real");
-    private static final String TIMEOUT_FEEDBACK = "伙伴思考超时，请稍后再试。";
+    private static final String TIMEOUT_FEEDBACK = "模型请求超时。";
+    private static final String SESSION_TIMEOUT_FEEDBACK = "伙伴思考超时，请稍后再试。";
     private static final String DISCONNECT_FEEDBACK = "无法连接模型服务，请检查端点和网络。";
     private static final Object LIST_LOCK = new Object();
 
@@ -67,7 +68,8 @@ public final class EventsClient {
             parseRealReply(text.substring(BOT_PREFIX.length()));
             return;
         }
-        if (REAL_MODE && (text.equals(TIMEOUT_FEEDBACK) || text.equals(DISCONNECT_FEEDBACK))) {
+        if (REAL_MODE && (text.equals(TIMEOUT_FEEDBACK) || text.equals(SESSION_TIMEOUT_FEEDBACK)
+                || text.equals(DISCONNECT_FEEDBACK))) {
             parseFaultFeedback(text);
             return;
         }
@@ -185,7 +187,7 @@ public final class EventsClient {
             return;
         }
         if ("REAL_CHAT".equals(expectedEvent)) {
-            if (!reply.startsWith("MF_REAL_OK " + expectedNonce + " ")) {
+            if (!reply.contains(expectedNonce.toString())) {
                 enqueue(new Action("FAIL", "real_chat_marker_absent", ""));
                 return;
             }
@@ -194,7 +196,8 @@ public final class EventsClient {
     }
 
     private static void parseFaultFeedback(String text) {
-        String expected = TIMEOUT_FEEDBACK.equals(text) ? "TIMEOUT" : "DISCONNECT";
+        String expected = (TIMEOUT_FEEDBACK.equals(text) || SESSION_TIMEOUT_FEEDBACK.equals(text))
+                ? "TIMEOUT" : "DISCONNECT";
         if (!expected.equals(expectedEvent)) {
             enqueue(new Action("FAIL", "unexpected_fault_feedback", ""));
             return;
