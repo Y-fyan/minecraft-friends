@@ -36,7 +36,7 @@ EVENTS = {
 }
 EVENT_HINTS = {
     "FIRST_MEETING": ("你好", "初次", "第一次", "相遇", "见面", "欢迎"),
-    "INJURED": ("受伤", "疼", "痛", "安全", "注意", "还好", "休息", "处理"),
+    "INJURED": ("受伤", "受了点伤", "受了伤", "疼", "痛", "安全", "注意", "还好", "休息", "处理"),
     "REJOIN": ("回来", "欢迎", "再见", "重", "又", "等你", "久"),
 }
 IDENTITY_HINTS = ("AI", "人工智能", "智能助手", "虚拟伙伴", "虚拟助手")
@@ -484,6 +484,18 @@ def self_test():
                     gate.label, response("你好，我是 AI 伙伴，初次见面请多指教。"))
                 self.assertTrue(ok)
                 self.assertEqual(reasons, [])
+
+        def test_natural_injury_wording_and_unrelated_reply(self):
+            with tempfile.TemporaryDirectory() as directory:
+                state = RealState(Path(directory) / "summary.json")
+                ok, _, reasons = state.inspect_response(
+                    "INJURED", response("我是 AI 伙伴，刚才我受了点伤，不过不碍事。"))
+                self.assertTrue(ok)
+                self.assertEqual(reasons, [])
+                ok, _, reasons = state.inspect_response(
+                    "INJURED", response("我是 AI 伙伴，今天云朵真漂亮。"))
+                self.assertFalse(ok)
+                self.assertIn("event_context_absent", reasons)
 
         def test_delete_probe_does_not_demand_nonce_or_repeated_identity(self):
             nonce = "00000000-0000-0000-0000-000000000000"
