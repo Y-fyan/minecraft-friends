@@ -31,6 +31,7 @@ minecraft {
             workingDirectory acceptanceClientDirectory
             property 'mf.acceptance', 'true'
             property 'mf.acceptance.loader', 'forge'
+            if (project.hasProperty('acceptanceActions')) { property 'mf.acceptance.actions', 'true' }
             if (project.hasProperty('acceptanceEvents')) { property 'mf.acceptance.events', 'true' }
             if (project.hasProperty('acceptanceReal')) { property 'mf.acceptance.real', 'true' }
             if (project.hasProperty('acceptanceNegative')) {
