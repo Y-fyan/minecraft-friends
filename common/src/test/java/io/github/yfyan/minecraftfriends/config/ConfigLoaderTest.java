@@ -11,6 +11,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ConfigLoaderTest {
@@ -164,5 +166,23 @@ class ConfigLoaderTest {
             assertFalse(notices.contains(sentinel));
             assertFalse(loaded.config().toString().contains(sentinel));
         }
+    }
+
+    @Test
+    void wrapsMalformedUnicodeEscapeWithoutChangingOrEchoingTheFile() throws IOException {
+        Path config = temporaryDirectory.resolve(ConfigLoader.FILE_NAME);
+        String secretSentinel = "private-config-sentinel";
+        String original = "model.provider=mock\nmodel.name=" + secretSentinel + (char) 92 + "u12X4\n";
+        Files.writeString(config, original);
+
+        IOException failure = assertThrows(
+                IOException.class,
+                () -> new ConfigLoader().loadOrCreate(temporaryDirectory)
+        );
+
+        assertEquals("Invalid syntax in minecraft-friends.properties.", failure.getMessage());
+        assertNull(failure.getCause());
+        assertFalse(failure.toString().contains(secretSentinel));
+        assertEquals(original, Files.readString(config));
     }
 }

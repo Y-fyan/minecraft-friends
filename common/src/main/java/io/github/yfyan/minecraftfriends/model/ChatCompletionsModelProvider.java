@@ -260,7 +260,7 @@ public final class ChatCompletionsModelProvider implements ModelProvider {
                 }
             }
             reader.endObject();
-            if (reader.peek() != JsonToken.END_DOCUMENT || content == null) {
+            if (reader.peek() != JsonToken.END_DOCUMENT || content == null || content.isBlank()) {
                 throw new ModelCallException(ModelCallException.Category.INVALID_RESPONSE);
             }
             return content;

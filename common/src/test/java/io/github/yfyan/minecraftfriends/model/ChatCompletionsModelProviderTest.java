@@ -1,5 +1,6 @@
 package io.github.yfyan.minecraftfriends.model;
 
+import com.google.gson.JsonPrimitive;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import io.github.yfyan.minecraftfriends.config.ModConfig;
@@ -75,6 +76,24 @@ class ChatCompletionsModelProviderTest {
 
             assertEquals(ModelCallException.Category.INVALID_RESPONSE, failure.category());
             assertFalse(failure.toString().contains(privateBody));
+        }
+    }
+
+    @Test
+    void emptyAndWhitespaceOnlyContentIsRejected() throws Exception {
+        List<String> contentCases = List.of("", "  \t\n", "\u2003");
+        AtomicInteger contentIndex = new AtomicInteger();
+        try (StubServer stub = new StubServer(exchange -> {
+            String content = contentCases.get(contentIndex.getAndIncrement());
+            reply(exchange, 200, success(content));
+        })) {
+            ModelProvider provider = create(stub.endpoint(), 0, 65_536);
+
+            for (int index = 0; index < contentCases.size(); index++) {
+                ModelCallException failure = awaitFailure(provider, Duration.ofSeconds(3));
+                assertEquals(ModelCallException.Category.INVALID_RESPONSE, failure.category());
+            }
+            assertEquals(contentCases.size(), contentIndex.get());
         }
     }
 
@@ -328,7 +347,7 @@ class ChatCompletionsModelProviderTest {
     }
 
     private static String success(String content) {
-        return "{\"choices\":[{\"message\":{\"content\":\"" + content + "\"}}]}";
+        return "{\"choices\":[{\"message\":{\"content\":" + new JsonPrimitive(content) + "}}]}";
     }
 
     private static void reply(HttpExchange exchange, int status, String body) throws IOException {

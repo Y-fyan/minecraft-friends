@@ -54,7 +54,11 @@ public final class ConfigLoader {
 
         Properties properties = new Properties();
         try (Reader reader = Files.newBufferedReader(configPath, StandardCharsets.UTF_8)) {
-            properties.load(reader);
+            try {
+                properties.load(reader);
+            } catch (IllegalArgumentException ignored) {
+                throw new IOException("Invalid syntax in minecraft-friends.properties.");
+            }
         }
 
         ModConfig defaults = ModConfig.defaults();
