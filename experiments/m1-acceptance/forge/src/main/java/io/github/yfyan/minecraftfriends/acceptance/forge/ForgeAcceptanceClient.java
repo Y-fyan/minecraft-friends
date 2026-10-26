@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
+import net.minecraftforge.client.event.SystemMessageReceivedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -16,6 +17,10 @@ public final class ForgeAcceptanceClient {
     }
     @SubscribeEvent
     public static void message(ClientChatReceivedEvent event) {
+        if (Boolean.getBoolean("mf.acceptance")) { AcceptanceClient.message(event.getMessage().getString()); }
+    }
+    @SubscribeEvent
+    public static void systemMessage(SystemMessageReceivedEvent event) {
         if (Boolean.getBoolean("mf.acceptance")) { AcceptanceClient.message(event.getMessage().getString()); }
     }
 }
