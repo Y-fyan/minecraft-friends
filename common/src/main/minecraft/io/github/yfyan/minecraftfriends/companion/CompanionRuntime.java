@@ -3,6 +3,7 @@ package io.github.yfyan.minecraftfriends.companion;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import io.github.yfyan.minecraftfriends.chat.ChatRuntime;
 import net.minecraft.SharedConstants;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.nbt.CompoundTag;
@@ -37,6 +38,7 @@ import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
 public final class CompanionRuntime {
+    private static volatile boolean featureEnabled = true;
     private static final Logger LOGGER = LoggerFactory.getLogger("minecraft_friends");
     private static final Map<MinecraftServer, Map<UUID, PendingDeath>> PENDING_DEATHS = new WeakHashMap<>();
     private static final Map<MinecraftServer, Set<ServerPlayer>> COMPANION_PLAYERS = new WeakHashMap<>();
@@ -44,6 +46,17 @@ public final class CompanionRuntime {
     private static final Set<MinecraftServer> VALIDATED_DATA_STORES = Collections.newSetFromMap(new WeakHashMap<>());
 
     private CompanionRuntime() {
+    }
+
+    /** Applies the game/server process configuration before registering gameplay callbacks. */
+    public static void configure(boolean enabled) {
+        featureEnabled = enabled;
+    }
+
+    private static void requireEnabled() {
+        if (!featureEnabled) {
+            throw new IllegalStateException("Minecraft Friends 已在配置中关闭。");
+        }
     }
 
     public static CompanionData data(MinecraftServer server) {
@@ -89,7 +102,7 @@ public final class CompanionRuntime {
     }
 
     public static void onOwnerLogin(ServerPlayer owner) {
-        if (isCompanion(owner)) {
+        if (!featureEnabled || isCompanion(owner)) {
             return;
         }
         try {
@@ -113,11 +126,13 @@ public final class CompanionRuntime {
     }
 
     public static CompanionData.Entry createFor(ServerPlayer owner, String requestedName) {
+        requireEnabled();
         CompanionData store = data(owner.server);
         CompanionData.Entry existing = store.find(owner.getUUID()).orElse(null);
         if (existing != null) {
             store.setActive(owner.getUUID(), true);
             summon(owner.server, owner, existing, false);
+            ChatRuntime.onCompanionAvailable(owner);
             return store.find(owner.getUUID()).orElseThrow();
         }
         String name = requestedName == null ? defaultName(owner, store) : requestedName;
@@ -127,21 +142,25 @@ public final class CompanionRuntime {
         CompanionData.Entry created = store.create(new CompanionIdentity(
                 uniqueCompanionId(owner.server, store, owner.getUUID()), owner.getUUID(), name));
         summon(owner.server, owner, created, true);
+        ChatRuntime.onCompanionAvailable(owner);
         return created;
     }
 
     public static void summonFor(ServerPlayer owner) {
+        requireEnabled();
         CompanionData store = data(owner.server);
         CompanionData.Entry entry = store.find(owner.getUUID())
                 .orElseThrow(() -> new IllegalStateException("No companion is registered for this owner."));
         store.setActive(owner.getUUID(), true);
         summon(owner.server, owner, entry, false);
+        ChatRuntime.onCompanionAvailable(owner);
     }
 
     public static void dismissFor(ServerPlayer owner) {
         CompanionData store = data(owner.server);
         CompanionData.Entry entry = store.find(owner.getUUID())
                 .orElseThrow(() -> new IllegalStateException("No companion is registered for this owner."));
+        ChatRuntime.onCompanionRemoved(owner.server, owner.getUUID());
         if (!removeLive(owner.server, entry.identity())) {
             throw new IllegalStateException("Refused to remove a player that is not a local companion.");
         }
@@ -155,6 +174,7 @@ public final class CompanionRuntime {
             }
             return;
         }
+        ChatRuntime.onLogout(owner);
         try {
             CompanionData store = data(owner.server);
             if (isRespawning(owner.server, owner.getUUID())
@@ -168,6 +188,7 @@ public final class CompanionRuntime {
     }
 
     public static void onServerStopping(MinecraftServer server) {
+        ChatRuntime.stop(server);
         try {
             for (CompanionData.Entry entry : data(server).entries()) {
                 removeLive(server, entry.identity());
@@ -191,6 +212,7 @@ public final class CompanionRuntime {
         if (entry == null || !entry.active()) {
             return;
         }
+        ChatRuntime.onCompanionRemoved(dead.server, entry.identity().ownerId());
         PENDING_DEATHS.computeIfAbsent(dead.server, ignored -> new HashMap<>())
                 .put(dead.getUUID(), new PendingDeath(dead, false));
     }

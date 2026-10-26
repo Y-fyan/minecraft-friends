@@ -21,8 +21,10 @@ public final class MinecraftFriendsForge {
     private static final Logger LOGGER = LoggerFactory.getLogger(MinecraftFriends.MOD_ID);
 
     public MinecraftFriendsForge() {
-        Bootstrap.initialize(new ForgeLoaderAdapter(LOGGER));
+        var report = Bootstrap.initialize(new ForgeLoaderAdapter(LOGGER));
+        CompanionRuntime.configure(report.config().enabled());
         MinecraftForge.EVENT_BUS.register(this);
+        ChatIntegrationForge.register();
     }
 
     @SubscribeEvent

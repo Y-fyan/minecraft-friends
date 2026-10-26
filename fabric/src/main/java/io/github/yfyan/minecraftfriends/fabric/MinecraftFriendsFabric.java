@@ -18,7 +18,8 @@ public final class MinecraftFriendsFabric implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        Bootstrap.initialize(new FabricLoaderAdapter(LOGGER));
+        var report = Bootstrap.initialize(new FabricLoaderAdapter(LOGGER));
+        CompanionRuntime.configure(report.config().enabled());
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 CompanionRuntime.registerCommands(dispatcher));
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
@@ -32,5 +33,6 @@ public final class MinecraftFriendsFabric implements ModInitializer {
         });
         ServerTickEvents.END_SERVER_TICK.register(CompanionRuntime::onServerTick);
         ServerLifecycleEvents.SERVER_STOPPING.register(CompanionRuntime::onServerStopping);
+        ChatIntegrationFabric.register();
     }
 }
