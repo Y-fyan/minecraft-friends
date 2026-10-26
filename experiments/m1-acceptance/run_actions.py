@@ -87,7 +87,8 @@ def main():
             if data is None:f.unlink(missing_ok=True)
             else:f.write_bytes(data)
     text='\n'.join(lines)
-    missing=[tag for tag in CHECKS if not re.search(r'MF_M2_SERVER \S+ '+re.escape(tag)+r' PASS',text)]
+    required=CHECKS+('dedicated_server_instance' if dedicated else 'integrated_server_instance',)
+    missing=[tag for tag in required if not re.search(r'MF_M2_SERVER \S+ '+re.escape(tag)+r' PASS',text)]
     unchanged=artifact.is_file() and sha(artifact)==proof
     source_unchanged=(subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()==commit and subprocess.check_output(['git','diff','HEAD','--'],cwd=ROOT)==diff)
     server_ok=True;server_hash=None

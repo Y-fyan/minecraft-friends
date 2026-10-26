@@ -22,14 +22,8 @@ public final class ActionsClient {
     private static final ConcurrentLinkedQueue<String> MESSAGES = new ConcurrentLinkedQueue<>();
     private static final String WORLD = "mf-m2-acceptance-" + UUID.randomUUID();
     private static final String SERVER = System.getProperty("mf.acceptance.server", "");
-    private static String expectedNonce;
-    private static String expectedSaveNonce;
     private static boolean started;
-    private static boolean reopening;
-    private static boolean lifecyclePassed;
     private static boolean finished;
-    private static int diagnosticTicks;
-    private static int waiting;
 
     public static void message(String text) {
         if (text != null && text.startsWith("MF_M2 ") && text.length() <= 512 && MESSAGES.size() < 128) { MESSAGES.add(text); }
@@ -38,11 +32,6 @@ public final class ActionsClient {
         client.options.pauseOnLostFocus = false;
         if (client.level != null && client.screen instanceof net.minecraft.client.gui.screens.PauseScreen) { client.setScreen(null); }
         if (finished) { return; }
-        if (++diagnosticTicks % 100 == 1) {
-            System.out.println("MF_ACCEPTANCE_SCREEN "
-                    + (client.screen == null ? "none" : client.screen.getClass().getName())
-                    + " overlay=" + (client.getOverlay() == null ? "none" : client.getOverlay().getClass().getName()));
-        }
         String text;
         while ((text = MESSAGES.poll()) != null) {
             if (text.startsWith("MF_M2 COMMAND ")) {
@@ -62,18 +51,7 @@ public final class ActionsClient {
             }
         }
         if (client.getOverlay() != null || !(client.screen instanceof TitleScreen)) { return; }
-        if (reopening && client.level == null) {
-            if (++waiting < 40) { return; }
-            reopening = false;
-            if (SERVER.isEmpty()) {
-                client.createWorldOpenFlows().openWorld(WORLD, () -> fail(client, "world_reopen_cancelled"));
-            } else {
-                ConnectScreen.startConnecting(new TitleScreen(), client, ServerAddress.parseString(SERVER),
-                        new ServerData("Isolated M1 acceptance", SERVER, ServerData.Type.OTHER), false, null);
-            }
-            return;
-        }
-        if (started || lifecyclePassed) { return; }
+        if (started) { return; }
         started = true;
         if (!SERVER.isEmpty()) {
             if (!SERVER.startsWith("127.0.0.1:") && !SERVER.startsWith("localhost:")) {

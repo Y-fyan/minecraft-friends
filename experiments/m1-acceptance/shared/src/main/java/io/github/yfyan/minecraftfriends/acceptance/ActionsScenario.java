@@ -42,7 +42,8 @@ public final class ActionsScenario {
                     for (int y=-60;y<=-57;y++) owner.serverLevel().setBlock(new BlockPos(x,y,z),Blocks.AIR.defaultBlockState(),3);
                 }
                 owner.getInventory().clearContent(); owner.teleportTo(15.5,-60,2.5);
-                age=0; emit("isolated_survival_map",true); return;
+                age=0; emit("isolated_survival_map",true);
+                emit(server instanceof net.minecraft.server.dedicated.DedicatedServer ? "dedicated_server_instance" : "integrated_server_instance",true); return;
             }
             if (phase==0) {
                 baseline.add(server.getAverageTickTimeNanos());
@@ -114,7 +115,7 @@ public final class ActionsScenario {
     private static long mean(List<Long> samples){return samples.isEmpty()?0:(long)samples.stream().mapToLong(Long::longValue).average().orElse(0);}
     private void next(int p){phase=p;age=0;}
     private void command(String command){owner.sendSystemMessage(Component.literal("MF_M2 COMMAND "+command));}
-    private void check(boolean ok,String tag){if(!ok)throw new IllegalStateException(tag);emit(tag,true);}
+    private void check(boolean ok,String tag){if(!ok){emit(tag,false);throw new IllegalStateException(tag);}emit(tag,true);}
     private void emit(String tag,boolean ok){System.out.println("MF_M2_SERVER "+server.getClass().getName()+" "+tag+" "+(ok?"PASS":"FAIL"));}
     private void fail(String reason){finished=true;emit(reason,false);if(owner!=null)owner.sendSystemMessage(Component.literal("MF_M2 FAIL "+reason));}
 }
