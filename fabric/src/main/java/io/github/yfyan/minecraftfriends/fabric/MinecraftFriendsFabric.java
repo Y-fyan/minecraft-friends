@@ -6,6 +6,7 @@ import io.github.yfyan.minecraftfriends.companion.CompanionRuntime;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.level.ServerPlayer;
@@ -29,6 +30,7 @@ public final class MinecraftFriendsFabric implements ModInitializer {
                 CompanionRuntime.onCompanionDeath(player);
             }
         });
+        ServerTickEvents.END_SERVER_TICK.register(CompanionRuntime::onServerTick);
         ServerLifecycleEvents.SERVER_STOPPING.register(CompanionRuntime::onServerStopping);
     }
 }

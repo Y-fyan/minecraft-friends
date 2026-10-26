@@ -8,8 +8,11 @@ import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public final class CompanionData extends SavedData {
@@ -24,22 +27,69 @@ public final class CompanionData extends SavedData {
     private final Map<UUID, Entry> byOwner = new HashMap<>();
 
     public static CompanionData load(CompoundTag tag, HolderLookup.Provider registries) {
+        if (!tag.contains("schemaVersion", Tag.TAG_INT)) {
+            throw new IllegalStateException("Companion data is missing its schema version; refusing to restore records.");
+        }
+        int schemaVersion = tag.getInt("schemaVersion");
+        if (schemaVersion != CURRENT_SCHEMA) {
+            throw new IllegalStateException("Unsupported companion data schema " + schemaVersion
+                    + "; expected " + CURRENT_SCHEMA + ". Refusing to restore records.");
+        }
+        if (!tag.contains("companions", Tag.TAG_LIST)) {
+            throw new IllegalStateException("Companion data has no valid records list; refusing to restore records.");
+        }
+        Tag rawEntries = tag.get("companions");
+        if (!(rawEntries instanceof ListTag entries)) {
+            throw new IllegalStateException("Companion data records have an invalid type; refusing to restore records.");
+        }
+        byte elementType = entries.getElementType();
+        if (elementType != Tag.TAG_COMPOUND
+                && !(entries.isEmpty() && elementType == Tag.TAG_END)) {
+            throw new IllegalStateException("Companion data records have an invalid type; refusing to restore records.");
+        }
+
         CompanionData data = new CompanionData();
-        ListTag entries = tag.getList("companions", Tag.TAG_COMPOUND);
+        Set<UUID> allIdentityIds = new HashSet<>();
+        Set<String> names = new HashSet<>();
         for (int index = 0; index < entries.size(); index++) {
             CompoundTag stored = entries.getCompound(index);
+            if (!stored.hasUUID("companion") || !stored.hasUUID("owner")
+                    || !stored.contains("name", Tag.TAG_STRING)
+                    || !stored.contains("active", Tag.TAG_BYTE)
+                    || (stored.getByte("active") != 0 && stored.getByte("active") != 1)) {
+                throw invalidRecord(index);
+            }
+
+            CompanionIdentity identity;
             try {
-                CompanionIdentity identity = new CompanionIdentity(
+                identity = new CompanionIdentity(
                         stored.getUUID("companion"),
                         stored.getUUID("owner"),
                         stored.getString("name")
                 );
-                data.byOwner.put(identity.ownerId(), new Entry(identity, stored.getBoolean("active")));
-            } catch (IllegalArgumentException | IllegalStateException ignored) {
-                // Ignore malformed records; never create an entity from incomplete ownership data.
+            } catch (RuntimeException malformed) {
+                throw invalidRecord(index);
             }
+
+            String normalizedName = normalizeName(identity.name());
+            if (data.byOwner.containsKey(identity.ownerId())
+                    || !allIdentityIds.add(identity.ownerId())
+                    || !allIdentityIds.add(identity.companionId())
+                    || !names.add(normalizedName)) {
+                throw invalidRecord(index);
+            }
+            data.byOwner.put(identity.ownerId(), new Entry(identity, stored.getBoolean("active")));
         }
         return data;
+    }
+
+    private static IllegalStateException invalidRecord(int index) {
+        return new IllegalStateException("Companion data record " + index
+                + " is malformed or duplicated; refusing to restore records.");
+    }
+
+    private static String normalizeName(String name) {
+        return name.toLowerCase(Locale.ROOT);
     }
 
     @Override
@@ -68,6 +118,12 @@ public final class CompanionData extends SavedData {
                 .findFirst();
     }
 
+    public boolean hasName(String name) {
+        String normalized = normalizeName(name);
+        return byOwner.values().stream()
+                .anyMatch(entry -> normalizeName(entry.identity().name()).equals(normalized));
+    }
+
     public Collection<Entry> entries() {
         return java.util.List.copyOf(byOwner.values());
     }
@@ -76,6 +132,19 @@ public final class CompanionData extends SavedData {
         Entry existing = byOwner.get(identity.ownerId());
         if (existing != null) {
             return existing;
+        }
+        for (Entry entry : byOwner.values()) {
+            CompanionIdentity registered = entry.identity();
+            if (registered.companionId().equals(identity.ownerId())
+                    || registered.ownerId().equals(identity.companionId())) {
+                throw new IllegalArgumentException("Companion identity conflicts with an existing owner or companion.");
+            }
+            if (registered.companionId().equals(identity.companionId())) {
+                throw new IllegalArgumentException("Companion UUID is already registered.");
+            }
+            if (normalizeName(registered.name()).equals(normalizeName(identity.name()))) {
+                throw new IllegalArgumentException("That companion name is already registered.");
+            }
         }
         Entry created = new Entry(identity, true);
         byOwner.put(identity.ownerId(), created);
@@ -86,7 +155,7 @@ public final class CompanionData extends SavedData {
     public Entry setActive(UUID ownerId, boolean active) {
         Entry current = byOwner.get(ownerId);
         if (current == null) {
-            throw new IllegalArgumentException("No companion is registered for owner " + ownerId);
+            throw new IllegalArgumentException("No companion is registered for this owner.");
         }
         if (current.active() != active) {
             Entry updated = new Entry(current.identity(), active);
