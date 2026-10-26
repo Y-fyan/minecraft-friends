@@ -37,6 +37,9 @@ def run():
     production = ROOT / 'build/artifacts' / f'minecraft-friends-{loader}-1.21.1-0.1.0-SNAPSHOT.jar'
     if not production.is_file():
         parser.error('first build the production project with checkAll')
+    artifact_hash = digest(production)
+    source_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+    source_diff = subprocess.check_output(['git', 'diff', 'HEAD', '--'], cwd=ROOT)
     client_run = HERE / loader / 'build/run/client'
     client_run.mkdir(parents=True, exist_ok=True)
     options_file = client_run / 'options.txt'
@@ -88,14 +91,17 @@ def run():
     missing = [name for name in required_checks if f'{server_class} {name} PASS' not in content]
     client_result = ('INTEGRATED_LIFECYCLE_REOPEN_PASS' if kind == 'integrated'
                      else 'DEDICATED_LIFECYCLE_PASS')
-    passed = (exit_code == 0 and not timed_out and not missing
+    artifact_unchanged = digest(production) == artifact_hash
+    passed = (exit_code == 0 and not timed_out and not missing and artifact_unchanged
               and f'MF_ACCEPTANCE_CLIENT PASS {client_result}' in content
               and 'MF_ACCEPTANCE_CLIENT FAIL' not in content
               and f'{server_class} result FAIL' not in content)
     summary = {'target': options.target, 'passed': passed, 'exit_code': exit_code,
                'timed_out': timed_out, 'seconds': round(time.monotonic() - started, 2),
-               'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
-               'production_jar_sha256': digest(production), 'log_sha256': digest(log_path),
+               'source_commit': source_commit, 'source_dirty': bool(source_diff),
+               'source_diff_sha256': hashlib.sha256(source_diff).hexdigest(),
+               'production_jar_sha256': artifact_hash, 'artifact_unchanged': artifact_unchanged,
+               'log_sha256': digest(log_path),
                'expected_server_class': server_class, 'missing_checks': missing,
                'client_completion': f'MF_ACCEPTANCE_CLIENT PASS {client_result}' in content}
     (evidence / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
