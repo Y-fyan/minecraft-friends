@@ -10,11 +10,19 @@ loom {
     runs {
         acceptance {
             client()
-            runDir 'build/run/client'
+            runDir project.layout.buildDirectory.dir('run/client').get().asFile.path
             vmArg '-Dmf.acceptance=true'
             vmArg '-Dmf.acceptance.loader=fabric'
+            if (project.hasProperty('acceptancePeer')) {
+                vmArg '-Dmf.acceptance.peer=true'
+                vmArg '-Dmf.acceptance.peer.role=' + project.property('acceptancePeerRole')
+            }
             if (project.hasProperty('acceptanceLifecycleOnly')) { vmArg '-Dmf.acceptance.lifecycleOnly=true' }
             if (project.hasProperty('acceptanceUsername')) { programArgs '--username', project.property('acceptanceUsername') }
+            if (project.hasProperty('acceptancePeerRole')) {
+                def username = project.property('acceptancePeerRole') == 'a' ? 'MFAcceptA' : 'MFAcceptB'
+                programArgs '--username', username
+            }
             if (project.hasProperty('acceptanceServer')) {
                 vmArg '-Dmf.acceptance.server=' + project.property('acceptanceServer')
             }

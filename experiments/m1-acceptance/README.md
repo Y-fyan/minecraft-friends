@@ -60,6 +60,31 @@ JAVA_HOME=/已有/JDK21 python3 experiments/m1-acceptance/run_acceptance.py fabr
 
 Dedicated 新流程实际断开并重新连接同一专服；**不等于专服重启后磁盘恢复**。专服 `--lifecycle-only` 还需要在其 Java 进程加 `-Dmf.acceptance.lifecycleOnly=true`，并明确配置离线 mock；客户端运行器不会改服务器目录。
 
+### DedicatedServer 真实双客户端隔离验收
+
+此流程通过两个真实开发客户端 `MFAcceptA`、`MFAcceptB` 连接同一个独立离线 DedicatedServer。两人分别通过服务器命令创建伙伴；B 的私聊使用普通 `@MF_PeerB ...` 聊天包，其他步骤使用实际客户端命令。服务端助手以真实 `ServerPlayer` UUID 配对消息 nonce ACK。它不以模拟玩家对象代替网络连接。
+
+先给父代理准备的服务器装入本分支构建的对应 acceptance helper JAR，使用全新的隔离测试世界、`online-mode=false`，仅绑定 `127.0.0.1`，并确认服务器只接纳这两个临时离线身份。服务端 Java 参数必须同时包含 `-Dmf.acceptance=true -Dmf.acceptance.peer=true`。不要用真实存档或账号。父代理继续独立管理服务器的 EULA、启动和退出。
+
+另开终端启动 peer 专用 fixture。它只监听随机 loopback 端口，打印应复制到该隔离服务器配置的无凭据属性文件及 summary 路径；进程须保持运行：
+
+```bash
+python3 experiments/m1-acceptance/peer_protocol_stub.py --fixture
+```
+
+fixture 明确是“协议模拟，非真实模型”，不保存请求正文、私聊、nonce 或凭据；它会拒绝 Authorization 头。配置使用本地 HTTP endpoint、空 `model.api-key-env`、无重试和 `chat.prefix=@`。伙伴创建产生的最多两条首次见面 setup 请求单独计数；正式私聊/共享流程只有在两位玩家都通过命令关闭主动问候后才开始。
+
+服务器 ready 后，runner 只启动和回收自己创建的两个开发客户端 Gradle 进程组，不启动、修改或停止服务器。Gradle 默认离线；每轮的 A/B 有独立 project cache、build 和 run 目录，客户端 `options.txt` 显式设 `simulationDistance:5`：
+
+```bash
+JAVA_HOME=/tmp/codex-mf-jdk21-213 python3 experiments/m1-acceptance/run_peer_acceptance.py fabric-dedicated \
+  --server 127.0.0.1:25575 --fixture-summary /本次peer-fixture目录/protocol-summary.json
+JAVA_HOME=/tmp/codex-mf-jdk21-213 python3 experiments/m1-acceptance/run_peer_acceptance.py forge-dedicated \
+  --server 127.0.0.1:25576 --fixture-summary /本次peer-fixture目录/protocol-summary.json
+```
+
+父代理可按实际端口只运行其中一个目标。runner 在客户端输出中仅保留结构化 READY/PASS/断言标记，不保存原始 Minecraft 日志或聊天；summary 记录客户端 launcher PID/命令、正式 JAR 哈希、源码 commit、助手源哈希和 fixture 断言计数。超时、客户端失败、任一必需断言缺失、请求次数不符或私有上下文泄漏都会失败。双端成功表示该加载器在协议模拟下完成真实客户端连接、私聊隔离、共享邀请/加入/退出及 B 清理不影响 A 的验收；不代表真实模型服务、另一加载器、真人账号或服务器重启恢复已验证。
+
 ### 证据、检查与缺项
 
 - 每次使用唯一证据目录，启动前记录源码 commit、dirty diff SHA、助手源码集合 SHA 和根正式 JAR SHA；运行期间每 0.5 秒及结束时复核正式 JAR，结束时也复核源码/助手。中途变化、缺任何服务端断言、无客户端完整结束标记、fixture 的 PRIVATE/PREFIX/REJOIN/AFTER_CLEAR 调用各不恰好一次、失败计数增加或进程超时均不能通过。源码 commit 表示启动时 checkout，不能替代 JAR 构建来源证明；最终产物由父代理从最终源码重建。

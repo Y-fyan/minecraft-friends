@@ -15,3 +15,17 @@ subprojects {
         }
     }
 }
+
+def acceptanceInstance = providers.gradleProperty('acceptanceInstance').orNull
+if (acceptanceInstance != null) {
+    if (!(acceptanceInstance in ['a', 'b'])) {
+        throw new GradleException('acceptanceInstance must be a or b')
+    }
+    def acceptanceRunId = providers.gradleProperty('acceptanceRunId').orElse('manual').get()
+    if (!acceptanceRunId.matches('[A-Za-z0-9-]{1,64}')) {
+        throw new GradleException('acceptanceRunId must contain only letters, digits and hyphens')
+    }
+    subprojects {
+        layout.buildDirectory.set(layout.projectDirectory.dir("build/peer/${acceptanceRunId}/${acceptanceInstance}"))
+    }
+}

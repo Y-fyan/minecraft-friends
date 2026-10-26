@@ -1,6 +1,7 @@
 package io.github.yfyan.minecraftfriends.acceptance.forge;
 
 import io.github.yfyan.minecraftfriends.acceptance.AcceptanceScenario;
+import io.github.yfyan.minecraftfriends.acceptance.PeerScenario;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -15,9 +16,18 @@ public final class ForgeAcceptance {
         if (Boolean.getBoolean("mf.acceptance")) { MinecraftForge.EVENT_BUS.register(this); }
     }
     @SubscribeEvent
-    public void commands(RegisterCommandsEvent event) { AcceptanceScenario.registerCommands(event.getDispatcher()); }
+    public void commands(RegisterCommandsEvent event) {
+        if (Boolean.getBoolean("mf.acceptance.peer")) { PeerScenario.registerCommands(event.getDispatcher()); }
+        else { AcceptanceScenario.registerCommands(event.getDispatcher()); }
+    }
     @SubscribeEvent
-    public void tick(TickEvent.ServerTickEvent.Post event) { AcceptanceScenario.tick(event.getServer()); }
+    public void tick(TickEvent.ServerTickEvent.Post event) {
+        if (Boolean.getBoolean("mf.acceptance.peer")) { PeerScenario.tick(event.getServer()); }
+        else { AcceptanceScenario.tick(event.getServer()); }
+    }
     @SubscribeEvent
-    public void stopped(ServerStoppedEvent event) { AcceptanceScenario.remove(event.getServer()); }
+    public void stopped(ServerStoppedEvent event) {
+        if (Boolean.getBoolean("mf.acceptance.peer")) { PeerScenario.remove(event.getServer()); }
+        else { AcceptanceScenario.remove(event.getServer()); }
+    }
 }

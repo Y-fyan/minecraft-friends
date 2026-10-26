@@ -25,11 +25,19 @@ minecraft {
     reobf = false
     runs {
         client {
-            workingDirectory project.file('build/run/client')
+            workingDirectory project.layout.buildDirectory.dir('run/client').get().asFile
             property 'mf.acceptance', 'true'
             property 'mf.acceptance.loader', 'forge'
+            if (project.hasProperty('acceptancePeer')) {
+                property 'mf.acceptance.peer', 'true'
+                property 'mf.acceptance.peer.role', project.property('acceptancePeerRole')
+            }
             if (project.hasProperty('acceptanceLifecycleOnly')) { property 'mf.acceptance.lifecycleOnly', 'true' }
             if (project.hasProperty('acceptanceUsername')) { args '--username', project.property('acceptanceUsername') }
+            if (project.hasProperty('acceptancePeerRole')) {
+                def username = project.property('acceptancePeerRole') == 'a' ? 'MFAcceptA' : 'MFAcceptB'
+                args '--username', username
+            }
             if (project.hasProperty('acceptanceServer')) {
                 property 'mf.acceptance.server', project.property('acceptanceServer')
             }
