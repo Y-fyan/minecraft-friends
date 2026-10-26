@@ -128,11 +128,17 @@ class ChatSessionServiceTest {
                 fixture.service.submit(resolved, stranger, "@MF_owner 请加入我"));
         assertEquals(ChatSessionService.ShareStatus.NOT_INVITED,
                 fixture.service.joinShared(shared.worldId(), shared.sessionId(), stranger).status());
+        assertEquals(ChatSessionService.ShareStatus.NOT_INVITED,
+                fixture.service.checkJoinShared(shared.worldId(), shared.sessionId(), stranger));
 
         assertEquals(ChatSessionService.ShareStatus.INVITED,
                 fixture.service.invite(shared, privateConversation.ownerId(), stranger));
+        assertEquals(ChatSessionService.ShareStatus.INVITED,
+                fixture.service.checkJoinShared(shared.worldId(), shared.sessionId(), stranger));
         assertEquals(ChatSessionService.ShareStatus.JOINED,
                 fixture.service.joinShared(shared.worldId(), shared.sessionId(), stranger).status());
+        assertEquals(ChatSessionService.ShareStatus.ALREADY_MEMBER,
+                fixture.service.checkJoinShared(shared.worldId(), shared.sessionId(), stranger));
         assertEquals(List.of(shared), fixture.service.joinedShared(shared.worldId(), stranger));
     }
 

@@ -333,6 +333,9 @@ public final class ChatRuntime {
             player.sendSystemMessage(Component.literal("记忆正在安全保存，请稍后再发送。"));
             return true;
         }
+        if (target.conversation() instanceof ChatSessionService.PrivateConversation) {
+            notifyPrivateServiceDisclosure(state, player);
+        }
         ChatSessionService.SubmitStatus status = submit(state, target.conversation(), player, address.message());
         if (status == ChatSessionService.SubmitStatus.ACCEPTED
                 || status == ChatSessionService.SubmitStatus.QUEUED) {
@@ -484,6 +487,9 @@ public final class ChatRuntime {
             player.sendSystemMessage(Component.literal("记忆正在安全保存，请稍后再发送。"));
             return 0;
         }
+        if (conversation instanceof ChatSessionService.PrivateConversation) {
+            notifyPrivateServiceDisclosure(state, player);
+        }
         ChatSessionService.SubmitStatus status = submit(state, conversation, player, message);
         if (status == ChatSessionService.SubmitStatus.ACCEPTED
                 || status == ChatSessionService.SubmitStatus.QUEUED) {
@@ -623,7 +629,8 @@ public final class ChatRuntime {
             return 0;
         }
         player.sendSystemMessage(Component.literal("共享会话已创建，编号 " + result.conversation().sessionId()
-                + "。使用 /mf chat shared invite <在线玩家> 邀请成员。"));
+                + "。" + sharedDisclosure(state, result.conversation())
+                + " 使用 /mf chat shared invite <在线玩家> 邀请成员。"));
         return 1;
     }
 
@@ -702,10 +709,11 @@ public final class ChatRuntime {
             owner.sendSystemMessage(Component.literal(shareMessage(result)));
             return 0;
         }
+        String disclosure = sharedDisclosure(state, shared);
         target.sendSystemMessage(Component.literal(owner.getGameProfile().getName() + " 邀请你加入伙伴共享会话。"
-                + "接受请执行 /mf chat shared join " + shared.sessionId()));
+                + disclosure + " 接受请执行 /mf chat shared join " + shared.sessionId()));
         owner.sendSystemMessage(Component.literal("已向 " + target.getGameProfile().getName()
-                + " 发送邀请；对方接受前不能访问共享会话。"));
+                + " 发送邀请；对方接受前不能访问共享会话。" + disclosure));
         return 1;
     }
 
@@ -717,6 +725,19 @@ public final class ChatRuntime {
             player.sendSystemMessage(Component.literal("共享会话编号无效或聊天功能未启动。"));
             return 0;
         }
+        ChatSessionService.ShareStatus eligibility = state.sessions
+                .checkJoinShared(state.worldId, sessionId, player.getUUID());
+        if (eligibility != ChatSessionService.ShareStatus.INVITED) {
+            player.sendSystemMessage(Component.literal(shareMessage(eligibility)));
+            return eligibility == ChatSessionService.ShareStatus.ALREADY_MEMBER ? 1 : 0;
+        }
+        ChatSessionService.SharedConversation conversation = state.sessions
+                .findShared(state.worldId, sessionId).orElse(null);
+        if (conversation == null) {
+            player.sendSystemMessage(Component.literal(shareMessage(ChatSessionService.ShareStatus.NOT_FOUND)));
+            return 0;
+        }
+        player.sendSystemMessage(Component.literal(sharedDisclosure(state, conversation)));
         ChatSessionService.ShareResult result = state.sessions.joinShared(state.worldId, sessionId, player.getUUID());
         player.sendSystemMessage(Component.literal(shareMessage(result.status())));
         return result.status() == ChatSessionService.ShareStatus.JOINED
@@ -959,6 +980,7 @@ public final class ChatRuntime {
                 }
                 return;
             }
+            notifyPrivateServiceDisclosure(state, owner);
             ChatSessionService.PrivateConversation privateConversation = privateConversation(state, entry);
             ChatSessionService.SubmitStatus result = state.sessions.submitProactive(
                     privateConversation, owner.getUUID(), prompt.text());
@@ -1097,6 +1119,42 @@ public final class ChatRuntime {
         return state == null ? "服务端聊天运行时尚未启动。" : state.disabledReason;
     }
 
+    private static void notifyPrivateServiceDisclosure(RuntimeState state, ServerPlayer player) {
+        if (state.isCurrentServiceDisclosure(player.getUUID())) {
+            player.sendSystemMessage(Component.literal(privateServiceDisclosure(state.config)));
+        }
+    }
+
+    private static String privateServiceDisclosure(ModConfig config) {
+        return switch (config.provider()) {
+            case MOCK -> "聊天服务说明：当前使用离线演示模型；私聊消息与私聊上下文不会外发。";
+            case CHAT_COMPLETIONS -> "聊天服务说明：当前使用模型服务主机「"
+                    + ChatServiceDisclosure.endpointHost(config.modelEndpoint())
+                    + "」；私聊消息与私聊上下文会发送给该服务处理。";
+            case DISABLED -> "聊天服务说明：模型服务已关闭，消息不会发送到模型。";
+        };
+    }
+
+    private static String sharedDisclosure(RuntimeState state, ChatSessionService.SharedConversation shared) {
+        String transfer = switch (state.config.provider()) {
+            case MOCK -> "该共享会话消息与共享上下文仅由离线演示模型本地处理，不会外发。";
+            case CHAT_COMPLETIONS -> "该共享会话消息与共享上下文将发给模型服务主机「"
+                    + ChatServiceDisclosure.endpointHost(state.config.modelEndpoint()) + "」处理。";
+            case DISABLED -> "模型服务已关闭，该共享会话消息不会发送到模型。";
+        };
+        return "共享会话当前成员：" + sharedMemberNames(state, shared) + "。"
+                + transfer + "私人历史/长期记忆不会加入。退出后不收后续回复。";
+    }
+
+    private static String sharedMemberNames(RuntimeState state, ChatSessionService.SharedConversation shared) {
+        List<String> names = new ArrayList<>();
+        for (UUID memberId : state.sessions.members(shared)) {
+            ServerPlayer member = state.server.getPlayerList().getPlayer(memberId);
+            names.add(member == null ? memberId.toString() : member.getGameProfile().getName());
+        }
+        return names.isEmpty() ? "无" : String.join("、", names);
+    }
+
     private static MemoryScope scope(RuntimeState state, CompanionData.Entry entry) {
         if (state.worldId == null) {
             throw new IllegalStateException("Persistent world UUID is unavailable.");
@@ -1196,6 +1254,7 @@ public final class ChatRuntime {
 
     private static final class LoginToken {
         private volatile boolean active = true;
+        private boolean serviceDisclosureSent;
     }
 
     private static final class RuntimeState {
@@ -1316,6 +1375,20 @@ public final class ChatRuntime {
 
         private boolean isCurrentLogin(UUID ownerId, LoginToken token) {
             return token != null && token.active && loginTokens.get(ownerId) == token;
+        }
+
+        private boolean isCurrentServiceDisclosure(UUID ownerId) {
+            if (!chatEnabled || !companionDataAvailable || !isCurrent(this)) {
+                return false;
+            }
+            LoginToken token = loginTokens.computeIfAbsent(ownerId, ignored -> new LoginToken());
+            synchronized (token) {
+                if (!isCurrentLogin(ownerId, token) || token.serviceDisclosureSent) {
+                    return false;
+                }
+                token.serviceDisclosureSent = true;
+                return true;
+            }
         }
 
         private boolean markFirstMeetingClaimed(UUID ownerId, LoginToken token) {

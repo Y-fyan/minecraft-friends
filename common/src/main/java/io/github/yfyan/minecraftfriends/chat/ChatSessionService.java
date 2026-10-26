@@ -256,6 +256,34 @@ public final class ChatSessionService implements AutoCloseable {
         return new ShareResult(ShareStatus.JOINED, conversation);
     }
 
+    /** Read-only authorization check so the UI can explain a valid invitation before joining it. */
+    public synchronized ShareStatus checkJoinShared(UUID worldId, UUID sessionId, UUID memberId) {
+        Objects.requireNonNull(worldId, "worldId");
+        Objects.requireNonNull(sessionId, "sessionId");
+        Objects.requireNonNull(memberId, "memberId");
+        if (closed) {
+            return ShareStatus.UNAVAILABLE;
+        }
+        SharedConversation conversation = sharedById.get(sessionId);
+        if (conversation == null || !conversation.worldId().equals(worldId)) {
+            return ShareStatus.NOT_FOUND;
+        }
+        Session session = sessions.get(conversation);
+        if (session == null) {
+            return ShareStatus.NOT_FOUND;
+        }
+        if (session.members.contains(memberId)) {
+            return ShareStatus.ALREADY_MEMBER;
+        }
+        if (!session.invitations.contains(memberId)) {
+            return ShareStatus.NOT_INVITED;
+        }
+        if (session.members.size() >= limits.maxSharedMembers()) {
+            return ShareStatus.MEMBER_LIMIT;
+        }
+        return ShareStatus.INVITED;
+    }
+
     public synchronized ShareStatus leaveShared(UUID worldId, UUID sessionId, UUID memberId) {
         Objects.requireNonNull(worldId, "worldId");
         Objects.requireNonNull(sessionId, "sessionId");
