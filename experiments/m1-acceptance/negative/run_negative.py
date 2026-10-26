@@ -139,6 +139,10 @@ def capture_markers(command, environment, timeout, marker_path):
 
     def accept_line(raw, output):
         line = raw.decode('utf-8', errors='replace').rstrip('\r')
+        line = re.sub(r'\x1b\[[0-9;]*m', '', line)
+        marker = line.find('MF_NEGATIVE_')
+        if marker >= 0:
+            line = line[marker:]
         if PREPARE_RE.fullmatch(line) or MARKER_RE.fullmatch(line):
             output.write(line + '\n')
             output.flush()

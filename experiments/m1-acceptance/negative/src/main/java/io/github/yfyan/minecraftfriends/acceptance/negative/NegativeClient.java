@@ -93,7 +93,7 @@ public final class NegativeClient {
             return;
         }
         worldRequested = true;
-        var settings = new LevelSettings("Minecraft Friends Negative Acceptance", GameType.SURVIVAL,
+        var settings = new LevelSettings(WORLD, GameType.SURVIVAL,
                 false, Difficulty.PEACEFUL, true, new GameRules(), WorldDataConfiguration.DEFAULT);
         client.createWorldOpenFlows().createFreshLevel(WORLD, settings,
                 new WorldOptions(97531L, false, false),
