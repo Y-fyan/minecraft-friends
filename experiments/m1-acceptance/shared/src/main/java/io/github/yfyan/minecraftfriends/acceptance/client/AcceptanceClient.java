@@ -41,6 +41,7 @@ public final class AcceptanceClient {
             } else if (text.equals("MF_ACCEPTANCE LIFECYCLE_PASS")) {
                 lifecyclePassed = true;
                 if (SERVER.isEmpty()) {
+                    client.level.disconnect();
                     client.disconnect(new TitleScreen());
                     reopening = true;
                 } else {
