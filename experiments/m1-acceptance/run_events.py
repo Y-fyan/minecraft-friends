@@ -100,8 +100,11 @@ def run():
     evidence = HERE / 'build/evidence' / f'{options.target}-{time.time_ns()}'
     evidence.mkdir(parents=True)
     config_path = client_run / 'config/minecraft-friends.properties'
+    options_path = client_run / 'options.txt'
     previous_config = None
     config_written = False
+    previous_options = None
+    options_written = False
     summary_path = evidence / 'protocol-summary.json'
     fixture = EventsFixture(summary_path).start()
     fixture.state.record('fixture_started')
@@ -141,6 +144,15 @@ def run():
     start = time.monotonic()
     try:
         config_path.parent.mkdir(parents=True, exist_ok=True)
+        if options_path.exists():
+            if options_path.stat().st_size > 65_536:
+                raise ValueError('isolated client options exceed bound')
+            previous_options = options_path.read_bytes()
+        options_path.write_text(
+            'onboardAccessibility:false\nmaxFps:30\nrenderDistance:4\n'
+            'simulationDistance:5\nfullscreen:false\ntutorialStep:none\n'
+            'soundCategory_master:0.0\n', encoding='utf-8')
+        options_written = True
         if config_path.exists():
             if config_path.stat().st_size > 65_536:
                 raise ValueError('isolated client config exceeds bound')
@@ -201,6 +213,11 @@ def run():
                 config_path.unlink(missing_ok=True)
             else:
                 config_path.write_bytes(previous_config)
+        if options_written:
+            if previous_options is None:
+                options_path.unlink(missing_ok=True)
+            else:
+                options_path.write_bytes(previous_options)
 
     evidence_log = filtered_log.read_text(encoding='utf-8') if filtered_log.exists() else ''
     server_class = ('net.minecraft.client.server.IntegratedServer'

@@ -20,6 +20,12 @@ python3 experiments/m1-acceptance/events_fixture.py --self-test
 
 只使用仓库现有 Wrapper 和指定便携 JDK 21；运行器不安装依赖。专用 JAR、源码、验收助手在运行期间会做哈希复核。运行超时、缺少任一服务端断言、客户端真实收到回复后的 ACK、协议分类计数错误、任何 fixture 错误或哈希变化都失败。
 
+为使全新工作树能越过首次可访问性引导，运行器在隔离客户端 `build/run/client` 启动前临时写入 `onboardAccessibility:false`、`maxFps:30`、`renderDistance:4`、`simulationDistance:5`、`fullscreen:false`、`tutorialStep:none` 与 `soundCategory_master:0.0`；结束后恢复原 `options.txt`，没有原文件时则移除临时文件。
+
+### 首次全新工作树尝试记录
+
+2026-10-26 在基线 `fd096324659f725293635c7823f1c2fa22c14a38` 上首次运行 Fabric 时，客户端目录没有 `options.txt`，180 秒内没有产生事件断言或 fixture 请求，运行器超时退出（143）。证据保存在忽略目录 `build/evidence/fabric-integrated-1793012012636397455/` 的 `summary.json` 与 `checks.log`。正式 Fabric JAR 哈希保持 `e3278b45c1f77755ce35b1ba73e6a9a1aaa3376778153bc59fe3a2dd4633a336`。这是新工作树未越过首次可访问性引导的装置启动失败，不作为生产功能失败；上面的临时 options 预置用于修复并复跑。
+
 运行器会暂时为实验客户端目录写入无凭据 loopback 配置，结束后还原原文件。`checks.log` 只保留固定的 `MF_EVENTS_*` 断言行，不保存完整客户端日志或聊天内容；fixture 的摘要只写固定事件标签、数量、布尔式错误类别与 `request_body_stored=false`。
 
 ## 关键断言
