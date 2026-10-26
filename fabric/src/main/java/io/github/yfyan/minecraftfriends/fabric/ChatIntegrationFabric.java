@@ -36,8 +36,6 @@ public final class ChatIntegrationFabric {
         });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
                 ChatRuntime.onLogin(handler.player));
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
-                ChatRuntime.onLogout(handler.player));
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 ChatRuntime.registerCommands(dispatcher));
         ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, sender, parameters) ->

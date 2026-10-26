@@ -55,13 +55,6 @@ public final class ChatIntegrationForge {
         }
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) {
-            ChatRuntime.onLogout(player);
-        }
-    }
-
     @SubscribeEvent
     public void registerCommands(RegisterCommandsEvent event) {
         ChatRuntime.registerCommands(event.getDispatcher());
