@@ -8,7 +8,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.Items;
 
 /** Local server player with a callback for pickups performed by vanilla ItemEntity.playerTouch. */
 public final class CompanionServerPlayer extends ServerPlayer {
@@ -19,11 +18,13 @@ public final class CompanionServerPlayer extends ServerPlayer {
 
     @Override
     public void take(Entity entity, int amount) {
-        boolean oakLog = entity instanceof ItemEntity item && item.getItem().is(Items.OAK_LOG);
+        // Inventory.add may already have emptied the stack before vanilla invokes take.
+        // The runtime validates the UUID against this task's source-bound oak-drop ledger.
+        boolean itemPickup = entity instanceof ItemEntity;
         int stackCountBeforePickup = entity instanceof ItemEntity item ? item.getItem().getCount() + amount : 0;
         java.util.UUID itemEntityId = entity.getUUID();
         super.take(entity, amount);
-        if (oakLog) {
+        if (itemPickup) {
             ActionRuntime.onItemPickedUp(this, itemEntityId, amount, stackCountBeforePickup);
         }
     }
