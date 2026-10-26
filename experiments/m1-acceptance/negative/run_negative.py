@@ -219,6 +219,10 @@ def run():
     client_dir = HERE / 'build' / 'run' / unique
     evidence = HERE / 'build' / 'evidence' / unique
     client_dir.mkdir(parents=True, exist_ok=False)
+    (client_dir / 'options.txt').write_text(
+        'onboardAccessibility:false\nmaxFps:30\nrenderDistance:4\nsimulationDistance:5\n'
+        'fullscreen:false\ntutorialStep:none\nskipMultiplayerWarning:true\nsoundCategory_master:0.0\n',
+        encoding='utf-8')
     evidence.mkdir(parents=True, exist_ok=False)
     config_path = client_dir / 'config' / 'minecraft-friends.properties'
     config_path.parent.mkdir(parents=True, exist_ok=True)
