@@ -1,6 +1,6 @@
 # 架构草案
 
-状态：**M0 双加载器骨架已实现；伙伴和游戏玩法仍为提案**。公共配置、模型契约、任务状态和最小加载器入口已通过本地构建与专服初始化验证。玩家控制路线已按 [ADR 0001](decisions/0001-player-control-route.md) 接受，依据为 [独立基础探针](validation/0002-player-control-reproduction.md)；其余模块仍需实现和验证。
+状态：**M0 已完成，M1 代码进入集成验收**。当前包含服务端伙伴生命周期、异步模型协议、会话隔离与可管理记忆；移动和世界任务仍为 M2 规划。纯 Java 核心位于 `common/src/main/java`；共享 Minecraft 服务端适配位于 `common/src/main/minecraft`，只由两个加载器工程编译。Fabric/Forge 各自注册事件与入口，不将 Minecraft 类型引入纯核心。玩家控制路线保持 [ADR 0001](decisions/0001-player-control-route.md) 的服务端玩家实体；具体接口见 [聊天](CHAT.md)、[模型](MODEL.md) 和 [记忆](MEMORY.md)。
 
 当前模块为 `common`、`fabric`、`forge`。两个发行 JAR 把同一份公共源码编入各自产物，避免玩家额外安装公共 JAR；决策见 [ADR 0002](decisions/0002-multiloader-layout.md)。
 
