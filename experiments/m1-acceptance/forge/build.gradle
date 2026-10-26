@@ -28,6 +28,8 @@ minecraft {
             workingDirectory project.file('build/run/client')
             property 'mf.acceptance', 'true'
             property 'mf.acceptance.loader', 'forge'
+            if (project.hasProperty('acceptanceLifecycleOnly')) { property 'mf.acceptance.lifecycleOnly', 'true' }
+            if (project.hasProperty('acceptanceUsername')) { args '--username', project.property('acceptanceUsername') }
             if (project.hasProperty('acceptanceServer')) {
                 property 'mf.acceptance.server', project.property('acceptanceServer')
             }

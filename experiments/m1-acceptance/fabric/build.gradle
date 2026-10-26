@@ -13,6 +13,8 @@ loom {
             runDir 'build/run/client'
             vmArg '-Dmf.acceptance=true'
             vmArg '-Dmf.acceptance.loader=fabric'
+            if (project.hasProperty('acceptanceLifecycleOnly')) { vmArg '-Dmf.acceptance.lifecycleOnly=true' }
+            if (project.hasProperty('acceptanceUsername')) { programArgs '--username', project.property('acceptanceUsername') }
             if (project.hasProperty('acceptanceServer')) {
                 vmArg '-Dmf.acceptance.server=' + project.property('acceptanceServer')
             }
