@@ -83,6 +83,7 @@ class RealState:
         self.semantic_passes = {name: 0 for name in REQUEST_LABELS}
         self.semantic_failures = {name: 0 for name in REQUEST_LABELS}
         self.semantic_failure_reasons = {}
+        self.event_context_advisories = {}
         self.transport = {"forwarded": 0, "upstream_http_error": 0, "network_error": 0,
                           "controlled_timeout": 0, "controlled_disconnect": 0}
         self.failures = {name: 0 for name in (
@@ -103,6 +104,7 @@ class RealState:
                 "semantic_passes": dict(self.semantic_passes),
                 "semantic_failures": dict(self.semantic_failures),
                 "semantic_failure_reasons": dict(self.semantic_failure_reasons),
+                "event_context_advisories": dict(self.event_context_advisories),
                 "transport": dict(self.transport),
                 "failures": dict(self.failures),
                 "human_review_output_opt_in": self.human_review_path is not None,
@@ -388,7 +390,14 @@ class ObserverHandler(BaseHTTPRequestHandler):
         ok, content, reasons = self.observer.state.inspect_response(label, raw, gate.marker)
         self.observer.state.record_human_review(label, ok, reasons, request_hash,
                                                 hashlib.sha256(raw).hexdigest(), content)
-        if not self.observer.state.accept_reply(label, ok, reasons):
+        # Natural event paraphrases require the parent review, not a keyword allowlist.
+        advisory_only = reasons == ["event_context_absent"]
+        if advisory_only:
+            with self.observer.state.lock:
+                self.observer.state.event_context_advisories[label] = (
+                    self.observer.state.event_context_advisories.get(label, 0) + 1)
+        if not self.observer.state.accept_reply(label, ok or advisory_only,
+                                                [] if advisory_only else reasons):
             self._json(502, {"error": {"message": "semantic acceptance gate rejected response"}})
             return
         self.send_response(status)
