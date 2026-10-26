@@ -62,6 +62,11 @@ public final class ActionsScenario {
                 case 1 -> {
                     // One-time fixture placement before any navigation input.
                     bot.teleportTo(2.5,-60,2.5);
+                    if ("unreachable".equals(System.getProperty("mf.acceptance.actions.scope"))) {
+                        for (int x=1;x<=3;x++) for(int z=1;z<=3;z++) if(x!=2 || z!=2)
+                            for(int y=-60;y<=-59;y++) owner.serverLevel().setBlock(new BlockPos(x,y,z),Blocks.STONE.defaultBlockState(),3);
+                        stopped=bot.position();command("mf task follow");next(11);return;
+                    }
                     for(int z=0;z<=5;z++) owner.serverLevel().setBlock(new BlockPos(8,-60,z),Blocks.STONE.defaultBlockState(),3);
                     last=bot.position(); maxStep=0; command("mf task follow"); next(2);
                 }
@@ -112,6 +117,13 @@ public final class ActionsScenario {
                 case 10 -> {if(age>=20){
                     complete();
                 }}
+                case 11 -> {
+                    String state=ActionRuntime.status(server,owner.getUUID()).state().name();
+                    if ("FAILED".equals(state) || "TIMED_OUT".equals(state)) {
+                        check(age<=200,"unreachable_fails_within_budget");stopped=bot.position();next(12);
+                    } else if(age>200) {fail("unreachable_kept_running");}
+                }
+                case 12 -> {if(age>=40){check(bot.position().distanceTo(stopped)<0.4,"failed_path_leaves_bot_still");complete();}}
                 default -> fail("invalid_phase");
             }
         } catch(Exception failure) { fail("exception_"+failure.getClass().getSimpleName()); }

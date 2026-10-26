@@ -37,7 +37,7 @@ def marker(raw):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('target', choices=('fabric-integrated','forge-integrated','fabric-dedicated','forge-dedicated'))
-    p.add_argument('--scope', choices=('navigation','full'), default='full')
+    p.add_argument('--scope', choices=('navigation','unreachable','full'), default='full')
     p.add_argument('--server')
     p.add_argument('--server-log', type=Path)
     p.add_argument('--server-mod', type=Path)
@@ -89,7 +89,8 @@ def main():
             if data is None:f.unlink(missing_ok=True)
             else:f.write_bytes(data)
     text='\n'.join(lines)
-    scenario_checks=CHECKS if args.scope=='full' else CHECKS[:4]+('result',)
+    scenario_checks=(CHECKS if args.scope=='full' else CHECKS[:4]+('result',) if args.scope=='navigation'
+                     else ('isolated_survival_map','unreachable_fails_within_budget','failed_path_leaves_bot_still','result'))
     required=scenario_checks+('dedicated_server_instance' if dedicated else 'integrated_server_instance',)
     missing=[tag for tag in required if not re.search(r'MF_M2_SERVER \S+ '+re.escape(tag)+r' PASS',text)]
     unchanged=artifact.is_file() and sha(artifact)==proof
