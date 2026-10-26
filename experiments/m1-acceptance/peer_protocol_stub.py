@@ -18,7 +18,8 @@ MARKER = re.compile(
 )
 PRIVATE_A = ('MF_A_ADDRESS', 'MF_A_PRIVATE_FACT', 'MF_A_PRIVATE_HISTORY')
 PRIVATE_B = ('MF_B_ADDRESS', 'MF_B_PRIVATE_FACT', 'MF_B_PRIVATE_HISTORY')
-SETUP_GREETING = '已确认的游戏事件：'
+SETUP_GREETING = ('已确认的游戏事件：主人第一次加入并与伙伴相遇。'
+                  '请简短、自然地向主人问候，并明确你是 AI 伙伴。')
 
 
 def reject_constant(value):
@@ -49,16 +50,29 @@ class PeerProtocolState:
                 self.counts[label] += 1
             if failure:
                 self.failures[failure] += 1
-            value = {
-                'kind': '协议模拟，非真实模型',
-                'endpoint': self.endpoint,
-                'counts': dict(self.counts),
-                'failures': dict(self.failures),
-                'request_body_stored': False,
-            }
-            temporary = self.summary_path.with_suffix('.tmp')
-            temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-            temporary.replace(self.summary_path)
+            self._write_snapshot_locked()
+
+    def record_setup_greeting(self):
+        with self.lock:
+            accepted = self.counts['SETUP_GREETING'] < 2
+            if accepted:
+                self.counts['SETUP_GREETING'] += 1
+            else:
+                self.failures['setup_greeting_limit'] += 1
+            self._write_snapshot_locked()
+            return accepted
+
+    def _write_snapshot_locked(self):
+        value = {
+            'kind': '协议模拟，非真实模型',
+            'endpoint': self.endpoint,
+            'counts': dict(self.counts),
+            'failures': dict(self.failures),
+            'request_body_stored': False,
+        }
+        temporary = self.summary_path.with_suffix('.tmp')
+        temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+        temporary.replace(self.summary_path)
 
     def validate(self, body, authorization=False):
         if authorization:
@@ -80,15 +94,16 @@ class PeerProtocolState:
             if sum(len(item['content']) for item in messages) > MAX_CONTENT:
                 self.record(failure='content_limit')
                 return 413, '协议上下文超过上限。'
+            if messages[-1]['role'] == 'system' and messages[-1]['content'] == SETUP_GREETING:
+                if self.record_setup_greeting():
+                    return 200, '协议模拟，非真实模型。'
+                return 400, '验收 setup greeting 超过两次。'
             users = [item['content'] for item in messages if item['role'] == 'user']
             if not users:
                 raise ValueError()
             marker = MARKER.search(users[-1])
             context = '\n'.join(item['content'] for item in messages)
             if marker is None:
-                if SETUP_GREETING in users[-1]:
-                    self.record('SETUP_GREETING')
-                    return 200, '协议模拟，非真实模型。'
                 self.record(failure='unmarked_request')
                 return 400, '协议请求缺少验收标记。'
 

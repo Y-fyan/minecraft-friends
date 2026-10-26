@@ -23,12 +23,19 @@ public final class PeerClient {
     private static final String ROLE = System.getProperty("mf.acceptance.peer.role", "");
     private static final String USERNAME = "a".equals(ROLE) ? "MFAcceptA" : "MFAcceptB";
     private static final ConcurrentLinkedQueue<String> MESSAGES = new ConcurrentLinkedQueue<>();
+    private static final ConcurrentLinkedQueue<Outbound> OUTBOUND = new ConcurrentLinkedQueue<>();
+    private static final int OUTBOUND_INTERVAL_TICKS = 20;
+    private static final int OUTBOUND_LIMIT = 128;
     private static final Set<String> EXPECTED_NONCES = ConcurrentHashMap.newKeySet();
     private static final Map<String, Watch> WATCHES = new ConcurrentHashMap<>();
     private static boolean started;
     private static boolean readySent;
     private static boolean finished;
+    private static boolean outboundOverflow;
+    private static int outboundTicks;
     private static String sessionId;
+
+    private record Outbound(boolean chat, String text) { }
 
     private static final class Watch {
         private final String needle;
@@ -56,10 +63,11 @@ public final class PeerClient {
             String actual = client.player.getGameProfile().getName();
             if (!USERNAME.equals(actual)) { fail(client, "offline_username_mismatch"); return; }
             if (!"a".equals(ROLE) && !"b".equals(ROLE)) { fail(client, "peer_role_missing"); return; }
-            client.player.connection.sendCommand("mfacceptance peer ready");
+            enqueueCommand("mfacceptance peer ready");
             readySent = true;
             System.out.println("MF_PEER_CLIENT READY role=" + ROLE + " username=" + USERNAME);
         }
+        sendNextOutbound(client);
         if (started || client.getOverlay() != null || !(client.screen instanceof TitleScreen)) { return; }
         if (!loopback(SERVER)) { fail(client, "only_explicit_loopback_server_is_allowed"); return; }
         started = true;
@@ -70,10 +78,10 @@ public final class PeerClient {
     private static boolean handleControl(Minecraft client, String control) {
         if (control.startsWith("COMMAND ")) {
             if (client.player == null) { fail(client, "command_before_connection"); return true; }
-            client.player.connection.sendCommand(control.substring("COMMAND ".length()));
+            enqueueCommand(control.substring("COMMAND ".length()));
         } else if (control.startsWith("CHAT ")) {
             if (client.player == null) { fail(client, "chat_before_connection"); return true; }
-            client.player.connection.sendChat(control.substring("CHAT ".length()));
+            enqueueChat(control.substring("CHAT ".length()));
         } else if (control.startsWith("EXPECT ")) {
             String nonce = control.substring("EXPECT ".length()).strip();
             if (!validUuid(nonce)) { fail(client, "invalid_expected_nonce"); return true; }
@@ -110,6 +118,33 @@ public final class PeerClient {
         return false;
     }
 
+    private static void enqueueCommand(String command) { enqueueOutbound(new Outbound(false, command)); }
+
+    private static void enqueueChat(String message) { enqueueOutbound(new Outbound(true, message)); }
+
+    private static void enqueueOutbound(Outbound outbound) {
+        if (OUTBOUND.size() >= OUTBOUND_LIMIT) {
+            outboundOverflow = true;
+            return;
+        }
+        OUTBOUND.add(outbound);
+    }
+
+    private static void sendNextOutbound(Minecraft client) {
+        if (outboundOverflow) { fail(client, "outbound_queue_limit"); return; }
+        if (client.player == null || client.player.connection == null || OUTBOUND.isEmpty()) { return; }
+        if (outboundTicks > 0) {
+            outboundTicks--;
+            return;
+        }
+        Outbound outbound = OUTBOUND.poll();
+        if (outbound == null) { return; }
+        if (outbound.chat()) { client.player.connection.sendChat(outbound.text()); }
+        else { client.player.connection.sendCommand(outbound.text()); }
+        // The vanilla server rate-limits command and chat packets; pace this harness below that guard.
+        outboundTicks = OUTBOUND_INTERVAL_TICKS;
+    }
+
     private static void observe(String text, Minecraft client) {
         // Never persist chat content. Watchers retain only bounded integer counts in memory.
         for (Watch watch : WATCHES.values()) {
@@ -119,10 +154,10 @@ public final class PeerClient {
         if (reply.find()) {
             String nonce = reply.group(1).toLowerCase();
             if (EXPECTED_NONCES.remove(nonce)) {
-                if (client.player != null) { client.player.connection.sendCommand("mfacceptance peer ack " + nonce); }
+                if (client.player != null) { enqueueCommand("mfacceptance peer ack " + nonce); }
                 else { fail(client, "reply_without_player"); }
             } else {
-                if (client.player != null) { client.player.connection.sendCommand("mfacceptance peer unexpected " + nonce); }
+                if (client.player != null) { enqueueCommand("mfacceptance peer unexpected " + nonce); }
                 else { fail(client, "unexpected_reply_without_player"); }
             }
         }
@@ -144,7 +179,7 @@ public final class PeerClient {
             fail(client, "invalid_report_or_missing_player");
             return;
         }
-        client.player.connection.sendCommand("mfacceptance peer report " + key + " " + value);
+        enqueueCommand("mfacceptance peer report " + key + " " + value);
     }
 
     private static boolean validUuid(String value) {

@@ -5,7 +5,7 @@ import tempfile
 import unittest
 import urllib.request
 
-from peer_protocol_stub import PeerProtocolFixture, PeerProtocolState
+from peer_protocol_stub import PeerProtocolFixture, PeerProtocolState, SETUP_GREETING
 
 NONCE = '1a2b3c4d-0000-4000-8000-123456789abc'
 
@@ -68,15 +68,38 @@ class PeerProtocolTests(unittest.TestCase):
         for value in (NONCE, 'MF_A_PRIVATE_FACT', 'MF_B_PRIVATE_FACT'):
             self.assertNotIn(value, serialized)
 
-    def test_verified_initial_greeting_is_setup_only(self):
+    def test_setup_greeting_requires_exact_final_system_prompt_and_is_capped(self):
         body = json.dumps({
             'model': 'acceptance-protocol-simulation',
-            'messages': [{'role': 'user', 'content': '已确认的游戏事件：首次见面'}],
+            'messages': [{'role': 'system', 'content': SETUP_GREETING}],
         }, ensure_ascii=False).encode('utf-8')
-        code, reply = self.state.validate(body)
-        self.assertEqual(200, code)
-        self.assertEqual('协议模拟，非真实模型。', reply)
-        self.assertEqual(1, self.state.snapshot()['counts']['SETUP_GREETING'])
+        for _ in range(2):
+            code, reply = self.state.validate(body)
+            self.assertEqual(200, code)
+            self.assertEqual('协议模拟，非真实模型。', reply)
+        self.assertEqual(2, self.state.snapshot()['counts']['SETUP_GREETING'])
+        self.assertEqual(400, self.state.validate(body)[0])
+        snapshot = self.state.snapshot()
+        self.assertEqual(2, snapshot['counts']['SETUP_GREETING'])
+        self.assertEqual(1, snapshot['failures']['setup_greeting_limit'])
+
+    def test_user_text_and_historical_or_altered_events_are_not_setup_greetings(self):
+        cases = (
+            [{'role': 'user', 'content': SETUP_GREETING}],
+            [{'role': 'system', 'content': SETUP_GREETING},
+             {'role': 'user', 'content': '已确认的游戏事件：主人重新加入服务器。'}],
+            [{'role': 'system', 'content': '已确认的游戏事件：主人重新加入服务器。'}],
+            [{'role': 'system', 'content': SETUP_GREETING + '额外文本'}],
+        )
+        for messages in cases:
+            with self.subTest(messages=messages):
+                body = json.dumps({'model': 'acceptance-protocol-simulation', 'messages': messages},
+                                  ensure_ascii=False).encode('utf-8')
+                self.assertEqual(400, self.state.validate(body)[0])
+        snapshot = self.state.snapshot()
+        self.assertEqual(0, snapshot['counts'].get('SETUP_GREETING', 0))
+        self.assertEqual(2, snapshot['failures']['invalid_json_or_shape'])
+        self.assertEqual(2, snapshot['failures']['unmarked_request'])
 
     def test_loopback_fixture_returns_nonce_without_storing_request(self):
         fixture = PeerProtocolFixture(self.summary).start()
