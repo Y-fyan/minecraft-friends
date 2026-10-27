@@ -41,6 +41,7 @@ import static net.minecraft.commands.Commands.literal;
 
 /** Server-thread action entrypoints shared by Fabric and Forge. */
 public final class ActionRuntime {
+    private static final double FOLLOW_DISTANCE = ActionTuning.followDistance(System.getProperty(ActionTuning.FOLLOW_DISTANCE_PROPERTY));
     private static final UUID IDLE_TASK_ID = new UUID(0L, 0L);
     private static final long FOLLOW_TIMEOUT_TICKS = 20L * 60L * 30L;
     private static final long COLLECTION_TIMEOUT_TICKS = 20L * 60L * 5L;
@@ -434,7 +435,7 @@ public final class ActionRuntime {
                 : ActionRequest.waitForOwner(taskId, owner.getUUID());
         submit(serverState, ownerState, request);
         owner.sendSystemMessage(Component.literal(type == ActionType.FOLLOW
-                ? "伙伴开始以正常移动跟随。" : "伙伴已停止移动并等待。"));
+                ? "伙伴开始以正常移动跟随，目标距离 " + FOLLOW_DISTANCE + " 格。" : "伙伴已停止移动并等待。"));
         return 1;
     }
 
@@ -596,14 +597,14 @@ public final class ActionRuntime {
     private static void tickFollow(MinecraftServer server, ServerState state, OwnerState ownerState,
                                    ServerPlayer owner, ServerPlayer companion) {
         Execution execution = ownerState.execution;
-        if (owner.distanceToSqr(companion) <= 9.0) {
+        if (owner.distanceToSqr(companion) <= FOLLOW_DISTANCE * FOLLOW_DISTANCE) {
             execution.path = List.of();
             execution.noPathTicks = 0;
             execution.stuckTicks = 0;
             applyTravel(companion, 0.0F, false);
             return;
         }
-        navigate(server, state, ownerState, owner, companion, owner.blockPosition(), 2);
+        navigate(server, state, ownerState, owner, companion, owner.blockPosition(), ActionTuning.followGoalRadius(FOLLOW_DISTANCE));
     }
 
     private static void tickCollect(MinecraftServer server, ServerState state, OwnerState ownerState,

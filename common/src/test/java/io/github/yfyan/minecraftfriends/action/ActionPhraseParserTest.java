@@ -17,4 +17,9 @@ class ActionPhraseParserTest {
         assertTrue(ActionPhraseParser.parse("我们以后再聊跟随的事").isEmpty());
         assertTrue(ActionPhraseParser.parse(null).isEmpty());
     }
+    @org.junit.jupiter.api.Test void quantityAndWhitespaceAreExplicitAndBounded() {
+        org.junit.jupiter.api.Assertions.assertEquals(8,ActionPhraseParser.parse("帮我收集 8 个橡木原木并交给我").orElseThrow().count());
+        org.junit.jupiter.api.Assertions.assertEquals(12,ActionPhraseParser.parse("帮我收集12个橡木原木并交给我").orElseThrow().count());
+        org.junit.jupiter.api.Assertions.assertTrue(ActionPhraseParser.parse("帮我收集65个橡木原木并交给我").isEmpty());
+    }
 }

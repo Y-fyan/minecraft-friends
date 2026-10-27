@@ -11,7 +11,13 @@ public final class ActionPhraseParser {
         if (message == null) {
             return Optional.empty();
         }
-        return switch (message.strip()) {
+        String compact = message.strip().replaceAll("\\s+", "");
+        var collect = java.util.regex.Pattern.compile("帮我收集([1-9][0-9]?)个橡木原木并交给我").matcher(compact);
+        if (collect.matches()) {
+            int count=Integer.parseInt(collect.group(1));
+            return count<=64 ? Optional.of(new ActionPlan(ActionType.COLLECT_OAK_LOGS,count)) : Optional.empty();
+        }
+        return switch (compact) {
             case "跟随", "跟随我", "跟着我" -> Optional.of(new ActionPlan(ActionType.FOLLOW, 0));
             case "等待", "等一下", "等我", "在这里等我" -> Optional.of(new ActionPlan(ActionType.WAIT, 0));
             case "停止", "停下", "别动", "停下来" -> Optional.of(new ActionPlan(ActionType.STOP, 0));

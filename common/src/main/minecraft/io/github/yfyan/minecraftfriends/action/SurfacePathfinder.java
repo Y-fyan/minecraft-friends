@@ -88,7 +88,7 @@ final class SurfacePathfinder {
         int dx = position.getX() - target.getX();
         int dz = position.getZ() - target.getZ();
         return dx * dx + dz * dz <= radius * radius
-                && Math.abs(position.getY() - target.getY()) <= (radius == 0 ? 0 : 2);
+                && Math.abs(position.getY() - target.getY()) <= (radius == 0 ? 0 : 1);
     }
 
     private static int heuristic(BlockPos position, BlockPos target, int goalRadius) {
