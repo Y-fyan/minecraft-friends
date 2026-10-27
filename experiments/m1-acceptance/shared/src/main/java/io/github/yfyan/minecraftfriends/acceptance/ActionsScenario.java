@@ -132,6 +132,9 @@ public final class ActionsScenario {
                 }
                 case 7 -> {if(age>=20){command("mf task collect oak_log 8");next(8);}}
                 case 8 -> {
+                    if ("return-stop".equals(System.getProperty("mf.acceptance.actions.scope")) && inventory(bot)==8 && inventory(owner)==0) {
+                        command("mf task stop");next(32);return;
+                    }
                     if (age%20==0) {
                         var task=ActionRuntime.status(server,owner.getUUID());
                         var drops=owner.serverLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
@@ -214,6 +217,11 @@ public final class ActionsScenario {
                             && inventory(owner)==0 && inventory(bot)==0,"forge_break_event_cancellation_preserves_block");complete();
                     }
                 }
+                case 32 -> {
+                    if("CANCELLED".equals(ActionRuntime.status(server,owner.getUUID()).state().name())) {stopped=bot.position();next(33);}
+                }
+                case 33 -> {if(age>=40){check(inventory(owner)==0 && inventory(bot)==8 && logs()==0
+                    && bot.position().distanceTo(stopped)<0.5,"stop_before_delivery_keeps_real_items_with_companion");complete();}}
                 default -> fail("invalid_phase");
             }
         } catch(Exception failure) { fail("exception_"+failure.getClass().getSimpleName()); }

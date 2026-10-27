@@ -178,6 +178,19 @@ public final class CompanionRuntime {
     }
 
     public static void onOwnerLogout(ServerPlayer owner) {
+        MinecraftServer server = owner.server;
+        // Fabric can notify a disconnect from Netty. All player lists, world state,
+        // task queues and saved data belong to the server thread, including cleanup.
+        if (!server.isSameThread()) {
+            server.execute(() -> onOwnerLogout(owner));
+            return;
+        }
+        ServerPlayer current = server.getPlayerList().getPlayer(owner.getUUID());
+        if (current != null && current != owner) {
+            // A delayed notification must not remove a newer login with the same UUID.
+            forgetCompanion(owner);
+            return;
+        }
         ActionRuntime.onOwnerLogout(owner);
         if (isCompanion(owner)) {
             if (owner.server.getPlayerList().getPlayer(owner.getUUID()) != owner) {
