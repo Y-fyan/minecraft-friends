@@ -159,7 +159,7 @@ public final class ActionsPeerScenario {
         if (observed < 40) return;
         if (botB.position().distanceTo(sampleB) < 2) { fail("b_did_not_keep_following_after_a_stop"); return; }
         emit("a_stop_isolated_b_keeps_moving",true);
-        a.teleportTo(52.5,-60,2.5); command(a,"mf task follow"); next(5);
+        a.teleportTo(botA.getX()+14.0,-60,2.5); command(a,"mf task follow"); next(5);
     }
     private void aRestarted() {
         if (!sent() || !running(a)) return;
