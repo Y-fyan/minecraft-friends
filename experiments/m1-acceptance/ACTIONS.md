@@ -1,4 +1,4 @@
-# M2 独立动作验收装置（开发中）
+# M2 独立动作验收装置
 
 本装置不代表 M2 已完成，也不代表 Alpha 已可发布。当前仅为烟雾测试：真正客户端发出固定命令，服务端用实际坐标、方块及库存核对移动/等待/停止和区域内采集交付。不会复制动作执行实现。
 
@@ -26,10 +26,12 @@ python3 experiments/m1-acceptance/run_actions.py fabric-dedicated \
 
 Forge 对应 `forge-dedicated`。专服启动设置 `-Dmf.acceptance=true -Dmf.acceptance.actions=true`，安装 helper 后才有测试场景。真实普通 DedicatedServer 与 IntegratedServer 类型分别断言，GameTestServer 不替代普通专服。
 
-## 尚需额外验收
+## 单项范围与完整验收
 
-这份 smoke 不能独自关闭 #8–#11。任务 schema/非法参数/迟到/归属需公共与游戏层测试；两真实客户端隔离、不可达与卡住自动退出、满背包/死亡/工具/资源不足、领地取消、模型结构化规划、冷重进生命周期、新成员按文档实际试走及完整四格运行均须补证据。
+完整验收结果见 [0014](../../docs/validation/0014-m2-acceptance.md)。单次 scope 的 smoke 不能独自关闭 #8–#11。任务 schema/非法参数/迟到/归属需公共与游戏层测试；两真实客户端隔离、不可达与卡住自动退出、满背包/死亡/工具/资源不足、领地取消、模型结构化规划、冷重进生命周期、新成员按文档实际试走及完整四格运行均须补证据。
 
 装置中的 baseline/active 是服务器自身滑动平均 tick 耗时的简单采样，只供排查，不能当作正式基线 A/B 或分位数预算验收。正式性能报告还需同硬件/同地图关闭与开启对照、样本区间、p50/p95/p99、寻路/感知单 tick 预算和网络调用频率。没有这些证据不宣布 Alpha 性能达标。默认 summary 始终保留 `m2_complete=false`，最终范围由统筹助手逐项核验。
 
 补充目标：`--scope door` 检查原版木门交互；`--scope planning` 用明确标注的 loopback 协议模拟检查严格计划、非法动作拒绝和 stop 后迟到回复。`--natural` 使用真实原版聊天包 `@MF_M2Bot 跟着我` 等指令；专服同时设置 `-Dmf.acceptance.actions.natural=true`。模型模拟不等同真实模型服务质量验收。
+
+最终补充入口：`--scope return-stop` 验证交付前停止；`run_prepared_dedicated.py fabric|forge --template /已接受EULA的安装 --port 端口 --boot-only` 在全新独立目录中不安装 helper、不预写模组配置，验证普通首次安装。正常专服入口还记录完整停服保存及异常判据。正式六组对照使用 [PERFORMANCE.md](PERFORMANCE.md)。

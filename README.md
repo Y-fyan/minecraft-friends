@@ -4,7 +4,7 @@
 
 Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Minecraft Forge** 两个版本。目标是让 AI 操控具有玩家身份、背包和生存能力的伙伴，通过原版聊天框与玩家交流，在实际游戏规则下执行任务。
 
-> **项目状态：M0、M1 已验收；M2 核心功能已实现，正在完成最终 Alpha 验收。** 伙伴具备身份、背包、生命周期、聊天与记忆，以及正常移动跟随、等待、停止和授权区域内橡木采集交付。默认开启并使用明确标注的离线演示模型；真实聊天需要配置自己的服务。M2 最新记录见 [核心验收](docs/validation/0012-m2-core-acceptance.md)，试用见 [安装与演示](docs/M2-INSTALL.md)。Forge 不等于 NeoForge。
+> **项目状态：M0、M1、M2 已通过技术验收，提供 Alpha 预览构建。** 伙伴能聊天、记忆、正常跟随、等待和停止，并在用户授权区域采集橡木、返回交付。Fabric / Minecraft Forge 的单机、普通专服、双玩家隔离和本机性能对照均通过；详见 [M2 验收记录](docs/validation/0014-m2-acceptance.md)。默认启用并使用明确标注的离线演示模型；真实聊天需要配置自己的服务。首次试用见 [安装与短演示](docs/M2-INSTALL.md)。Forge 不等于 NeoForge。
 
 ## 我们希望带来的体验
 
@@ -26,7 +26,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | 无密钥启动 | 已验证；创建离线配置且不发起模型请求 |
 | 伙伴身份、主人归属与生命周期 | 已实现；双加载器实际单机/专服验证创建、恢复与死亡规则，坏存档保护通过 |
 | 私聊、共享会话、称呼与记忆 | 私聊、显式共享与双人隔离、称呼及记忆恢复/删除均通过 |
-| 导航、采集与交付 | 已实现有界地表跟随、木门、等待/停止及一次性授权区域橡木采集；最终矩阵验收进行中 |
+| 导航、采集与交付 | 已实现有界地表跟随、木门、等待/停止及一次性授权区域橡木采集；双加载器四格及专项验收通过 |
 | 模型服务 | 已通过 DeepSeek 官方 API 真实聊天和故障恢复验收；默认仍为离线演示 |
 | 客户端内运行 | Fabric / Forge 实际客户端主流程通过，模型后端为明确标注的协议模拟 |
 
@@ -50,7 +50,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | --- | --- | --- |
 | M0 技术验证与协作基础（已完成） | 已验证玩家控制基础路径，建立双加载器工程和协作约定 | [#1](https://github.com/Y-fyan/minecraft-friends/issues/1)、[#2](https://github.com/Y-fyan/minecraft-friends/issues/2)、[#3](https://github.com/Y-fyan/minecraft-friends/issues/3) |
 | M1 陪伴聊天闭环（已验收） | 伙伴身份、模型接入、聊天、人设与记忆 | [#4](https://github.com/Y-fyan/minecraft-friends/issues/4)、[#5](https://github.com/Y-fyan/minecraft-friends/issues/5)、[#6](https://github.com/Y-fyan/minecraft-friends/issues/6)、[#7](https://github.com/Y-fyan/minecraft-friends/issues/7) |
-| M2 干活能力与 Alpha（最终验收中） | 感知、动作调度、跟随、采集交付及双加载器验收 | [#8](https://github.com/Y-fyan/minecraft-friends/issues/8)、[#9](https://github.com/Y-fyan/minecraft-friends/issues/9)、[#10](https://github.com/Y-fyan/minecraft-friends/issues/10)、[#11](https://github.com/Y-fyan/minecraft-friends/issues/11) |
+| M2 干活能力与 Alpha（已验收） | 感知、动作调度、跟随、采集交付及双加载器验收 | [#8](https://github.com/Y-fyan/minecraft-friends/issues/8)、[#9](https://github.com/Y-fyan/minecraft-friends/issues/9)、[#10](https://github.com/Y-fyan/minecraft-friends/issues/10)、[#11](https://github.com/Y-fyan/minecraft-friends/issues/11) |
 
 完整计划见 [路线图 #12](https://github.com/Y-fyan/minecraft-friends/issues/12)，进度以 [Issues](https://github.com/Y-fyan/minecraft-friends/issues) 和 [里程碑](https://github.com/Y-fyan/minecraft-friends/milestones) 为准。
 
@@ -62,7 +62,7 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | 加载器 | Fabric、Minecraft Forge，分别构建与验证 |
 | 开发环境 | Java 21、Gradle Wrapper 8.8；加载器、映射和插件版本已固定 |
 | 模型 | 默认离线 Mock；显式配置后支持异步 Chat Completions；仅服务端读取指定环境变量凭据 |
-| 部署 | M1 正式 JAR 独立专服安装和主交互通过；尚无正式发行 |
+| 部署 | M2 两个独立 JAR 与首次安装已验收，交付 Alpha 预览构建 |
 | 控制 | 模型输出结构化意图，游戏执行器校验并执行，世界操作由服务端最终授权 |
 
 真实模型调用需要用户显式配置服务地址、模型和凭据来源，可能产生服务商费用。凭据只从指定的服务端环境变量读取，不写入 properties；配置与数据流见 [模型说明](docs/MODEL.md)。运行时会创建 `config/minecraft-friends.properties`；字段和限制见 [构建指南](docs/BUILD.md#配置)。

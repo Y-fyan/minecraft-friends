@@ -1,0 +1,3448 @@
+{
+  "production_source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+  "helper_commits": [
+    "b8abda6d4c508dfec70dec8577e5fe7cc1c2f4a4",
+    "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2"
+  ],
+  "production_inputs_unchanged_since_validated_commit": true,
+  "root_tests": {
+    "tests": 88,
+    "failures": 0,
+    "errors": 0
+  },
+  "python_tool_tests": 21,
+  "artifacts": {
+    "fabric": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+    "forge": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0"
+  },
+  "runs": [
+    {
+      "evidence": "fabric-dedicated-actions-1793073284168146352",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.class_3176 collection_requires_explicit_area PASS",
+        "MF_M2_SERVER net.minecraft.class_3176 dedicated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.class_3176 eight_real_logs_delivered_without_duplication PASS",
+        "MF_M2_SERVER net.minecraft.class_3176 isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.class_3176 natural_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.class_3176 outside_area_resource_untouched PASS",
+        "MF_M2_SERVER net.minecraft.class_3176 physical_follow_over_obstacle PASS",
+        "MF_M2_SERVER net.minecraft.class_3176 repeat_request_does_not_create_items PASS",
+        "MF_M2_SERVER net.minecraft.class_3176 result PASS",
+        "MF_M2_SERVER net.minecraft.class_3176 stop_clears_movement PASS",
+        "MF_M2_SERVER net.minecraft.class_3176 wait_does_not_pursue PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "e9a992ac9526fdba59c09294cd626fe44644732b92c39b9ab8f2c1204a9e80eb",
+        "server-checks.log": "bf894a0b4186351a05c068d27e62ae9f26e83da41a77f91c101359c48d131a2b",
+        "server-tail.log": "118f68d3e2fba14c1868e8f79da60abaea86c162809c8da57114e39543913fb5"
+      },
+      "target": "fabric-dedicated",
+      "scope": "full",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": "036c51fed1a6e0fd82baf89662edd4038e15df2e0965c503a7f7a094bb510624",
+      "server_log_tail_sha256": "118f68d3e2fba14c1868e8f79da60abaea86c162809c8da57114e39543913fb5",
+      "elapsed_seconds": 95.48
+    },
+    {
+      "evidence": "fabric-dedicated-actions-peer-1793073978193031607",
+      "source_commit": "b8abda6d4c508dfec70dec8577e5fe7cc1c2f4a4",
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "checks": [
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 a_stop_isolated_b_keeps_moving PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 b_stop_isolated_a_keeps_moving PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 both_follow_physical_displacement PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 both_stopped_still_40_ticks PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 extra_owner_stop_rejected_without_cross_cancel PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 ready_uuid_and_fresh_dedicated_map PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 result PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 two_owned_companions_created_by_packets PASS"
+      ],
+      "log_sha256": {
+        "server-tail.log": "d5264e29028d19a8ff426cf7e3f00555590908f226d6c3ce82394f0706599d91",
+        "a-markers.log": "035a9d10963a816e46ec33a5983a0baf337afef67f513b86590d05c35dee2a22",
+        "b-markers.log": "7c512050b102b3b39b80383cbd7cf37f69c469d3e437062e3f2ef0220eca6d83"
+      },
+      "target": "fabric-dedicated",
+      "passed": true,
+      "exit_codes": {
+        "a": 0,
+        "b": 0
+      },
+      "missing_checks": [],
+      "client_markers": {
+        "a": {
+          "ready": true,
+          "pass": true,
+          "failed": false,
+          "done": true
+        },
+        "b": {
+          "ready": true,
+          "pass": true,
+          "failed": false,
+          "done": true
+        }
+      },
+      "server_checks": {
+        "ready_uuid_and_fresh_dedicated_map": "PASS",
+        "two_owned_companions_created_by_packets": "PASS",
+        "both_follow_physical_displacement": "PASS",
+        "b_stop_isolated_a_keeps_moving": "PASS",
+        "a_stop_isolated_b_keeps_moving": "PASS",
+        "extra_owner_stop_rejected_without_cross_cancel": "PASS",
+        "both_stopped_still_40_ticks": "PASS",
+        "result": "PASS"
+      },
+      "inputs_unchanged": true,
+      "installed_helper_sha256": "3c81ecf8e6bca8e605da1bb8e106fd5dc79c4b8d92f36fe165ee847e8f2122cb",
+      "server_log_tail_sha256": "d5264e29028d19a8ff426cf7e3f00555590908f226d6c3ce82394f0706599d91",
+      "elapsed_seconds": 37.2
+    },
+    {
+      "evidence": "fabric-dedicated-actions-peer-1793074024016659946",
+      "source_commit": "b8abda6d4c508dfec70dec8577e5fe7cc1c2f4a4",
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "checks": [
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 a_stop_isolated_b_keeps_moving PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 b_stop_isolated_a_keeps_moving PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 both_follow_physical_displacement PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 both_stopped_still_40_ticks PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 extra_owner_stop_rejected_without_cross_cancel PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 ready_uuid_and_fresh_dedicated_map PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 result PASS",
+        "MF_M2_PEER_SERVER net.minecraft.class_3176 two_owned_companions_created_by_packets PASS"
+      ],
+      "log_sha256": {
+        "server-tail.log": "ce3022eb7931f89a65232777cf5dc46468540d523936a08d6a4dde3ab33876d6",
+        "a-markers.log": "035a9d10963a816e46ec33a5983a0baf337afef67f513b86590d05c35dee2a22",
+        "b-markers.log": "7c512050b102b3b39b80383cbd7cf37f69c469d3e437062e3f2ef0220eca6d83"
+      },
+      "target": "fabric-dedicated",
+      "passed": true,
+      "exit_codes": {
+        "a": 0,
+        "b": 0
+      },
+      "missing_checks": [],
+      "client_markers": {
+        "a": {
+          "ready": true,
+          "pass": true,
+          "failed": false,
+          "done": true
+        },
+        "b": {
+          "ready": true,
+          "pass": true,
+          "failed": false,
+          "done": true
+        }
+      },
+      "server_checks": {
+        "ready_uuid_and_fresh_dedicated_map": "PASS",
+        "two_owned_companions_created_by_packets": "PASS",
+        "both_follow_physical_displacement": "PASS",
+        "b_stop_isolated_a_keeps_moving": "PASS",
+        "a_stop_isolated_b_keeps_moving": "PASS",
+        "extra_owner_stop_rejected_without_cross_cancel": "PASS",
+        "both_stopped_still_40_ticks": "PASS",
+        "result": "PASS"
+      },
+      "inputs_unchanged": true,
+      "installed_helper_sha256": "3c81ecf8e6bca8e605da1bb8e106fd5dc79c4b8d92f36fe165ee847e8f2122cb",
+      "server_log_tail_sha256": "ce3022eb7931f89a65232777cf5dc46468540d523936a08d6a4dde3ab33876d6",
+      "elapsed_seconds": 39.23
+    },
+    {
+      "evidence": "fabric-integrated-1793073845358190769",
+      "source_commit": "b8abda6d4c508dfec70dec8577e5fe7cc1c2f4a4",
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "checks": [
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer after_clear_chinese_reply_ack PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer chat_provider_configured PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer chat_scope_identity PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer client_command_created_companion PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer client_command_dismissed PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer death_clears_inventory PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer death_drops_exactly_four PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer death_started_false PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer death_started_true PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer keep_inventory_has_no_drops PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer keep_inventory_retained PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer memory_clear_address PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer memory_clear_facts PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer memory_clear_generation PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer new_world_has_no_companion PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer prefix_chinese_reply_ack PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer private_address_saved PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer private_chinese_reply_ack PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer private_memory_saved PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer rejoin_chinese_reply_ack PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer separate_identity PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer summon_health PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer summon_inventory PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_address PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_chat_uuid PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_health PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_identity PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_inventory PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_memory PASS"
+      ],
+      "log_sha256": {
+        "full.log": "7113c9b7005b5c3da49a943e47e3535162b50e302c128e56155d342f8c9cacc6",
+        "protocol-summary.json": "902f250f840a26c10c8a6d49685f89bde607cab8a5328ed4ac6489c11ea5588a"
+      },
+      "target": "fabric-integrated",
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "protocol_count_delta": {
+        "PRIVATE": 1,
+        "PREFIX": 1,
+        "REJOIN": 1,
+        "AFTER_CLEAR": 1
+      },
+      "protocol_checks_passed": true,
+      "client_completion": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "artifact_unchanged": true,
+      "seconds": 19.4
+    },
+    {
+      "evidence": "fabric-integrated-actions-1793073174043969447",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer collection_requires_explicit_area PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer eight_real_logs_delivered_without_duplication PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer natural_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer outside_area_resource_untouched PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer physical_follow_over_obstacle PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer repeat_request_does_not_create_items PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer respawn_restored_live_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer stop_clears_movement PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer wait_does_not_pursue PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "74263d840667b1a0e4e73b89ee0d125431884e6a42dfc3b3508a08a02f085366"
+      },
+      "target": "fabric-integrated",
+      "scope": "respawn",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "phase": 2,
+          "x_milli": 2114,
+          "state_running": 1
+        },
+        {
+          "phase": 2,
+          "x_milli": 6203,
+          "state_running": 1
+        },
+        {
+          "phase": 2,
+          "x_milli": 10257,
+          "state_running": 1
+        },
+        {
+          "phase": 2,
+          "x_milli": 14126,
+          "state_running": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 16108,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 12023,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 7966,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 7502,
+          "bot_z_milli": 1863,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 7502,
+          "bot_z_milli": 1863,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 7502,
+          "bot_z_milli": 1863,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 7,
+          "bot_x_milli": 7502,
+          "bot_z_milli": 2028,
+          "drop_distance_milli": 4662,
+          "drop_delayed": 1,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 7,
+          "bot_x_milli": 6487,
+          "bot_z_milli": 5682,
+          "drop_distance_milli": 1778,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 1,
+          "source_logs": 7,
+          "bot_x_milli": 6494,
+          "bot_z_milli": 6022,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 1,
+          "source_logs": 7,
+          "bot_x_milli": 6494,
+          "bot_z_milli": 6022,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 1,
+          "source_logs": 7,
+          "bot_x_milli": 6494,
+          "bot_z_milli": 6022,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 6,
+          "bot_x_milli": 7634,
+          "bot_z_milli": 5598,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 6,
+          "bot_x_milli": 7634,
+          "bot_z_milli": 5598,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 6,
+          "bot_x_milli": 7634,
+          "bot_z_milli": 5598,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 5,
+          "bot_x_milli": 7882,
+          "bot_z_milli": 5569,
+          "drop_distance_milli": 2233,
+          "drop_delayed": 1,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9815,
+          "bot_z_milli": 5562,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 4,
+          "bot_x_milli": 10664,
+          "bot_z_milli": 5657,
+          "drop_distance_milli": 1515,
+          "drop_delayed": 1,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 4,
+          "bot_x_milli": 11512,
+          "bot_z_milli": 6035,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 4,
+          "bot_x_milli": 11512,
+          "bot_z_milli": 6035,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 4,
+          "bot_x_milli": 11512,
+          "bot_z_milli": 6035,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 3,
+          "bot_x_milli": 9809,
+          "bot_z_milli": 5484,
+          "drop_distance_milli": 3297,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7135,
+          "bot_z_milli": 5487,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 2,
+          "bot_x_milli": 7122,
+          "bot_z_milli": 5667,
+          "drop_distance_milli": 2459,
+          "drop_delayed": 1,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 2,
+          "bot_x_milli": 7900,
+          "bot_z_milli": 6704,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 2,
+          "bot_x_milli": 7900,
+          "bot_z_milli": 6704,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 2,
+          "bot_x_milli": 7900,
+          "bot_z_milli": 6704,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 7,
+          "source_logs": 1,
+          "bot_x_milli": 9395,
+          "bot_z_milli": 6333,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 7,
+          "source_logs": 1,
+          "bot_x_milli": 9395,
+          "bot_z_milli": 6333,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 7,
+          "source_logs": 1,
+          "bot_x_milli": 9395,
+          "bot_z_milli": 6333,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 7,
+          "source_logs": 0,
+          "bot_x_milli": 9506,
+          "bot_z_milli": 6356,
+          "drop_distance_milli": 1813,
+          "drop_delayed": 1,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 8,
+          "source_logs": 0,
+          "bot_x_milli": 8079,
+          "bot_z_milli": 6492,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 8,
+          "source_logs": 0,
+          "bot_x_milli": 4613,
+          "bot_z_milli": 6282,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "baseline_mean_tick_ns": 1427796,
+          "active_mean_tick_ns": 1527548,
+          "baseline_p95_tick_ns": 2091397,
+          "active_p50_tick_ns": 1429192,
+          "active_p95_tick_ns": 2191007,
+          "active_p99_tick_ns": 2891209,
+          "samples": 1584
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 103.05
+    },
+    {
+      "evidence": "fabric-integrated-actions-1793073382204650423",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer full_companion_backpack_preserves_resources PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer mining_cancel_stops_world_changes_and_delivery PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer resource_shortage_reports_actual_partial_delivery PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "fc21b7f14f6e500859156a3c10236c426f80f3f5bfa637bccfe2876c5ec76b9c"
+      },
+      "target": "fabric-integrated",
+      "scope": "failures",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "baseline_mean_tick_ns": 1484308,
+          "active_mean_tick_ns": 1977528,
+          "baseline_p95_tick_ns": 1991132,
+          "active_p50_tick_ns": 1622391,
+          "active_p95_tick_ns": 2933205,
+          "active_p99_tick_ns": 9952047,
+          "samples": 260
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 35.5
+    },
+    {
+      "evidence": "fabric-integrated-actions-1793073417742476358",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer physical_follow_over_obstacle PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer stop_clears_movement PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer wait_does_not_pursue PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer wooden_door_opened_and_crossed PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "9b01fb412b2e5f1f42fb10ec2bf3eb01b4771d0d2872a0559092743850d562f9"
+      },
+      "target": "fabric-integrated",
+      "scope": "door",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "phase": 2,
+          "x_milli": 6114,
+          "z_milli": 2500,
+          "state_running": 1
+        },
+        {
+          "phase": 2,
+          "x_milli": 10520,
+          "z_milli": 2500,
+          "state_running": 1
+        },
+        {
+          "baseline_mean_tick_ns": 1662503,
+          "active_mean_tick_ns": 1792240,
+          "baseline_p95_tick_ns": 2148217,
+          "active_p50_tick_ns": 1503975,
+          "active_p95_tick_ns": 2592655,
+          "active_p99_tick_ns": 7446617,
+          "samples": 153
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 29.95
+    },
+    {
+      "evidence": "fabric-integrated-actions-1793073447722724279",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer failed_path_leaves_bot_still PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer unreachable_fails_within_budget PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "a48527fca1dbcb5a4e60995eb3f5fbac489c28cfb7184811e3a65a838730ae0f"
+      },
+      "target": "fabric-integrated",
+      "scope": "unreachable",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "baseline_mean_tick_ns": 1648314,
+          "active_mean_tick_ns": 2016626,
+          "baseline_p95_tick_ns": 2292332,
+          "active_p50_tick_ns": 1661945,
+          "active_p95_tick_ns": 5059636,
+          "active_p99_tick_ns": 8749983,
+          "samples": 53
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 25.53
+    },
+    {
+      "evidence": "fabric-integrated-actions-1793073473285906337",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer invalid_model_action_rejected PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer late_model_plan_cannot_resume_after_stop PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer planning_inflight_before_stop PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer structured_model_plan_moves_companion PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "b44e4c18b08297184aedfa51289d8ec4ca2da9c1b9630c8befc16429bea87b44",
+        "model-fixture.json": "eb4bca6e55a7ae009fa19a218ba9543befda2418da00c21671d021c5dba5e333"
+      },
+      "target": "fabric-integrated",
+      "scope": "planning",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "baseline_mean_tick_ns": 1437888,
+          "active_mean_tick_ns": 1753118,
+          "baseline_p95_tick_ns": 1961835,
+          "active_p50_tick_ns": 1573853,
+          "active_p95_tick_ns": 2148070,
+          "active_p99_tick_ns": 7339431,
+          "samples": 214
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 33.54
+    },
+    {
+      "evidence": "fabric-integrated-actions-1793073884545576548",
+      "source_commit": "b8abda6d4c508dfec70dec8577e5fe7cc1c2f4a4",
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer collection_requires_explicit_area PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer physical_follow_over_obstacle PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer stop_before_delivery_keeps_real_items_with_companion PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer stop_clears_movement PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer wait_does_not_pursue PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "0e0810f750e5a80e554db5d72e15ecd34229b2dbc4d5c3a620ae266fc47115c3"
+      },
+      "target": "fabric-integrated",
+      "scope": "return-stop",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "phase": 2,
+          "x_milli": 6335,
+          "z_milli": 2500,
+          "state_running": 1
+        },
+        {
+          "phase": 2,
+          "x_milli": 10152,
+          "z_milli": 2500,
+          "state_running": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 2655,
+          "bot_z_milli": 6500,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 2655,
+          "bot_z_milli": 6500,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 2655,
+          "bot_z_milli": 6500,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 7,
+          "bot_x_milli": 6200,
+          "bot_z_milli": 6500,
+          "drop_distance_milli": 1787,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 1,
+          "source_logs": 7,
+          "bot_x_milli": 6700,
+          "bot_z_milli": 6378,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 1,
+          "source_logs": 7,
+          "bot_x_milli": 6700,
+          "bot_z_milli": 6378,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 1,
+          "source_logs": 7,
+          "bot_x_milli": 6700,
+          "bot_z_milli": 6378,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 6,
+          "bot_x_milli": 7619,
+          "bot_z_milli": 5613,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 6,
+          "bot_x_milli": 7619,
+          "bot_z_milli": 5613,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 6,
+          "bot_x_milli": 7619,
+          "bot_z_milli": 5613,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 5,
+          "bot_x_milli": 7758,
+          "bot_z_milli": 5611,
+          "drop_distance_milli": 2382,
+          "drop_delayed": 1,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9766,
+          "bot_z_milli": 5588,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 4,
+          "bot_x_milli": 10268,
+          "bot_z_milli": 5700,
+          "drop_distance_milli": 1149,
+          "drop_delayed": 1,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 4,
+          "bot_x_milli": 10656,
+          "bot_z_milli": 5670,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 4,
+          "bot_x_milli": 10656,
+          "bot_z_milli": 5670,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 4,
+          "bot_x_milli": 10656,
+          "bot_z_milli": 5670,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 3,
+          "bot_x_milli": 11460,
+          "bot_z_milli": 5799,
+          "drop_distance_milli": 4286,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 3,
+          "bot_x_milli": 8926,
+          "bot_z_milli": 7504,
+          "drop_distance_milli": 1371,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 8806,
+          "bot_z_milli": 7502,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 8806,
+          "bot_z_milli": 7502,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 8806,
+          "bot_z_milli": 7502,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 2,
+          "bot_x_milli": 8076,
+          "bot_z_milli": 6300,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 2,
+          "bot_x_milli": 8076,
+          "bot_z_milli": 6300,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 2,
+          "bot_x_milli": 8076,
+          "bot_z_milli": 6300,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 1,
+          "bot_x_milli": 9112,
+          "bot_z_milli": 6300,
+          "drop_distance_milli": 1947,
+          "drop_delayed": 1,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 7,
+          "source_logs": 1,
+          "bot_x_milli": 9350,
+          "bot_z_milli": 6300,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 7,
+          "source_logs": 1,
+          "bot_x_milli": 9350,
+          "bot_z_milli": 6300,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 7,
+          "source_logs": 1,
+          "bot_x_milli": 9350,
+          "bot_z_milli": 6300,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "baseline_mean_tick_ns": 1568316,
+          "active_mean_tick_ns": 1807963,
+          "baseline_p95_tick_ns": 2460984,
+          "active_p50_tick_ns": 1632899,
+          "active_p95_tick_ns": 2848355,
+          "active_p99_tick_ns": 3987244,
+          "samples": 1101
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 76.69
+    },
+    {
+      "evidence": "fabric-integrated-actions-1793074065768299365",
+      "source_commit": "b8abda6d4c508dfec70dec8577e5fe7cc1c2f4a4",
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_local_tick_budget PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_samples PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_variant_conditions PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "e5000ddc9da7851b3a83a3be33659d91b5b9e528cb922e91922540cc098677f8"
+      },
+      "target": "fabric-integrated",
+      "scope": "performance",
+      "variant": "disabled",
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "variant": 0,
+          "count": 600,
+          "p50_us": 1436,
+          "p95_us": 2650,
+          "p99_us": 3350,
+          "max_us": 21228,
+          "heap_start_bytes": 595286344,
+          "heap_used_bytes": 592117024,
+          "max_heap_bytes": 16441671680,
+          "distance_milli": 0,
+          "perception_calls": 0,
+          "perception_p95_us": 0,
+          "perception_max_us": 0,
+          "path_calls": 0,
+          "path_p95_us": 0,
+          "path_max_us": 0
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 51.78
+    },
+    {
+      "evidence": "fabric-integrated-actions-1793074117587130462",
+      "source_commit": "b8abda6d4c508dfec70dec8577e5fe7cc1c2f4a4",
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_local_tick_budget PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_samples PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_variant_conditions PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "af8a9862f52f3301dfd08a40e62ef3b426295bd0ccd3a9607ef4a54b1af8e055"
+      },
+      "target": "fabric-integrated",
+      "scope": "performance",
+      "variant": "idle",
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "variant": 1,
+          "count": 600,
+          "p50_us": 1743,
+          "p95_us": 3232,
+          "p99_us": 4628,
+          "max_us": 19851,
+          "heap_start_bytes": 602179968,
+          "heap_used_bytes": 443503040,
+          "max_heap_bytes": 16441671680,
+          "distance_milli": 0,
+          "perception_calls": 0,
+          "perception_p95_us": 0,
+          "perception_max_us": 0,
+          "path_calls": 0,
+          "path_p95_us": 0,
+          "path_max_us": 0
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 51.94
+    },
+    {
+      "evidence": "fabric-integrated-actions-1793074169556954421",
+      "source_commit": "b8abda6d4c508dfec70dec8577e5fe7cc1c2f4a4",
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_local_tick_budget PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_readonly_microbenchmarks PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_samples PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_variant_conditions PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "2f4bdabd33b542cc79f4c6d03ef2e17b6b8c08084b9ba6e4cdb234b67cf5d97a"
+      },
+      "target": "fabric-integrated",
+      "scope": "performance",
+      "variant": "active",
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "variant": 2,
+          "count": 600,
+          "p50_us": 1540,
+          "p95_us": 2656,
+          "p99_us": 3909,
+          "max_us": 19919,
+          "heap_start_bytes": 533592224,
+          "heap_used_bytes": 618200784,
+          "max_heap_bytes": 16441671680,
+          "distance_milli": 88896,
+          "perception_calls": 30,
+          "perception_p95_us": 185,
+          "perception_max_us": 1587,
+          "path_calls": 30,
+          "path_p95_us": 212,
+          "path_max_us": 1348
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 51.94
+    },
+    {
+      "evidence": "forge-dedicated-actions-1793073286010943005",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.server.dedicated.DedicatedServer collection_requires_explicit_area PASS",
+        "MF_M2_SERVER net.minecraft.server.dedicated.DedicatedServer dedicated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.server.dedicated.DedicatedServer eight_real_logs_delivered_without_duplication PASS",
+        "MF_M2_SERVER net.minecraft.server.dedicated.DedicatedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.server.dedicated.DedicatedServer natural_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.server.dedicated.DedicatedServer outside_area_resource_untouched PASS",
+        "MF_M2_SERVER net.minecraft.server.dedicated.DedicatedServer physical_follow_over_obstacle PASS",
+        "MF_M2_SERVER net.minecraft.server.dedicated.DedicatedServer repeat_request_does_not_create_items PASS",
+        "MF_M2_SERVER net.minecraft.server.dedicated.DedicatedServer result PASS",
+        "MF_M2_SERVER net.minecraft.server.dedicated.DedicatedServer stop_clears_movement PASS",
+        "MF_M2_SERVER net.minecraft.server.dedicated.DedicatedServer wait_does_not_pursue PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "e9a992ac9526fdba59c09294cd626fe44644732b92c39b9ab8f2c1204a9e80eb",
+        "server-checks.log": "b89edb9e9ee35da8dee9086ee4388e7333cfc948a675820414b3c1a7e3f5133e",
+        "server-tail.log": "0cd86395b07661b158ec62abf529d6df705d3a348fa043cdb7c783ff004551f7"
+      },
+      "target": "forge-dedicated",
+      "scope": "full",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": "545e23e0d851c475a1896305ef429f8f2ab320a4a3b11e79f6b268c56f491929",
+      "server_log_tail_sha256": "0cd86395b07661b158ec62abf529d6df705d3a348fa043cdb7c783ff004551f7",
+      "elapsed_seconds": 72.04
+    },
+    {
+      "evidence": "forge-dedicated-actions-peer-1793073607872723973",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "checks": [
+        "MF_M2_PEER_SERVER net.minecraft.server.dedicated.DedicatedServer a_stop_isolated_b_keeps_moving PASS",
+        "MF_M2_PEER_SERVER net.minecraft.server.dedicated.DedicatedServer b_stop_isolated_a_keeps_moving PASS",
+        "MF_M2_PEER_SERVER net.minecraft.server.dedicated.DedicatedServer both_follow_physical_displacement PASS",
+        "MF_M2_PEER_SERVER net.minecraft.server.dedicated.DedicatedServer both_stopped_still_40_ticks PASS",
+        "MF_M2_PEER_SERVER net.minecraft.server.dedicated.DedicatedServer extra_owner_stop_rejected_without_cross_cancel PASS",
+        "MF_M2_PEER_SERVER net.minecraft.server.dedicated.DedicatedServer ready_uuid_and_fresh_dedicated_map PASS",
+        "MF_M2_PEER_SERVER net.minecraft.server.dedicated.DedicatedServer result PASS",
+        "MF_M2_PEER_SERVER net.minecraft.server.dedicated.DedicatedServer two_owned_companions_created_by_packets PASS"
+      ],
+      "log_sha256": {
+        "server-tail.log": "dab607356b565d6359451350625c5172d330c420b1259e6fcb8c293a3d605c26",
+        "a-markers.log": "035a9d10963a816e46ec33a5983a0baf337afef67f513b86590d05c35dee2a22",
+        "b-markers.log": "7c512050b102b3b39b80383cbd7cf37f69c469d3e437062e3f2ef0220eca6d83"
+      },
+      "target": "forge-dedicated",
+      "passed": true,
+      "exit_codes": {
+        "a": 0,
+        "b": 0
+      },
+      "missing_checks": [],
+      "client_markers": {
+        "a": {
+          "ready": true,
+          "pass": true,
+          "failed": false,
+          "done": true
+        },
+        "b": {
+          "ready": true,
+          "pass": true,
+          "failed": false,
+          "done": true
+        }
+      },
+      "server_checks": {
+        "ready_uuid_and_fresh_dedicated_map": "PASS",
+        "two_owned_companions_created_by_packets": "PASS",
+        "both_follow_physical_displacement": "PASS",
+        "b_stop_isolated_a_keeps_moving": "PASS",
+        "a_stop_isolated_b_keeps_moving": "PASS",
+        "extra_owner_stop_rejected_without_cross_cancel": "PASS",
+        "both_stopped_still_40_ticks": "PASS",
+        "result": "PASS"
+      },
+      "inputs_unchanged": true,
+      "installed_helper_sha256": "545e23e0d851c475a1896305ef429f8f2ab320a4a3b11e79f6b268c56f491929",
+      "server_log_tail_sha256": "dab607356b565d6359451350625c5172d330c420b1259e6fcb8c293a3d605c26",
+      "elapsed_seconds": 43.26
+    },
+    {
+      "evidence": "forge-integrated-1793073492270851989",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "checks": [
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer after_clear_chinese_reply_ack PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer chat_provider_configured PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer chat_scope_identity PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer client_command_created_companion PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer client_command_dismissed PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer death_clears_inventory PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer death_drops_exactly_four PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer death_started_false PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer death_started_true PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer keep_inventory_has_no_drops PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer keep_inventory_retained PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer memory_clear_address PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer memory_clear_facts PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer memory_clear_generation PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer new_world_has_no_companion PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer prefix_chinese_reply_ack PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer private_address_saved PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer private_chinese_reply_ack PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer private_memory_saved PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer rejoin_chinese_reply_ack PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer separate_identity PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer summon_health PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer summon_inventory PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_address PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_chat_uuid PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_health PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_identity PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_inventory PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_memory PASS"
+      ],
+      "log_sha256": {
+        "full.log": "38aaaeb80a1259da9cd44f56eac14e14d07375e20dd373f5b6fe37c44ff7f35b",
+        "protocol-summary.json": "902f250f840a26c10c8a6d49685f89bde607cab8a5328ed4ac6489c11ea5588a"
+      },
+      "target": "forge-integrated",
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "protocol_count_delta": {
+        "PRIVATE": 1,
+        "PREFIX": 1,
+        "REJOIN": 1,
+        "AFTER_CLEAR": 1
+      },
+      "protocol_checks_passed": true,
+      "client_completion": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "artifact_unchanged": true,
+      "seconds": 21.01
+    },
+    {
+      "evidence": "forge-integrated-1793073864810805055",
+      "source_commit": "b8abda6d4c508dfec70dec8577e5fe7cc1c2f4a4",
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "checks": [
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer after_clear_chinese_reply_ack PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer chat_provider_configured PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer chat_scope_identity PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer client_command_created_companion PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer client_command_dismissed PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer death_clears_inventory PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer death_drops_exactly_four PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer death_started_false PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer death_started_true PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer keep_inventory_has_no_drops PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer keep_inventory_retained PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer memory_clear_address PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer memory_clear_facts PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer memory_clear_generation PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer new_world_has_no_companion PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer prefix_chinese_reply_ack PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer private_address_saved PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer private_chinese_reply_ack PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer private_memory_saved PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer rejoin_chinese_reply_ack PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer separate_identity PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer summon_health PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer summon_inventory PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_address PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_chat_uuid PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_health PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_identity PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_inventory PASS",
+        "MF_ACCEPTANCE_SERVER net.minecraft.client.server.IntegratedServer world_reopen_memory PASS"
+      ],
+      "log_sha256": {
+        "full.log": "11a7f1dbeb3ba6ee5ce477836d98082a59dedc238f3ca63979a3699f7a50e5cd",
+        "protocol-summary.json": "902f250f840a26c10c8a6d49685f89bde607cab8a5328ed4ac6489c11ea5588a"
+      },
+      "target": "forge-integrated",
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "protocol_count_delta": {
+        "PRIVATE": 1,
+        "PREFIX": 1,
+        "REJOIN": 1,
+        "AFTER_CLEAR": 1
+      },
+      "protocol_checks_passed": true,
+      "client_completion": true,
+      "source_unchanged": true,
+      "helper_unchanged": true,
+      "artifact_unchanged": true,
+      "seconds": 19.7
+    },
+    {
+      "evidence": "forge-integrated-actions-1793073175184673207",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer collection_requires_explicit_area PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer eight_real_logs_delivered_without_duplication PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer natural_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer outside_area_resource_untouched PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer physical_follow_over_obstacle PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer repeat_request_does_not_create_items PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer respawn_restored_live_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer stop_clears_movement PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer wait_does_not_pursue PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "df014bac4c3843389c697f7fbb77f5df9752d6be6de8e1295d8354ab037e1ca6"
+      },
+      "target": "forge-integrated",
+      "scope": "respawn",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "phase": 2,
+          "state_running": 1
+        },
+        {
+          "phase": 2,
+          "x_milli": 3203,
+          "state_running": 1
+        },
+        {
+          "phase": 2,
+          "x_milli": 7257,
+          "state_running": 1
+        },
+        {
+          "phase": 2,
+          "x_milli": 11126,
+          "state_running": 1
+        },
+        {
+          "phase": 2,
+          "x_milli": 15210,
+          "state_running": 1
+        },
+        {
+          "phase": 2,
+          "x_milli": 15499,
+          "state_running": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 15817,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 11756,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 7777,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 7500,
+          "bot_z_milli": 1845,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 7500,
+          "bot_z_milli": 1845,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 7500,
+          "bot_z_milli": 1845,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 7,
+          "bot_x_milli": 7500,
+          "bot_z_milli": 2405,
+          "drop_distance_milli": 4573,
+          "drop_delayed": 1,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 7,
+          "bot_x_milli": 6499,
+          "bot_z_milli": 5826,
+          "drop_distance_milli": 1844,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 1,
+          "source_logs": 7,
+          "bot_x_milli": 6579,
+          "bot_z_milli": 6366,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 1,
+          "source_logs": 7,
+          "bot_x_milli": 6579,
+          "bot_z_milli": 6366,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 1,
+          "source_logs": 7,
+          "bot_x_milli": 6579,
+          "bot_z_milli": 6366,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 6,
+          "bot_x_milli": 7127,
+          "bot_z_milli": 5700,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 6,
+          "bot_x_milli": 7127,
+          "bot_z_milli": 5700,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 6,
+          "bot_x_milli": 7127,
+          "bot_z_milli": 5700,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 5,
+          "bot_x_milli": 7718,
+          "bot_z_milli": 5630,
+          "drop_distance_milli": 2093,
+          "drop_delayed": 1,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9743,
+          "bot_z_milli": 5580,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 4,
+          "bot_x_milli": 10294,
+          "bot_z_milli": 5700,
+          "drop_distance_milli": 870,
+          "drop_delayed": 1,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 4,
+          "bot_x_milli": 10359,
+          "bot_z_milli": 5700,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 4,
+          "bot_x_milli": 10359,
+          "bot_z_milli": 5700,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 4,
+          "bot_x_milli": 10359,
+          "bot_z_milli": 5700,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 3,
+          "bot_x_milli": 7786,
+          "bot_z_milli": 5468,
+          "drop_distance_milli": 1480,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 7147,
+          "bot_z_milli": 5472,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 2,
+          "bot_x_milli": 7832,
+          "bot_z_milli": 6372,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 2,
+          "bot_x_milli": 7832,
+          "bot_z_milli": 6372,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 2,
+          "bot_x_milli": 7832,
+          "bot_z_milli": 6372,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 1,
+          "bot_x_milli": 8313,
+          "bot_z_milli": 6499,
+          "drop_distance_milli": 2067,
+          "drop_delayed": 1,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 7,
+          "source_logs": 1,
+          "bot_x_milli": 9561,
+          "bot_z_milli": 6632,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 7,
+          "source_logs": 1,
+          "bot_x_milli": 9561,
+          "bot_z_milli": 6632,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 7,
+          "source_logs": 1,
+          "bot_x_milli": 9561,
+          "bot_z_milli": 6632,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 8,
+          "source_logs": 0,
+          "bot_x_milli": 9404,
+          "bot_z_milli": 6437,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "phase": 8,
+          "bot_logs": 8,
+          "source_logs": 0,
+          "bot_x_milli": 5305,
+          "bot_z_milli": 6349,
+          "drop_delayed": 0,
+          "custom_companion": 0
+        },
+        {
+          "baseline_mean_tick_ns": 1726459,
+          "active_mean_tick_ns": 1678680,
+          "baseline_p95_tick_ns": 2368894,
+          "active_p50_tick_ns": 1561758,
+          "active_p95_tick_ns": 2463703,
+          "active_p99_tick_ns": 3597994,
+          "samples": 1595
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 104.77
+    },
+    {
+      "evidence": "forge-integrated-actions-1793073361063134654",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer forge_break_event_cancellation_preserves_block PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer full_companion_backpack_preserves_resources PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer mining_cancel_stops_world_changes_and_delivery PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer resource_shortage_reports_actual_partial_delivery PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "b84cb00602bf3c92e36d8738708a698b32c6084c67d967ec14b9fb3d53f69d10"
+      },
+      "target": "forge-integrated",
+      "scope": "failures",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "baseline_mean_tick_ns": 1840922,
+          "active_mean_tick_ns": 2062950,
+          "baseline_p95_tick_ns": 2657217,
+          "active_p50_tick_ns": 1815078,
+          "active_p95_tick_ns": 3225875,
+          "active_p99_tick_ns": 9195167,
+          "samples": 346
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 40.17
+    },
+    {
+      "evidence": "forge-integrated-actions-1793073401262705166",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer physical_follow_over_obstacle PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer stop_clears_movement PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer wait_does_not_pursue PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer wooden_door_opened_and_crossed PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "ac0d9f8bbfaba1b648340f3d35ba01b2da87cab78399efba51a8d4d2b76d2a3e"
+      },
+      "target": "forge-integrated",
+      "scope": "door",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "phase": 2,
+          "x_milli": 6114,
+          "z_milli": 2500,
+          "state_running": 1
+        },
+        {
+          "phase": 2,
+          "x_milli": 10520,
+          "z_milli": 2500,
+          "state_running": 1
+        },
+        {
+          "baseline_mean_tick_ns": 1741079,
+          "active_mean_tick_ns": 1974997,
+          "baseline_p95_tick_ns": 2190637,
+          "active_p50_tick_ns": 1751785,
+          "active_p95_tick_ns": 2741373,
+          "active_p99_tick_ns": 8776967,
+          "samples": 153
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 30.65
+    },
+    {
+      "evidence": "forge-integrated-actions-1793073431945667500",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer failed_path_leaves_bot_still PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer unreachable_fails_within_budget PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "2ada7d0634a4d5d9c798270b91244c422f201c0b40fab0de32e9d1d9a9f1bfef"
+      },
+      "target": "forge-integrated",
+      "scope": "unreachable",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "baseline_mean_tick_ns": 1745473,
+          "active_mean_tick_ns": 2276052,
+          "baseline_p95_tick_ns": 2489953,
+          "active_p50_tick_ns": 1931492,
+          "active_p95_tick_ns": 4724167,
+          "active_p99_tick_ns": 9517432,
+          "samples": 53
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 25.88
+    },
+    {
+      "evidence": "forge-integrated-actions-1793073457860453698",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer invalid_model_action_rejected PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer late_model_plan_cannot_resume_after_stop PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer planning_inflight_before_stop PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer structured_model_plan_moves_companion PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "2d250bce8e4d56d747a1a1bbc5b162e17878497b94bf6d6283cf1ddd4b85e289",
+        "model-fixture.json": "eb4bca6e55a7ae009fa19a218ba9543befda2418da00c21671d021c5dba5e333"
+      },
+      "target": "forge-integrated",
+      "scope": "planning",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "baseline_mean_tick_ns": 1751799,
+          "active_mean_tick_ns": 1889094,
+          "baseline_p95_tick_ns": 2452268,
+          "active_p50_tick_ns": 1708532,
+          "active_p95_tick_ns": 2542241,
+          "active_p99_tick_ns": 5739776,
+          "samples": 217
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 34.35
+    },
+    {
+      "evidence": "forge-integrated-actions-1793073513321987990",
+      "source_commit": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer collection_requires_explicit_area PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer physical_follow_over_obstacle PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer stop_before_delivery_keeps_real_items_with_companion PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer stop_clears_movement PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer wait_does_not_pursue PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "cf5978cd747682fff0478a886f4988c286220d215e7f6b45108424de1b7780b6"
+      },
+      "target": "forge-integrated",
+      "scope": "return-stop",
+      "variant": null,
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "phase": 2,
+          "x_milli": 6114,
+          "z_milli": 2500,
+          "state_running": 1
+        },
+        {
+          "phase": 2,
+          "x_milli": 9995,
+          "z_milli": 2500,
+          "state_running": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 2655,
+          "bot_z_milli": 6500,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 2655,
+          "bot_z_milli": 6500,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 0,
+          "source_logs": 8,
+          "bot_x_milli": 2655,
+          "bot_z_milli": 6500,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 1,
+          "source_logs": 7,
+          "bot_x_milli": 5880,
+          "bot_z_milli": 6500,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 1,
+          "source_logs": 7,
+          "bot_x_milli": 5880,
+          "bot_z_milli": 6500,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 1,
+          "source_logs": 7,
+          "bot_x_milli": 5880,
+          "bot_z_milli": 6500,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 1,
+          "source_logs": 7,
+          "bot_x_milli": 5880,
+          "bot_z_milli": 6500,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 6,
+          "bot_x_milli": 7627,
+          "bot_z_milli": 5599,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 6,
+          "bot_x_milli": 7627,
+          "bot_z_milli": 5599,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 6,
+          "bot_x_milli": 7627,
+          "bot_z_milli": 5599,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 2,
+          "source_logs": 5,
+          "bot_x_milli": 7758,
+          "bot_z_milli": 5601,
+          "drop_distance_milli": 2374,
+          "drop_delayed": 1,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 5,
+          "bot_x_milli": 9776,
+          "bot_z_milli": 5585,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 3,
+          "source_logs": 4,
+          "bot_x_milli": 10368,
+          "bot_z_milli": 5700,
+          "drop_distance_milli": 1054,
+          "drop_delayed": 1,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 4,
+          "bot_x_milli": 11309,
+          "bot_z_milli": 5700,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 4,
+          "bot_x_milli": 11309,
+          "bot_z_milli": 5700,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 4,
+          "bot_x_milli": 11309,
+          "bot_z_milli": 5700,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 3,
+          "bot_x_milli": 11407,
+          "bot_z_milli": 5736,
+          "drop_distance_milli": 4552,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 4,
+          "source_logs": 3,
+          "bot_x_milli": 8931,
+          "bot_z_milli": 7504,
+          "drop_distance_milli": 1782,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 8372,
+          "bot_z_milli": 7529,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 8372,
+          "bot_z_milli": 7529,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 5,
+          "source_logs": 3,
+          "bot_x_milli": 8372,
+          "bot_z_milli": 7529,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 2,
+          "bot_x_milli": 8501,
+          "bot_z_milli": 7501,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 2,
+          "bot_x_milli": 8501,
+          "bot_z_milli": 7501,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 2,
+          "bot_x_milli": 8501,
+          "bot_z_milli": 7501,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 6,
+          "source_logs": 1,
+          "bot_x_milli": 8833,
+          "bot_z_milli": 7071,
+          "drop_distance_milli": 2014,
+          "drop_delayed": 1,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 7,
+          "source_logs": 1,
+          "bot_x_milli": 8745,
+          "bot_z_milli": 6857,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 7,
+          "source_logs": 1,
+          "bot_x_milli": 8745,
+          "bot_z_milli": 6857,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "phase": 8,
+          "bot_logs": 7,
+          "source_logs": 1,
+          "bot_x_milli": 8745,
+          "bot_z_milli": 6857,
+          "drop_delayed": 0,
+          "custom_companion": 1
+        },
+        {
+          "baseline_mean_tick_ns": 1604863,
+          "active_mean_tick_ns": 1322855,
+          "baseline_p95_tick_ns": 2174656,
+          "active_p50_tick_ns": 1210795,
+          "active_p95_tick_ns": 1838499,
+          "active_p99_tick_ns": 2864850,
+          "samples": 1103
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 79.02
+    },
+    {
+      "evidence": "forge-integrated-actions-1793074221528635144",
+      "source_commit": "b8abda6d4c508dfec70dec8577e5fe7cc1c2f4a4",
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_local_tick_budget PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_samples PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_variant_conditions PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "47c8e788280b6a92cb5baf68ccafdba1b50e277865acbbf65384e6c8c3569b3d"
+      },
+      "target": "forge-integrated",
+      "scope": "performance",
+      "variant": "disabled",
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "variant": 0,
+          "count": 600,
+          "p50_us": 1508,
+          "p95_us": 2754,
+          "p99_us": 3642,
+          "max_us": 10895,
+          "heap_start_bytes": 479938472,
+          "heap_used_bytes": 462923928,
+          "max_heap_bytes": 16441671680,
+          "distance_milli": 0,
+          "perception_calls": 0,
+          "perception_p95_us": 0,
+          "perception_max_us": 0,
+          "path_calls": 0,
+          "path_p95_us": 0,
+          "path_max_us": 0
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 53.84
+    },
+    {
+      "evidence": "forge-integrated-actions-1793074275400395501",
+      "source_commit": "b8abda6d4c508dfec70dec8577e5fe7cc1c2f4a4",
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_local_tick_budget PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_samples PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_variant_conditions PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "577a1382c0a6d14075b2f73ce447121c2bf27e0fb1a744b11b292cd5d6977120"
+      },
+      "target": "forge-integrated",
+      "scope": "performance",
+      "variant": "idle",
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "variant": 1,
+          "count": 600,
+          "p50_us": 1667,
+          "p95_us": 2996,
+          "p99_us": 3983,
+          "max_us": 16951,
+          "heap_start_bytes": 649224200,
+          "heap_used_bytes": 442550096,
+          "max_heap_bytes": 16441671680,
+          "distance_milli": 0,
+          "perception_calls": 0,
+          "perception_p95_us": 0,
+          "perception_max_us": 0,
+          "path_calls": 0,
+          "path_p95_us": 0,
+          "path_max_us": 0
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 52.44
+    },
+    {
+      "evidence": "forge-integrated-actions-1793074327868541861",
+      "source_commit": "b8abda6d4c508dfec70dec8577e5fe7cc1c2f4a4",
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "checks": [
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer explicit_commands_enabled PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer integrated_server_instance PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer isolated_survival_map PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_local_tick_budget PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_readonly_microbenchmarks PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_samples PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer performance_variant_conditions PASS",
+        "MF_M2_SERVER net.minecraft.client.server.IntegratedServer result PASS"
+      ],
+      "log_sha256": {
+        "checks.log": "6970b06184ef2a8e60c8109fd4c430816aace108f71e88342034ac10504c787f"
+      },
+      "target": "forge-integrated",
+      "scope": "performance",
+      "variant": "active",
+      "passed": true,
+      "exit_code": 0,
+      "missing_checks": [],
+      "metrics": [
+        {
+          "variant": 2,
+          "count": 600,
+          "p50_us": 1706,
+          "p95_us": 3081,
+          "p99_us": 3988,
+          "max_us": 13677,
+          "heap_start_bytes": 499902232,
+          "heap_used_bytes": 726674616,
+          "max_heap_bytes": 16441671680,
+          "distance_milli": 88896,
+          "perception_calls": 30,
+          "perception_p95_us": 205,
+          "perception_max_us": 974,
+          "path_calls": 30,
+          "path_p95_us": 287,
+          "path_max_us": 543
+        }
+      ],
+      "source_unchanged": true,
+      "artifact_unchanged": true,
+      "installed_helper_sha256": null,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 53.94
+    }
+  ],
+  "servers": [
+    {
+      "run": "forge-final-peer-1793073601816315124",
+      "loader": "forge",
+      "world_saved": true,
+      "server_clean": true,
+      "server_exit_code": 0,
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "server_log_sha256": "032c3b51288c58a0d0723670d3642083bd58faa942b908c96a76cf860253de35",
+      "default_configuration_generated": null,
+      "no_acceptance_helper": null
+    },
+    {
+      "run": "fabric-final-peer-1793074017950686808",
+      "loader": "fabric",
+      "world_saved": true,
+      "server_clean": true,
+      "server_exit_code": 0,
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "server_log_sha256": "34376615b55dbc37a22b6e98568914785f0b33e18ecd2c91ddf0db8174f11e02",
+      "default_configuration_generated": null,
+      "no_acceptance_helper": null
+    },
+    {
+      "run": "fabric-final-peer-1793073971124120736",
+      "loader": "fabric",
+      "world_saved": true,
+      "server_clean": true,
+      "server_exit_code": 0,
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "server_log_sha256": "f46483f5104df5caf011e914626f8491e22f755cdac09b9639030b693d286cdc",
+      "default_configuration_generated": null,
+      "no_acceptance_helper": null
+    },
+    {
+      "run": "fabric-final-full-1793073277117222414",
+      "loader": "fabric",
+      "world_saved": true,
+      "server_clean": true,
+      "server_exit_code": 0,
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "server_log_sha256": "27ab2b36078bd38d74fc0755bbdafb452e86f13b165424c32f31bcfb9474d2d8",
+      "default_configuration_generated": null,
+      "no_acceptance_helper": null
+    },
+    {
+      "run": "fabric-final-full-1793073961262695805",
+      "loader": "fabric",
+      "world_saved": true,
+      "server_clean": true,
+      "server_exit_code": 0,
+      "production_jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e",
+      "server_log_sha256": "349fa0e2dd66f9ec0ec80ca4ac73ef2bc0c21735e224516eba994de759f67c1c",
+      "default_configuration_generated": true,
+      "no_acceptance_helper": true
+    },
+    {
+      "run": "forge-final-full-1793073279980212002",
+      "loader": "forge",
+      "world_saved": true,
+      "server_clean": true,
+      "server_exit_code": 0,
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "server_log_sha256": "92bac4a30ab55e4fdcf22d38827498ecef1ec764cfa5a63787e8653913c8a1ba",
+      "default_configuration_generated": null,
+      "no_acceptance_helper": null
+    },
+    {
+      "run": "forge-final-full-1793073592369392891",
+      "loader": "forge",
+      "world_saved": true,
+      "server_clean": true,
+      "server_exit_code": 0,
+      "production_jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0",
+      "server_log_sha256": "aca9265314cfe161034e4d8a2d285c58395a18e69c0e2ba443be79b0d2fd8da4",
+      "default_configuration_generated": true,
+      "no_acceptance_helper": true
+    }
+  ],
+  "performance_evidence": "m2-performance-1793074065741906366",
+  "performance": {
+    "host": {
+      "os": "Linux",
+      "kernel": "7.0.0-34-generic",
+      "cpu": "Intel(R) Core(TM) Ultra 9 275HX",
+      "logical_cpus": 24
+    },
+    "seed": 4321,
+    "mode": "single owner, IntegratedServer, software-rendered client, separate JVM per variant",
+    "warmup_ticks": 160,
+    "sample_ticks": 600,
+    "network": "mock; zero remote requests, no credentials",
+    "runs": [
+      {
+        "loader": "fabric",
+        "variant": "disabled",
+        "summary": "fabric-integrated-actions-1793074065768299365/summary.json",
+        "passed": true,
+        "metrics": [
+          {
+            "variant": 0,
+            "count": 600,
+            "p50_us": 1436,
+            "p95_us": 2650,
+            "p99_us": 3350,
+            "max_us": 21228,
+            "heap_start_bytes": 595286344,
+            "heap_used_bytes": 592117024,
+            "max_heap_bytes": 16441671680,
+            "distance_milli": 0,
+            "perception_calls": 0,
+            "perception_p95_us": 0,
+            "perception_max_us": 0,
+            "path_calls": 0,
+            "path_p95_us": 0,
+            "path_max_us": 0
+          }
+        ],
+        "jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e"
+      },
+      {
+        "loader": "fabric",
+        "variant": "idle",
+        "summary": "fabric-integrated-actions-1793074117587130462/summary.json",
+        "passed": true,
+        "metrics": [
+          {
+            "variant": 1,
+            "count": 600,
+            "p50_us": 1743,
+            "p95_us": 3232,
+            "p99_us": 4628,
+            "max_us": 19851,
+            "heap_start_bytes": 602179968,
+            "heap_used_bytes": 443503040,
+            "max_heap_bytes": 16441671680,
+            "distance_milli": 0,
+            "perception_calls": 0,
+            "perception_p95_us": 0,
+            "perception_max_us": 0,
+            "path_calls": 0,
+            "path_p95_us": 0,
+            "path_max_us": 0
+          }
+        ],
+        "jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e"
+      },
+      {
+        "loader": "fabric",
+        "variant": "active",
+        "summary": "fabric-integrated-actions-1793074169556954421/summary.json",
+        "passed": true,
+        "metrics": [
+          {
+            "variant": 2,
+            "count": 600,
+            "p50_us": 1540,
+            "p95_us": 2656,
+            "p99_us": 3909,
+            "max_us": 19919,
+            "heap_start_bytes": 533592224,
+            "heap_used_bytes": 618200784,
+            "max_heap_bytes": 16441671680,
+            "distance_milli": 88896,
+            "perception_calls": 30,
+            "perception_p95_us": 185,
+            "perception_max_us": 1587,
+            "path_calls": 30,
+            "path_p95_us": 212,
+            "path_max_us": 1348
+          }
+        ],
+        "jar_sha256": "590bfb7804adf4182e4db6e7449a83885fd293a8b97c1517455f27871a6f884e"
+      },
+      {
+        "loader": "forge",
+        "variant": "disabled",
+        "summary": "forge-integrated-actions-1793074221528635144/summary.json",
+        "passed": true,
+        "metrics": [
+          {
+            "variant": 0,
+            "count": 600,
+            "p50_us": 1508,
+            "p95_us": 2754,
+            "p99_us": 3642,
+            "max_us": 10895,
+            "heap_start_bytes": 479938472,
+            "heap_used_bytes": 462923928,
+            "max_heap_bytes": 16441671680,
+            "distance_milli": 0,
+            "perception_calls": 0,
+            "perception_p95_us": 0,
+            "perception_max_us": 0,
+            "path_calls": 0,
+            "path_p95_us": 0,
+            "path_max_us": 0
+          }
+        ],
+        "jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0"
+      },
+      {
+        "loader": "forge",
+        "variant": "idle",
+        "summary": "forge-integrated-actions-1793074275400395501/summary.json",
+        "passed": true,
+        "metrics": [
+          {
+            "variant": 1,
+            "count": 600,
+            "p50_us": 1667,
+            "p95_us": 2996,
+            "p99_us": 3983,
+            "max_us": 16951,
+            "heap_start_bytes": 649224200,
+            "heap_used_bytes": 442550096,
+            "max_heap_bytes": 16441671680,
+            "distance_milli": 0,
+            "perception_calls": 0,
+            "perception_p95_us": 0,
+            "perception_max_us": 0,
+            "path_calls": 0,
+            "path_p95_us": 0,
+            "path_max_us": 0
+          }
+        ],
+        "jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0"
+      },
+      {
+        "loader": "forge",
+        "variant": "active",
+        "summary": "forge-integrated-actions-1793074327868541861/summary.json",
+        "passed": true,
+        "metrics": [
+          {
+            "variant": 2,
+            "count": 600,
+            "p50_us": 1706,
+            "p95_us": 3081,
+            "p99_us": 3988,
+            "max_us": 13677,
+            "heap_start_bytes": 499902232,
+            "heap_used_bytes": 726674616,
+            "max_heap_bytes": 16441671680,
+            "distance_milli": 88896,
+            "perception_calls": 30,
+            "perception_p95_us": 205,
+            "perception_max_us": 974,
+            "path_calls": 30,
+            "path_p95_us": 287,
+            "path_max_us": 543
+          }
+        ],
+        "jar_sha256": "11a247e962d852acacd7eca0c17e10dcb5e0f1b911e6dc848e56d2ca4f4000e0"
+      }
+    ],
+    "passed": true,
+    "limitations": [
+      "Local Alpha smoke budget, not a hardware-wide guarantee",
+      "Heap is whole integrated client/server JVM; no forced GC or long-duration leak conclusion",
+      "No remote inference throughput or real token/cost measurement"
+    ]
+  },
+  "review": {
+    "implementation": "gpt-6-luna/xhigh and coordinating assistant",
+    "glm": "GLM-5.3-Flash: installation/source audit and targeted disconnect-fix review; not human playtesting",
+    "coordinator": "integrated fixes, actual game verification, original raw evidence review"
+  },
+  "retained_failures": [
+    {
+      "evidence": "fabric-final-peer-1793072940924780416",
+      "source_commit": "6d018a2",
+      "runner_passed": true,
+      "overall_passed": false,
+      "reason": "Netty cleanup corrupted world/player list; crash, no normal world save",
+      "fixed_by": "dd7bf80acd9481d1f4d83195ce80a4457e3ea9a2",
+      "log_sha256": "172e60f100c7e6517d63a62daee9fa92458fddb9327b1aa78645c4f78b64c625"
+    },
+    {
+      "evidence": "fabric-integrated-1793073506888099752",
+      "passed": false,
+      "reason": "test client auto-paused; operator interrupted; fixed acceptance helper, rerun succeeded"
+    }
+  ],
+  "limitations": [
+    "Only pinned Minecraft1.21.1 Fabric0.20.1/API0.116.17 and Forge52.1.20 tested",
+    "Local fixed-map single-owner performance, 160 warmup +600 completed ticks; whole integrated JVM heap, no long-duration leak claim",
+    "Perception/path timings are additional read-only microbenchmarks including reflection overhead, not executor instrumentation",
+    "Remote real-model quality not retested for M2 planning; explicit loopback protocol fixtures; prior M1 real DeepSeek evidence remains historical",
+    "No human new-member playtest claimed; automated fresh ordinary installation and real-client workflows verified",
+    "Surface oak-only MVP, explicit one-shot area, no complex caves, cross-dimension autonomous travel or universal protection-plugin compatibility"
+  ],
+  "artifact_audit": {
+    "fabric": {
+      "entries": 156,
+      "license_matches_root": true,
+      "acceptance_classes_absent": true,
+      "bytes": 309236
+    },
+    "forge": {
+      "entries": 157,
+      "license_matches_root": true,
+      "acceptance_classes_absent": true,
+      "bytes": 304387
+    }
+  }
+}

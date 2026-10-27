@@ -1,6 +1,6 @@
 # 架构草案
 
-状态：**M0、M1 已验收，M2 核心已实现并进入最终验收**。当前包含服务端伙伴生命周期、异步模型协议、会话隔离与可管理记忆；有界地表导航、授权区域橡木采集与异步白名单动作规划已接入，见 [动作契约](ACTIONS.md)。纯 Java 核心位于 `common/src/main/java`；共享 Minecraft 服务端适配位于 `common/src/main/minecraft`，只由两个加载器工程编译。Fabric/Forge 各自注册事件与入口，不将 Minecraft 类型引入纯核心。玩家控制路线保持 [ADR 0001](decisions/0001-player-control-route.md) 的服务端玩家实体；具体接口见 [聊天](CHAT.md)、[模型](MODEL.md) 和 [记忆](MEMORY.md)。
+状态：**M0、M1 已验收，M2 已通过技术验收**。当前包含服务端伙伴生命周期、异步模型协议、会话隔离与可管理记忆；有界地表导航、授权区域橡木采集与异步白名单动作规划已接入，见 [动作契约](ACTIONS.md)。纯 Java 核心位于 `common/src/main/java`；共享 Minecraft 服务端适配位于 `common/src/main/minecraft`，只由两个加载器工程编译。Fabric/Forge 各自注册事件与入口，不将 Minecraft 类型引入纯核心。玩家控制路线保持 [ADR 0001](decisions/0001-player-control-route.md) 的服务端玩家实体；具体接口见 [聊天](CHAT.md)、[模型](MODEL.md) 和 [记忆](MEMORY.md)。
 
 当前模块为 `common`、`fabric`、`forge`。两个发行 JAR 把同一份公共源码编入各自产物，避免玩家额外安装公共 JAR；决策见 [ADR 0002](decisions/0002-multiloader-layout.md)。
 

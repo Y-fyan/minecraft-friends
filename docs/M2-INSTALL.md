@@ -1,12 +1,12 @@
-# M2 开发构建：安装与首次试用
+# M2 Alpha 预览：安装与首次试用
 
-当前是 PR #26 的开发候选，尚未宣布完整 Alpha 发布。先备份整个存档，再在独立测试世界试用。伙伴会真实改变方块，卸载模组不会自动撤销已经发生的采集。
+M2 已通过 [技术验收](validation/0014-m2-acceptance.md)，首次预览包的包内版本为 `0.1.0-SNAPSHOT`，请按附件 SHA-256 确认测试产物。先备份整个存档，再在独立测试世界试用。伙伴会真实改变方块，卸载模组不会自动撤销已经发生的采集。
 
 ## 安装
 
 使用 Minecraft Java 1.21.1 与 Java 21。已测试的环境是 Fabric Loader 0.20.1 / Fabric API 0.116.17+1.21.1，或 Minecraft Forge 52.1.20；Forge 不等于 NeoForge。
 
-从本分支运行 `./gradlew checkAll --no-daemon`，或下载对应提交 CI 的构建产物。两个 JAR 位于 `build/artifacts/`：
+从已合并的主分支运行 `./gradlew checkAll --no-daemon`，或下载对应提交 CI 的构建产物。两个 JAR 位于 `build/artifacts/`：
 
 - Fabric：`minecraft-friends-fabric-1.21.1-0.1.0-SNAPSHOT.jar`，另装上述 Fabric API。
 - Forge：`minecraft-friends-forge-1.21.1-0.1.0-SNAPSHOT.jar`。
@@ -45,4 +45,4 @@
 
 ## 验收边界
 
-实际四格任务流程、双玩家隔离和失败用例均有逐项证据，但不是所有整合包、所有模型或长期体验保证。M2 规划的游戏内网络测试使用本机协议模拟器，不冒充真实语言模型。最终发布还需核对性能对照、安装试走及兼容声明；目前没有创建版本标签或 Release。
+实际四格任务流程、双玩家隔离和失败用例均有逐项证据，但不是所有整合包、所有模型或长期体验保证。M2 规划的游戏内网络测试使用本机协议模拟器，不冒充真实语言模型。已完成本机性能对照、自动首次安装和固定版本兼容核对；不是人类试玩、长期压力测试或所有模型的质量保证。
