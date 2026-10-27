@@ -38,17 +38,18 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('target', choices=('fabric-integrated','forge-integrated','fabric-dedicated','forge-dedicated'))
     p.add_argument('--natural',action='store_true')
-    p.add_argument('--scope', choices=('navigation','unreachable','planning','full'), default='full')
+    p.add_argument('--scope', choices=('navigation','door','unreachable','planning','full'), default='full')
     p.add_argument('--server')
     p.add_argument('--server-log', type=Path)
     p.add_argument('--server-mod', type=Path)
+    p.add_argument('--server-helper', type=Path)
     p.add_argument('--timeout',type=int,default=480)
     args=p.parse_args()
     dedicated=args.target.endswith('dedicated');loader=args.target.split('-')[0]
     if not 60<=args.timeout<=1200:p.error('timeout must be 60..1200')
-    if dedicated and (not args.server or not re.fullmatch(r'(?:127\.0\.0\.1|localhost):[0-9]{1,5}',args.server) or not args.server_log or not args.server_mod):
+    if dedicated and (not args.server or not re.fullmatch(r'(?:127\.0\.0\.1|localhost):[0-9]{1,5}',args.server) or not args.server_log or not args.server_mod or not args.server_helper):
         p.error('dedicated requires explicit loopback server, server-log and installed server-mod')
-    if not dedicated and (args.server or args.server_log or args.server_mod):p.error('server options only for dedicated')
+    if not dedicated and (args.server or args.server_log or args.server_mod or args.server_helper):p.error('server options only for dedicated')
     artifact=ROOT/'build/artifacts'/f'minecraft-friends-{loader}-1.21.1-0.1.0-SNAPSHOT.jar'
     if not artifact.is_file():p.error('build production JAR first')
     with zipfile.ZipFile(artifact) as z:
@@ -57,6 +58,7 @@ def main():
     proof=sha(artifact)
     before_server=args.server_log.read_bytes() if dedicated else b''
     if dedicated and sha(args.server_mod)!=proof:p.error('installed server mod differs from root artifact')
+    helper_hash=sha(args.server_helper) if dedicated else None
     commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
     diff=subprocess.check_output(['git','diff','HEAD','--'],cwd=ROOT)
     d=HERE/'build/evidence'/f'{args.target}-actions-{time.time_ns()}';d.mkdir(parents=True)
@@ -98,7 +100,7 @@ def main():
             if data is None:f.unlink(missing_ok=True)
             else:f.write_bytes(data)
     text='\n'.join(lines)
-    scenario_checks=(CHECKS if args.scope=='full' else CHECKS[:4]+('result',) if args.scope=='navigation'
+    scenario_checks=(CHECKS if args.scope=='full' else CHECKS[:4]+('result',) if args.scope=='navigation' else CHECKS[:4]+('wooden_door_opened_and_crossed','result') if args.scope=='door'
                      else ('isolated_survival_map','structured_model_plan_moves_companion','invalid_model_action_rejected','planning_inflight_before_stop','late_model_plan_cannot_resume_after_stop','result') if args.scope=='planning'
                      else ('isolated_survival_map','unreachable_fails_within_budget','failed_path_leaves_bot_still','result'))
     required=scenario_checks+('natural_commands_enabled' if args.natural else 'explicit_commands_enabled',)+('dedicated_server_instance' if dedicated else 'integrated_server_instance',)
@@ -108,11 +110,11 @@ def main():
     server_ok=True;server_hash=None
     if dedicated:
         after=args.server_log.read_bytes();tail=after[len(before_server):]
-        server_ok=after.startswith(before_server) and b'MF_M2_SERVER ' in tail and b'result PASS' in tail and sha(args.server_mod)==proof
+        server_ok=after.startswith(before_server) and b'MF_M2_SERVER ' in tail and b'result PASS' in tail and sha(args.server_mod)==proof and sha(args.server_helper)==helper_hash
         server_hash=hashlib.sha256(tail).hexdigest()
     fixture_ok=(fixture is None or fixture.failures==0 and all(fixture.counts.get(k)==1 for k in ('follow','bad','late','late_write_attempt')))
     passed=(fixture_ok and code==0 and not timed_out and not missing and unchanged and source_unchanged and server_ok and 'MF_M2_CLIENT PASS M2_PASS' in text and ' FAIL' not in text)
-    result=dict(target=args.target,natural_commands=args.natural,scope=args.scope,model_fixture_verified=fixture_ok,passed=passed,source_commit=commit,source_diff_sha256=hashlib.sha256(diff).hexdigest(),production_jar_sha256=proof,artifact_unchanged=unchanged,source_unchanged=source_unchanged,exit_code=code,timed_out=timed_out,missing_checks=missing,server_log_verified=server_ok,server_log_tail_sha256=server_hash,elapsed_seconds=round(time.monotonic()-started,2),m2_complete=False,limitations=['Smoke test only; two-player, unreachable, full-backpack, model planning, full baseline percentiles and new-member walkthrough remain separate gates'])
+    result=dict(target=args.target,natural_commands=args.natural,scope=args.scope,model_fixture_verified=fixture_ok,passed=passed,source_commit=commit,source_diff_sha256=hashlib.sha256(diff).hexdigest(),production_jar_sha256=proof,artifact_unchanged=unchanged,source_unchanged=source_unchanged,exit_code=code,timed_out=timed_out,missing_checks=missing,server_log_verified=server_ok,server_log_tail_sha256=server_hash,installed_helper_sha256=helper_hash,elapsed_seconds=round(time.monotonic()-started,2),m2_complete=False,limitations=['Smoke test only; two-player, unreachable, full-backpack, model planning, full baseline percentiles and new-member walkthrough remain separate gates'])
     (d/'summary.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps({'passed':passed,'summary':str(d/'summary.json'),'missing_checks':missing}));return 0 if passed else 1
 if __name__=='__main__':raise SystemExit(main())

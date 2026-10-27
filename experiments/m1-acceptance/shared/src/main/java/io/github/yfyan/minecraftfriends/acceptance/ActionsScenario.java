@@ -48,10 +48,10 @@ public final class ActionsScenario {
                 emit(server instanceof net.minecraft.server.dedicated.DedicatedServer ? "dedicated_server_instance" : "integrated_server_instance",true); return;
             }
             if (phase==0) {
-                baseline.add(server.getAverageTickTimeNanos());
-                if(age>=100) { command("mf companion create MF_M2Bot"); next(1); } return;
+                if(age>60)baseline.add(server.getTickTimesNanos()[Math.floorMod(server.getTickCount()-1,100)]);
+                if(age>=160) { command("mf companion create MF_M2Bot"); next(1); } return;
             }
-            active.add(server.getAverageTickTimeNanos());
+            active.add(server.getTickTimesNanos()[Math.floorMod(server.getTickCount()-1,100)]);
             if(age>2400) { fail("phase_timeout_"+phase); return; }
             if(bot==null) {
                 var entry=CompanionRuntime.data(server).find(owner.getUUID()).orElse(null);
@@ -72,6 +72,12 @@ public final class ActionsScenario {
                         stopped=bot.position();command("mf task follow");next(11);return;
                     }
                     for(int z=0;z<=5;z++) owner.serverLevel().setBlock(new BlockPos(8,-60,z),Blocks.STONE.defaultBlockState(),3);
+                    if ("door".equals(System.getProperty("mf.acceptance.actions.scope"))) {
+                        for(int z=-5;z<=16;z++)for(int y=-60;y<=-58;y++)owner.serverLevel().setBlock(new BlockPos(8,y,z),Blocks.STONE.defaultBlockState(),3);
+                        var lower=Blocks.OAK_DOOR.defaultBlockState().setValue(net.minecraft.world.level.block.DoorBlock.FACING,net.minecraft.core.Direction.EAST);
+                        owner.serverLevel().setBlock(new BlockPos(8,-60,2),lower,2);
+                        owner.serverLevel().setBlock(new BlockPos(8,-59,2),lower.setValue(net.minecraft.world.level.block.DoorBlock.HALF,net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER),2);
+                    }
                     last=bot.position(); maxStep=0; command("mf task follow"); next(2);
                 }
                 case 2 -> {
@@ -83,7 +89,9 @@ public final class ActionsScenario {
                     double step=bot.position().distanceTo(last); maxStep=Math.max(maxStep,step);last=bot.position();
                     if(maxStep>1.5) {fail("navigation_teleport_detected");return;}
                     if(age>30 && bot.distanceTo(owner)<4.5) {
-                        emit("physical_follow_over_obstacle",true); command("mf task wait"); stopped=bot.position();
+                        emit("physical_follow_over_obstacle",true);
+                        if("door".equals(System.getProperty("mf.acceptance.actions.scope"))) check(owner.serverLevel().getBlockState(new BlockPos(8,-60,2)).getValue(net.minecraft.world.level.block.DoorBlock.OPEN),"wooden_door_opened_and_crossed");
+                        command("mf task wait"); stopped=bot.position();
                         owner.teleportTo(23.5,-60,2.5); next(3);
                     }
                 }
@@ -96,7 +104,7 @@ public final class ActionsScenario {
                     if(age==4) stopped=bot.position();
                     if(age>=44) {
                         check(bot.position().distanceTo(stopped)<0.4,"stop_clears_movement");
-                        if ("navigation".equals(System.getProperty("mf.acceptance.actions.scope"))) { complete(); return; }
+                        if (Set.of("navigation","door").contains(System.getProperty("mf.acceptance.actions.scope",""))) { complete(); return; }
                         bot.teleportTo(2.5,-60,6.5);owner.teleportTo(2.5,-60,3.5);
                         for(int x=7;x<=10;x++) for(int y=-60;y<=-59;y++) owner.serverLevel().setBlock(new BlockPos(x,y,6),Blocks.OAK_LOG.defaultBlockState(),3);
                         owner.serverLevel().setBlock(new BlockPos(12,-60,6),Blocks.OAK_LOG.defaultBlockState(),3);
@@ -158,11 +166,12 @@ public final class ActionsScenario {
         } catch(Exception failure) { fail("exception_"+failure.getClass().getSimpleName()); }
     }
     private void complete(){
-        System.out.println("MF_M2_METRIC baseline_mean_tick_ns="+mean(baseline)+" active_mean_tick_ns="+mean(active)+" samples="+active.size());
+        System.out.println("MF_M2_METRIC baseline_mean_tick_ns="+mean(baseline)+" active_mean_tick_ns="+mean(active)+" baseline_p95_tick_ns="+percentile(baseline,.95)+" active_p50_tick_ns="+percentile(active,.5)+" active_p95_tick_ns="+percentile(active,.95)+" active_p99_tick_ns="+percentile(active,.99)+" samples="+active.size());
         emit("result",true);owner.sendSystemMessage(Component.literal("MF_M2 PASS"));finished=true;
     }
     private int logs(){int n=0;for(int x=7;x<=10;x++)for(int y=-60;y<=-59;y++)if(owner.serverLevel().getBlockState(new BlockPos(x,y,6)).is(Blocks.OAK_LOG))n++;return n;}
     private static int inventory(ServerPlayer p){int n=0;for(int i=0;i<p.getInventory().getContainerSize();i++){var s=p.getInventory().getItem(i);if(s.is(Items.OAK_LOG))n+=s.getCount();}return n;}
+    private static long percentile(List<Long> samples,double q){if(samples.isEmpty())return 0;var sorted=new ArrayList<>(samples);sorted.sort(Long::compare);return sorted.get(Math.max(0,(int)Math.ceil(q*sorted.size())-1));}
     private static long mean(List<Long> samples){return samples.isEmpty()?0:(long)samples.stream().mapToLong(Long::longValue).average().orElse(0);}
     private void next(int p){phase=p;age=0;}
     private void command(String command){
