@@ -1,0 +1,33 @@
+{
+  "status": "partial; stopped at creator quota boundary",
+  "remaining_quota_percent": 80,
+  "production_head": "dfecfe602d5428362b12813bc3feab95d2877300",
+  "root_tests": 88,
+  "root_failures": 0,
+  "checkAll": "passed",
+  "passed_evidence": [
+    "fabric-integrated-actions-1793062494442683436",
+    "forge-integrated-actions-1793062808424425247",
+    "fabric-integrated-actions-1793063244058369778",
+    "fabric-integrated-actions-1793064287000560929",
+    "forge-integrated-actions-1793064476685233241",
+    "fabric-integrated-actions-1793064775767976824",
+    "forge-dedicated-actions-peer-1793065815839093611",
+    "fabric-integrated-actions-1793066647215993546"
+  ],
+  "parent_reviewed_dedicated_evidence": [
+    "fabric-dedicated-actions-1793063576409547974",
+    "forge-dedicated-actions-1793063576409453681"
+  ],
+  "remaining": [
+    "最终候选在两个加载器上的完整回归矩阵",
+    "正式性能对照与内存验收（当前只有局部 tick 数据）",
+    "独立安装试走和 Alpha 发布门槛审核",
+    "最新提交的远程 CI 及最终合并审查"
+  ],
+  "m2_complete": false,
+  "merged": false,
+  "remote_model_quality_tested": false,
+  "test_servers": "stopped with worlds saved; last server exit 0",
+  "worker": "closed/not found"
+}
