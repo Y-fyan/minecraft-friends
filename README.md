@@ -6,6 +6,8 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 
 > **项目状态：M0、M1、M2 已通过技术验收，提供 Alpha 预览构建。** 伙伴能聊天、记忆、正常跟随、等待和停止，并在用户授权区域采集橡木、返回交付。Fabric / Minecraft Forge 的单机、普通专服、双玩家隔离和本机性能对照均通过；详见 [M2 验收记录](docs/validation/0014-m2-acceptance.md)。默认启用并使用明确标注的离线演示模型；真实聊天需要配置自己的服务。首次试用见 [安装与短演示](docs/M2-INSTALL.md)。Forge 不等于 NeoForge。
 
+[下载 M2 Alpha 预览](https://github.com/Y-fyan/minecraft-friends/releases/tag/m2-alpha-preview-20261026) · [安装与首次试用](docs/M2-INSTALL.md)
+
 ## 我们希望带来的体验
 
 - **自然交流**：在聊天框中和伙伴说话，分享今天的经历，也可以提出游戏内请求。

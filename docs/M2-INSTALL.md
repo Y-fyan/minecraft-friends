@@ -4,6 +4,8 @@ M2 已通过 [技术验收](validation/0014-m2-acceptance.md)，首次预览包�
 
 ## 安装
 
+从 [M2 Alpha 预览发布页](https://github.com/Y-fyan/minecraft-friends/releases/tag/m2-alpha-preview-20261026) 下载一个对应加载器的 JAR，并用附件 `SHA256SUMS` 核对。发布页同时提供无凭据配置示例。
+
 使用 Minecraft Java 1.21.1 与 Java 21。已测试的环境是 Fabric Loader 0.20.1 / Fabric API 0.116.17+1.21.1，或 Minecraft Forge 52.1.20；Forge 不等于 NeoForge。
 
 从已合并的主分支运行 `./gradlew checkAll --no-daemon`，或下载对应提交 CI 的构建产物。两个 JAR 位于 `build/artifacts/`：
