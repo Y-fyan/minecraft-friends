@@ -39,7 +39,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('target', choices=('fabric-integrated','forge-integrated','fabric-dedicated','forge-dedicated'))
     p.add_argument('--natural',action='store_true')
-    p.add_argument('--scope', choices=('navigation','door','unreachable','planning','respawn','full'), default='full')
+    p.add_argument('--scope', choices=('navigation','door','unreachable','planning','respawn','failures','full'), default='full')
     p.add_argument('--server')
     p.add_argument('--server-log', type=Path)
     p.add_argument('--server-mod', type=Path)
@@ -101,7 +101,7 @@ def main():
             if data is None:f.unlink(missing_ok=True)
             else:f.write_bytes(data)
     text='\n'.join(lines)
-    scenario_checks=(CHECKS+('respawn_restored_live_instance',) if args.scope=='respawn' else CHECKS if args.scope=='full' else CHECKS[:4]+('result',) if args.scope=='navigation' else CHECKS[:4]+('wooden_door_opened_and_crossed','result') if args.scope=='door'
+    scenario_checks=(('isolated_survival_map','full_companion_backpack_preserves_resources','resource_shortage_reports_actual_partial_delivery','mining_cancel_stops_world_changes_and_delivery','result') if args.scope=='failures' else CHECKS+('respawn_restored_live_instance',) if args.scope=='respawn' else CHECKS if args.scope=='full' else CHECKS[:4]+('result',) if args.scope=='navigation' else CHECKS[:4]+('wooden_door_opened_and_crossed','result') if args.scope=='door'
                      else ('isolated_survival_map','structured_model_plan_moves_companion','invalid_model_action_rejected','planning_inflight_before_stop','late_model_plan_cannot_resume_after_stop','result') if args.scope=='planning'
                      else ('isolated_survival_map','unreachable_fails_within_budget','failed_path_leaves_bot_still','result'))
     required=scenario_checks+('natural_commands_enabled' if args.natural else 'explicit_commands_enabled',)+('dedicated_server_instance' if dedicated else 'integrated_server_instance',)

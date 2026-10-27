@@ -19,7 +19,7 @@ public final class ActionsScenario {
     private static final Map<MinecraftServer, ActionsScenario> RUNS = new WeakHashMap<>();
     private final MinecraftServer server;
     private ServerPlayer owner, bot;
-    private int phase, age, ticks;
+    private int phase, age, ticks, stoppedCount;
     private Vec3 last, stopped;
     private boolean finished;
     private boolean respawned;
@@ -64,6 +64,12 @@ public final class ActionsScenario {
             switch(phase) {
                 case 1 -> {
                     // One-time fixture placement before any navigation input.
+                    if("failures".equals(System.getProperty("mf.acceptance.actions.scope"))) {
+                        bot.teleportTo(2.5,-60,6.5);owner.teleportTo(2.5,-60,3.5);
+                        for(int x=7;x<=10;x++)for(int y=-60;y<=-59;y++)owner.serverLevel().setBlock(new BlockPos(x,y,6),Blocks.OAK_LOG.defaultBlockState(),3);
+                        for(int slot=0;slot<36;slot++)bot.getInventory().setItem(slot,new net.minecraft.world.item.ItemStack(Items.STONE,64));
+                        command("mf task area 7 -60 6 10 -59 6");next(22);return;
+                    }
                     if("respawn".equals(System.getProperty("mf.acceptance.actions.scope")) && !respawned) {
                         killed=bot;bot.invulnerableTime=0;bot.hurt(server.overworld().damageSources().genericKill(),Float.MAX_VALUE);next(21);return;
                     }
@@ -173,6 +179,28 @@ public final class ActionsScenario {
                         bot=live;respawned=true;check(true,"respawn_restored_live_instance");next(1);
                     }
                 }
+                case 22 -> {if(age>=20){command("mf task collect oak_log 8");next(23);}}
+                case 23 -> {
+                    if("FAILED".equals(ActionRuntime.status(server,owner.getUUID()).state().name())) {
+                        check(logs()==8 && inventory(owner)==0,"full_companion_backpack_preserves_resources");
+                        bot.getInventory().clearContent();
+                        for(int x=7;x<=10;x++)for(int y=-60;y<=-59;y++)if(!(x==7&&y==-60))owner.serverLevel().setBlock(new BlockPos(x,y,6),Blocks.AIR.defaultBlockState(),3);
+                        command("mf task area 7 -60 6 10 -59 6");next(24);
+                    }
+                }
+                case 24 -> {if(age>=20){command("mf task collect oak_log 8");next(25);}}
+                case 25 -> {
+                    if("FAILED".equals(ActionRuntime.status(server,owner.getUUID()).state().name()) && age>20) {
+                        check(logs()==0 && inventory(owner)==1 && inventory(bot)==0,"resource_shortage_reports_actual_partial_delivery");
+                        owner.getInventory().clearContent();
+                        for(int x=7;x<=10;x++)for(int y=-60;y<=-59;y++)owner.serverLevel().setBlock(new BlockPos(x,y,6),Blocks.OAK_LOG.defaultBlockState(),3);
+                        command("mf task area 7 -60 6 10 -59 6");next(26);
+                    }
+                }
+                case 26 -> {if(age>=20){command("mf task collect oak_log 8");next(27);}}
+                case 27 -> {if(logs()<8){command("mf task stop");next(28);}}
+                case 28 -> {if("CANCELLED".equals(ActionRuntime.status(server,owner.getUUID()).state().name())){stoppedCount=logs();next(29);}}
+                case 29 -> {if(age>=40){check(logs()==stoppedCount && inventory(owner)==0,"mining_cancel_stops_world_changes_and_delivery");complete();}}
                 default -> fail("invalid_phase");
             }
         } catch(Exception failure) { fail("exception_"+failure.getClass().getSimpleName()); }

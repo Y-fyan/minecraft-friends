@@ -630,6 +630,11 @@ public final class ActionRuntime {
                     "维度、距离或授权状态变化，已停止采集。");
             return;
         }
+        if (execution.logsPicked < request.requestedCount() && oakLogCapacity(companion) == 0) {
+            completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
+                    "伙伴背包已满，已停止挖掘并按实际数量返回。");
+            return;
+        }
         if (execution.logsPicked >= request.requestedCount()) {
             completeCollection(server, state, ownerState, owner, companion, TaskState.SUCCEEDED,
                     "已拾取到请求数量，正在交付主人。");
