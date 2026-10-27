@@ -38,6 +38,10 @@ public final class AcceptanceClient {
         }
     }
     public static void tick(Minecraft client) {
+        client.options.pauseOnLostFocus = false;
+        if (client.level != null && client.screen instanceof net.minecraft.client.gui.screens.PauseScreen) {
+            client.setScreen(null);
+        }
         if (finished) { return; }
         if (++diagnosticTicks % 100 == 1) {
             System.out.println("MF_ACCEPTANCE_SCREEN "

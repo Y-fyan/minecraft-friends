@@ -109,6 +109,7 @@ def main():
                      else ('isolated_survival_map','unreachable_fails_within_budget','failed_path_leaves_bot_still','result'))
     if args.scope=='return-stop':scenario_checks=CHECKS[:5]+('stop_before_delivery_keeps_real_items_with_companion','result')
     if args.scope=='performance':scenario_checks=('isolated_survival_map','performance_variant_conditions','performance_samples','performance_local_tick_budget','result')
+    if args.scope=='performance' and args.variant=='active':scenario_checks+=('performance_readonly_microbenchmarks',)
     if args.scope=='failures' and loader=='forge':scenario_checks+=('forge_break_event_cancellation_preserves_block',)
     required=scenario_checks+('natural_commands_enabled' if args.natural else 'explicit_commands_enabled',)+('dedicated_server_instance' if dedicated else 'integrated_server_instance',)
     missing=[tag for tag in required if not re.search(r'MF_M2_SERVER \S+ '+re.escape(tag)+r' PASS',text)]

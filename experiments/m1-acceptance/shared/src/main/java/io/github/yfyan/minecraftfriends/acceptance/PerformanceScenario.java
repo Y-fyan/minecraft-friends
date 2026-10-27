@@ -19,6 +19,8 @@ public final class PerformanceScenario {
     private final MinecraftServer server;
     private final String variant = System.getProperty("mf.acceptance.performance.variant", "");
     private final List<Long> samples = new ArrayList<>();
+    private final List<Long> perceptionSamples = new ArrayList<>(), pathSamples = new ArrayList<>();
+    private java.lang.reflect.Method pathSearch;
     private ServerPlayer owner, bot;
     private int age, ticks, phase;
     private boolean finished;
@@ -56,6 +58,11 @@ public final class PerformanceScenario {
                     if(entry==null)return;
                     bot=server.getPlayerList().getPlayer(entry.identity().companionId());if(bot==null)return;
                     bot.teleportTo(2.5,-60,2.5);last=bot.position();
+                    if(variant.equals("active")) {
+                        pathSearch=Class.forName("io.github.yfyan.minecraftfriends.action.SurfacePathfinder").getDeclaredMethod(
+                            "find",net.minecraft.server.level.ServerLevel.class,BlockPos.class,BlockPos.class,int.class);
+                        pathSearch.setAccessible(true);
+                    }
                     command(variant.equals("active")?"mf task follow":"mf task wait");
                 }
                 phase=1;age=0;return;
@@ -71,6 +78,15 @@ public final class PerformanceScenario {
             if(age>160) {
                 long elapsed=server.getTickTimesNanos()[Math.floorMod(server.getTickCount()-1,100)];
                 if(elapsed<=0)throw new IllegalStateException("invalid_tick_sample");samples.add(elapsed);
+                if(variant.equals("active") && age%20==0) {
+                    // Read-only microbenchmarks of the real implementations, on the game
+                    // thread. These include reflection overhead and are not executor spans.
+                    long began=System.nanoTime();
+                    if(ActionRuntime.perception(server,owner.getUUID()).isEmpty())throw new IllegalStateException("perception_missing");
+                    perceptionSamples.add(System.nanoTime()-began);
+                    began=System.nanoTime();pathSearch.invoke(null,bot.serverLevel(),bot.blockPosition(),owner.blockPosition(),1);
+                    pathSamples.add(System.nanoTime()-began);
+                }
             }
             if(samples.size()==600) {
                 boolean conditions=variant.equals("disabled")?server.getPlayerList().getPlayers().size()==1:
@@ -80,7 +96,12 @@ public final class PerformanceScenario {
                 System.out.println("MF_M2_METRIC variant="+(variant.equals("disabled")?0:variant.equals("idle")?1:2)
                     +" count="+samples.size()+" p50_us="+percentile(.5)/1000+" p95_us="+p95/1000+" p99_us="+p99/1000
                     +" max_us="+Collections.max(samples)/1000+" heap_start_bytes="+heapStart+" heap_used_bytes="+usedHeap()
-                    +" max_heap_bytes="+Runtime.getRuntime().maxMemory()+" distance_milli="+Math.round(displacement*1000));
+                    +" max_heap_bytes="+Runtime.getRuntime().maxMemory()+" distance_milli="+Math.round(displacement*1000)
+                    +" perception_calls="+perceptionSamples.size()+" perception_p95_us="+percentile(perceptionSamples,.95)/1000
+                    +" perception_max_us="+(perceptionSamples.isEmpty()?0:Collections.max(perceptionSamples)/1000)
+                    +" path_calls="+pathSamples.size()+" path_p95_us="+percentile(pathSamples,.95)/1000
+                    +" path_max_us="+(pathSamples.isEmpty()?0:Collections.max(pathSamples)/1000));
+                if(variant.equals("active"))check(perceptionSamples.size()==30 && pathSamples.size()==30,"performance_readonly_microbenchmarks");
                 check(p95<50_000_000L && p99<100_000_000L,"performance_local_tick_budget");
                 if(bot!=null)command("mf task stop");
                 emit("result",true);owner.sendSystemMessage(Component.literal("MF_M2 PASS"));finished=true;
@@ -91,7 +112,8 @@ public final class PerformanceScenario {
         }
     }
     private static long usedHeap(){return Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();}
-    private long percentile(double q){var sorted=new ArrayList<>(samples);sorted.sort(Long::compare);return sorted.get((int)Math.ceil(q*sorted.size())-1);}
+    private long percentile(double q){return percentile(samples,q);}
+    private static long percentile(List<Long> input,double q){if(input.isEmpty())return 0;var sorted=new ArrayList<>(input);sorted.sort(Long::compare);return sorted.get((int)Math.ceil(q*sorted.size())-1);}
     private void command(String c){owner.sendSystemMessage(Component.literal("MF_M2 COMMAND "+c));}
     private void check(boolean ok,String tag){emit(tag,ok);if(!ok)throw new IllegalStateException(tag);}
     private void emit(String tag,boolean ok){System.out.println("MF_M2_SERVER "+server.getClass().getName()+" "+tag+" "+(ok?"PASS":"FAIL"));}
