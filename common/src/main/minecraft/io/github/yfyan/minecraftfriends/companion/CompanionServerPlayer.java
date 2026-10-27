@@ -21,17 +21,37 @@ public final class CompanionServerPlayer extends ServerPlayer {
     @Override
     public void tick() {
         super.tick();
-        // Local connections do not drive ServerPlayer.doTick/Player.aiStep.
-        // Run only vanilla item contact, using the non-riding Player.aiStep bounds.
-        if (!CompanionRuntime.isEnabled() || !isAlive() || isSpectator() || isPassenger() || !CompanionRuntime.isCompanion(this)) {
-            return;
-        }
+        touchLocalItems(this);
+    }
+
+    /** Also supports vanilla ServerPlayer instances returned by PlayerList.respawn. */
+    public static void touchLocalItems(ServerPlayer player) {
+        if (!CompanionRuntime.isEnabled() || !player.isAlive() || player.isSpectator()
+                || player.isPassenger() || !CompanionRuntime.isCompanion(player)) return;
         var nearby = new ArrayList<ItemEntity>();
-        serverLevel().getEntities(EntityTypeTest.forClass(ItemEntity.class),
-                getBoundingBox().inflate(1.0, 0.5, 1.0), ItemEntity::isAlive, nearby, 32);
-        for (ItemEntity item : nearby) {
-            item.playerTouch(this);
+        player.serverLevel().getEntities(EntityTypeTest.forClass(ItemEntity.class),
+                player.getBoundingBox().inflate(1.0,0.5,1.0),ItemEntity::isAlive,nearby,32);
+        for(ItemEntity item:nearby) {
+            java.util.UUID id=item.getUUID();
+            int stackBefore=item.getItem().getCount();
+            boolean fallback=!(player instanceof CompanionServerPlayer)
+                    && item.getItem().is(net.minecraft.world.item.Items.OAK_LOG);
+            int inventoryBefore=fallback?oakCount(player):0;
+            item.playerTouch(player);
+            if(fallback) {
+                int accepted=Math.min(stackBefore,Math.max(0,oakCount(player)-inventoryBefore));
+                if(accepted>0)ActionRuntime.onItemPickedUp(player,id,accepted,stackBefore);
+            }
         }
+    }
+
+    private static int oakCount(ServerPlayer player) {
+        int result=0;
+        for(int slot=0;slot<player.getInventory().getContainerSize();slot++) {
+            var stack=player.getInventory().getItem(slot);
+            if(stack.is(net.minecraft.world.item.Items.OAK_LOG))result+=stack.getCount();
+        }
+        return result;
     }
 
     @Override

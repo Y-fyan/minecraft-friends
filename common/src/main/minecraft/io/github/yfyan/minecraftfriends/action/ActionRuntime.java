@@ -276,6 +276,9 @@ public final class ActionRuntime {
                 state.owners.remove(ownerId);
                 continue;
             }
+            if (!(companion instanceof io.github.yfyan.minecraftfriends.companion.CompanionServerPlayer)) {
+                io.github.yfyan.minecraftfriends.companion.CompanionServerPlayer.touchLocalItems(companion);
+            }
             if (ownerState.execution == null) {
                 ActionStatus next = state.scheduler.startNext(ownerId).orElse(null);
                 if (next == null) {
