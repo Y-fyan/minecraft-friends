@@ -23,7 +23,7 @@ public final class CompanionServerPlayer extends ServerPlayer {
         super.tick();
         // Local connections do not drive ServerPlayer.doTick/Player.aiStep.
         // Run only vanilla item contact, using the non-riding Player.aiStep bounds.
-        if (!isAlive() || isSpectator() || isPassenger() || !CompanionRuntime.isCompanion(this)) {
+        if (!CompanionRuntime.isEnabled() || !isAlive() || isSpectator() || isPassenger() || !CompanionRuntime.isCompanion(this)) {
             return;
         }
         var nearby = new ArrayList<ItemEntity>();
