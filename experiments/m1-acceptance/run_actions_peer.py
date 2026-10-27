@@ -19,7 +19,7 @@ CHECKS = ('ready_uuid_and_fresh_dedicated_map', 'two_owned_companions_created_by
           'both_follow_physical_displacement', 'b_stop_isolated_a_keeps_moving',
           'a_stop_isolated_b_keeps_moving', 'extra_owner_stop_rejected_without_cross_cancel',
           'both_stopped_still_40_ticks', 'result')
-SERVER = re.compile(r'MF_M2_PEER_SERVER net\.minecraft\.server\.dedicated\.DedicatedServer '
+SERVER = re.compile(r'MF_M2_PEER_SERVER (?:net\.minecraft\.server\.dedicated\.DedicatedServer|net\.minecraft\.class_3176) '
                     r'([a-z0-9_]+) (PASS|FAIL)(?: ([A-Za-z0-9_-]+))?')
 CLIENT = re.compile(r'MF_M2_PEER_CLIENT (?:(READY|PASS) role=([ab]) username=(MF_M2_[AB])'
                     r'|FAIL role=([a-z]+) code=([A-Za-z0-9_-]+)|SENT role=([ab]))')
@@ -32,8 +32,9 @@ def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def marker(raw, pattern):
+def marker(raw, pattern, server_console=False):
     text = ANSI.sub('', raw.strip())
+    if server_console:text=re.sub(r'^>\s*','',text)
     found = pattern.search(text)
     if found is None or found.end() != len(text):
         return None
@@ -201,10 +202,10 @@ def main():
             raise ValueError('unexpected_chat_not_retained')
         (evidence / 'server-tail.log').write_bytes(tail)  # Exact raw append; no chat retained.
         for line in text.splitlines():
-            identity = marker(line, IDENTITY)
+            identity = marker(line, IDENTITY,True)
             if identity:
                 identities[identity[1]] = {'owner': identity[2], 'companion': identity[3]}
-            match = marker(line, SERVER)
+            match = marker(line, SERVER,True)
             if match:
                 check, outcome, detail = match.groups()
                 checks[check] = outcome

@@ -8,7 +8,7 @@ public final class ClientAcceptanceDispatch {
     private ClientAcceptanceDispatch() { }
     public static void tick(Minecraft client) {
         switch (AcceptanceMode.CURRENT) {
-            case ACTIONS -> ActionsClient.tick(client);
+            case ACTIONS -> { if ("peer".equals(System.getProperty("mf.acceptance.actions.scope"))) ActionsPeerClient.tick(client); else ActionsClient.tick(client); }
             case STANDARD -> AcceptanceClient.tick(client);
             case PEER -> PeerClient.tick(client);
             case EVENTS -> EventsClient.tick(client);
@@ -17,7 +17,7 @@ public final class ClientAcceptanceDispatch {
     }
     public static void message(String text) {
         switch (AcceptanceMode.CURRENT) {
-            case ACTIONS -> ActionsClient.message(text);
+            case ACTIONS -> { if ("peer".equals(System.getProperty("mf.acceptance.actions.scope"))) ActionsPeerClient.message(text); else ActionsClient.message(text); }
             case STANDARD -> AcceptanceClient.message(text);
             case PEER -> PeerClient.message(text);
             case EVENTS -> EventsClient.message(text);

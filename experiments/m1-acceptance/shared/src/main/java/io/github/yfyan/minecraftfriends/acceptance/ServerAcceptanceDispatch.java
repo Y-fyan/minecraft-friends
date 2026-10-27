@@ -12,7 +12,7 @@ public final class ServerAcceptanceDispatch {
     }
     public static void commands(CommandDispatcher<CommandSourceStack> dispatcher) {
         switch (AcceptanceMode.CURRENT) {
-            case ACTIONS -> ActionsScenario.registerCommands(dispatcher);
+            case ACTIONS -> { if ("peer".equals(System.getProperty("mf.acceptance.actions.scope"))) ActionsPeerScenario.registerCommands(dispatcher); else ActionsScenario.registerCommands(dispatcher); }
             case STANDARD -> AcceptanceScenario.registerCommands(dispatcher);
             case PEER -> PeerScenario.registerCommands(dispatcher);
             case EVENTS -> EventsScenario.registerCommands(dispatcher);
@@ -21,7 +21,7 @@ public final class ServerAcceptanceDispatch {
     }
     public static void tick(MinecraftServer server) {
         switch (AcceptanceMode.CURRENT) {
-            case ACTIONS -> ActionsScenario.tick(server);
+            case ACTIONS -> { if ("peer".equals(System.getProperty("mf.acceptance.actions.scope"))) ActionsPeerScenario.tick(server); else ActionsScenario.tick(server); }
             case STANDARD -> AcceptanceScenario.tick(server);
             case PEER -> PeerScenario.tick(server);
             case EVENTS -> EventsScenario.tick(server);
@@ -30,7 +30,7 @@ public final class ServerAcceptanceDispatch {
     }
     public static void stopped(MinecraftServer server) {
         switch (AcceptanceMode.CURRENT) {
-            case ACTIONS -> ActionsScenario.remove(server);
+            case ACTIONS -> { if ("peer".equals(System.getProperty("mf.acceptance.actions.scope"))) ActionsPeerScenario.remove(server); else ActionsScenario.remove(server); }
             case STANDARD -> AcceptanceScenario.remove(server);
             case PEER -> PeerScenario.remove(server);
             case EVENTS -> EventsScenario.remove(server);
