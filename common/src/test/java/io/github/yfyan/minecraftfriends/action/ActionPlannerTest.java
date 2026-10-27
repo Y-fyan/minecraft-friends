@@ -117,6 +117,25 @@ class ActionPlannerTest {
         drainMain(); assertEquals("QUEUE_FULL", status().reason()); assertTrue(requests.isEmpty());
     }
 
+    @Test void cancellationBeforeWorkerStartsDoesNotInvokeProvider() {
+        request(snapshot, provider(nonCancellable()));
+        planner.cancel(snapshot.ownerId()); workers.remove().run(); drainMain();
+        assertTrue(requests.isEmpty()); assertTrue(applied.isEmpty());
+    }
+
+    @Test void providerFailureIsReportedOnMainWithoutApplyingActions() {
+        request(snapshot, provider(CompletableFuture.failedFuture(new IllegalStateException("test failure"))));
+        workers.remove().run();
+        assertEquals(ActionPlanner.State.PLANNING, status().state());
+        drainMain(); assertEquals("PROVIDER_FAILED", status().reason()); assertTrue(applied.isEmpty());
+    }
+
+    @Test void deadlineIsRecheckedEvenWhenAResponseIsAlreadyQueued() {
+        request(snapshot, provider(CompletableFuture.completedFuture(new ModelResponse("{\"action\":\"follow\"}"))));
+        workers.remove().run(); now.set(Duration.ofSeconds(30).toNanos()); drainMain();
+        assertEquals(ActionPlanner.State.TIMED_OUT, status().state()); assertTrue(applied.isEmpty());
+    }
+
     @Test void perceptionIsImmutableAndBounded() {
         var blocks = new ArrayList<ActionPerception.Block>();
         var copied = new ActionPerception(snapshot.worldSession(), snapshot.ownerId(), snapshot.companionId(),

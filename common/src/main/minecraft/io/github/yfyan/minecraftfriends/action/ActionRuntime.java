@@ -2,6 +2,9 @@ package io.github.yfyan.minecraftfriends.action;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import io.github.yfyan.minecraftfriends.chat.ChatRuntime;
+import net.minecraft.core.registries.BuiltInRegistries;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import io.github.yfyan.minecraftfriends.companion.CompanionData;
@@ -55,7 +58,8 @@ public final class ActionRuntime {
 
     public static void onServerStarted(MinecraftServer server) {
         synchronized (SERVERS) {
-            SERVERS.put(server, new ServerState());
+            ServerState previous = SERVERS.put(server, new ServerState(server));
+            if (previous != null) previous.planner.close();
         }
     }
 
@@ -65,6 +69,10 @@ public final class ActionRuntime {
                 .then(literal("wait").executes(context -> start(context.getSource(), ActionType.WAIT)))
                 .then(literal("stop").executes(context -> stop(context.getSource())))
                 .then(literal("status").executes(context -> sendStatus(context.getSource())))
+                .then(literal("clear").executes(context -> stop(context.getSource())))
+                .then(literal("plan").then(argument("instruction", StringArgumentType.greedyString())
+                        .executes(context -> plan(context.getSource(),
+                                StringArgumentType.getString(context, "instruction")))))
                 .then(literal("area")
                         .then(argument("x1", IntegerArgumentType.integer())
                                 .then(argument("y1", IntegerArgumentType.integer())
@@ -95,6 +103,135 @@ public final class ActionRuntime {
         return state.scheduler.status(ownerId).orElseGet(ActionRuntime::idleStatus);
     }
 
+    public static void cancelPlanning(MinecraftServer server, UUID ownerId) {
+        ServerState state = stateIfStarted(server);
+        if (state != null) state.planner.cancel(ownerId);
+    }
+
+    public static void cancelAllPlanning(MinecraftServer server) {
+        ServerState state = stateIfStarted(server);
+        if (state != null) state.planner.cancelAll();
+    }
+
+    public static ActionPlanner.Status planningStatus(MinecraftServer server, UUID ownerId) {
+        ServerState state = stateIfStarted(server);
+        return state == null ? new ActionPlanner.Status(IDLE_TASK_ID, ActionPlanner.State.IDLE, "")
+                : state.planner.status(ownerId);
+    }
+
+    /** Server-thread only. Never loads chunks or exposes live objects, NBT, containers or other players. */
+    public static java.util.Optional<ActionPerception> perception(MinecraftServer server, UUID ownerId) {
+        ServerPlayer owner = server.getPlayerList().getPlayer(ownerId);
+        if (owner == null || !owner.isAlive()) return java.util.Optional.empty();
+        try {
+            CompanionData.Entry entry = requireLiveCompanion(owner);
+            ServerState state = stateIfStarted(server);
+            if (state == null) return java.util.Optional.empty();
+            ServerPlayer companion = server.getPlayerList().getPlayer(entry.identity().companionId());
+            OwnerState os = state.owners.get(ownerId);
+            BlockArea area = os != null && os.area != null && server.getTickCount() <= os.areaExpiresAt
+                    && owner.serverLevel().dimension().equals(os.areaDimension) ? os.area : null;
+            List<ActionPerception.Block> blocks = new ArrayList<>();
+            BlockPos origin = companion.blockPosition();
+            ServerLevel level = companion.serverLevel();
+            // Examine at most 245 positions; retain at most 64 non-air observations to bound the prompt.
+            for (int dy = -2; dy <= 2; dy++) for (int dx = -3; dx <= 3; dx++) for (int dz = -3; dz <= 3; dz++) {
+                BlockPos pos = origin.offset(dx, dy, dz);
+                if (blocks.size() >= 64 || !level.hasChunkAt(pos) || level.isOutsideBuildHeight(pos)) continue;
+                BlockState block = level.getBlockState(pos);
+                if (!block.isAir()) blocks.add(new ActionPerception.Block(pos.getX(), pos.getY(), pos.getZ(),
+                        BuiltInRegistries.BLOCK.getKey(block.getBlock()).toString()));
+            }
+            List<ActionPerception.InventorySlot> inventory = new ArrayList<>();
+            for (int slot = 0; slot < Math.min(41, companion.getInventory().getContainerSize()); slot++) {
+                ItemStack stack = companion.getInventory().getItem(slot);
+                if (!stack.isEmpty()) inventory.add(new ActionPerception.InventorySlot(slot,
+                        BuiltInRegistries.ITEM.getKey(stack.getItem()).toString(), Math.min(99, stack.getCount())));
+            }
+            return java.util.Optional.of(new ActionPerception(state.worldSession, ownerId, companion.getUUID(),
+                    level.dimension().location().toString(), server.getTickCount(), position(owner), position(companion),
+                    owner.getHealth(), companion.getHealth(), blocks, inventory, area));
+        } catch (CommandSyntaxException unavailable) {
+            return java.util.Optional.empty();
+        }
+    }
+
+    private static ActionPerception.Position position(ServerPlayer player) {
+        return new ActionPerception.Position(player.getX(), player.getY(), player.getZ());
+    }
+
+    private static int plan(CommandSourceStack source, String instruction) throws CommandSyntaxException {
+        ServerPlayer owner = source.getPlayerOrException();
+        CompanionData.Entry entry = requireLiveCompanion(owner);
+        if (!owner.isAlive()) throw commandError("主人当前不可执行任务。", null);
+        ChatRuntime.PlanningAccess access = ChatRuntime.planningAccess(owner.server);
+        if (access == null) throw commandError("任务规划不可用；请检查现有模型配置。", null);
+        ServerState state = state(owner.server);
+        OwnerState os = ownerState(state, owner, entry.identity().companionId());
+        if (owner.server.getTickCount() < os.nextPlanTick) throw commandError("请稍后再请求规划。", null);
+        if (instruction.isBlank() || instruction.length() > ActionPlanner.MAX_INSTRUCTION_CHARS)
+            throw commandError("任务描述限 1 至 512 字符。", null);
+        BlockArea area = os.area;
+        var areaDimension = os.areaDimension;
+        long expires = os.areaExpiresAt;
+        cancelOwner(owner.server, state, owner.getUUID(), os);
+        os.area = area;
+        os.areaDimension = areaDimension;
+        os.areaExpiresAt = expires;
+        os.dimension = owner.serverLevel().dimension();
+        ActionPerception snapshot = perception(owner.server, owner.getUUID()).orElseThrow(
+                () -> commandError("无法获取当前伙伴观测。", null));
+        ServerPlayer companion = owner.server.getPlayerList().getPlayer(entry.identity().companionId());
+        os.nextPlanTick = owner.server.getTickCount() + 20;
+        try {
+            state.planner.request(snapshot, instruction, access.provider(), access.worker(), access.timeout(),
+                    access.contextBudget(), new ActionPlanner.Handler() {
+                        @Override
+                        public boolean revalidate(ActionPlanner.Ticket ticket, ActionPerception captured, ActionPlan plan) {
+                            if (stateIfStarted(owner.server) != state || !state.worldSession.equals(captured.worldSession())
+                                    || owner.server.getPlayerList().getPlayer(owner.getUUID()) != owner
+                                    || owner.server.getPlayerList().getPlayer(companion.getUUID()) != companion
+                                    || !owner.isAlive() || !companion.isAlive() || !CompanionRuntime.isEnabled()
+                                    || !owner.serverLevel().dimension().location().toString().equals(captured.dimension())
+                                    || !companion.serverLevel().dimension().equals(owner.serverLevel().dimension())
+                                    || owner.server.getTickCount() - captured.capturedTick() > 600
+                                    || ChatRuntime.planningAccess(owner.server) == null) return false;
+                            try {
+                                if (!requireLiveCompanion(owner).identity().companionId().equals(captured.companionId())) return false;
+                            } catch (CommandSyntaxException unavailable) { return false; }
+                            if (plan.type() != ActionType.COLLECT_OAK_LOGS) return true;
+                            return captured.authorizedArea() != null && captured.authorizedArea().equals(os.area)
+                                    && owner.server.getTickCount() <= os.areaExpiresAt
+                                    && owner.serverLevel().dimension().equals(os.areaDimension)
+                                    && validAreaBounds(owner.serverLevel(), os.area) && loaded(owner.serverLevel(), os.area)
+                                    && areaNear(owner, os.area, MAX_AREA_DISTANCE) && areaNear(companion, os.area, MAX_AREA_DISTANCE);
+                        }
+                        @Override
+                        public void apply(ActionPlanner.Ticket ticket, ActionPerception captured, ActionPlan result) {
+                            try {
+                                switch (result.type()) {
+                                    case STOP -> stopFor(owner);
+                                    case FOLLOW, WAIT -> startFor(owner, result.type(), ticket.requestId());
+                                    case COLLECT_OAK_LOGS -> collectForOwner(owner, result.count(), ticket.requestId());
+                                    default -> throw new IllegalArgumentException("Unsupported action");
+                                }
+                            } catch (CommandSyntaxException refused) { throw new IllegalStateException(refused); }
+                        }
+                        @Override
+                        public void onOutcome(ActionPlanner.Status outcome) {
+                            if (stateIfStarted(owner.server) == state
+                                    && owner.server.getPlayerList().getPlayer(owner.getUUID()) == owner)
+                                owner.sendSystemMessage(Component.literal("任务规划 " + outcome.state() + " / " + outcome.reason()
+                                        + "；实际执行结果请查 /mf task status。"));
+                        }
+                    });
+        } catch (IllegalArgumentException | IllegalStateException refused) {
+            throw commandError("规划请求被拒绝：指令、上下文预算或队列超限。", null);
+        }
+        owner.sendSystemMessage(Component.literal("已请求后台结构化规划；可随时 /mf task stop。"));
+        return 1;
+    }
+
     public static void onTick(MinecraftServer server) {
         ServerState state = stateIfStarted(server);
         if (state == null) {
@@ -108,6 +245,7 @@ public final class ActionRuntime {
             state.requests.clear();
             return;
         }
+        state.planner.expire();
         List<UUID> ownerIds = new ArrayList<>(state.owners.keySet());
         if (ownerIds.isEmpty()) {
             return;
@@ -250,6 +388,7 @@ public final class ActionRuntime {
             cancelOwner(server, state, ownerId, state.owners.get(ownerId));
         }
         synchronized (SERVERS) {
+            state.planner.close();
             SERVERS.remove(server);
         }
     }
@@ -279,13 +418,17 @@ public final class ActionRuntime {
     }
 
     private static int startFor(ServerPlayer owner, ActionType type) throws CommandSyntaxException {
+        return startFor(owner, type, UUID.randomUUID());
+    }
+
+    private static int startFor(ServerPlayer owner, ActionType type, UUID taskId) throws CommandSyntaxException {
         CompanionData.Entry entry = requireLiveCompanion(owner);
         ServerState serverState = state(owner.server);
         OwnerState ownerState = ownerState(serverState, owner, entry.identity().companionId());
         cancelOwner(owner.server, serverState, owner.getUUID(), ownerState);
         ActionRequest request = type == ActionType.FOLLOW
-                ? ActionRequest.follow(UUID.randomUUID(), owner.getUUID())
-                : ActionRequest.waitForOwner(UUID.randomUUID(), owner.getUUID());
+                ? ActionRequest.follow(taskId, owner.getUUID())
+                : ActionRequest.waitForOwner(taskId, owner.getUUID());
         submit(serverState, ownerState, request);
         owner.sendSystemMessage(Component.literal(type == ActionType.FOLLOW
                 ? "伙伴开始以正常移动跟随。" : "伙伴已停止移动并等待。"));
@@ -309,6 +452,7 @@ public final class ActionRuntime {
     private static int sendStatus(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer owner = source.getPlayerOrException();
         ActionStatus current = status(owner.server, owner.getUUID());
+        owner.sendSystemMessage(Component.literal("规划 " + planningStatus(owner.server, owner.getUUID())));
         owner.sendSystemMessage(Component.literal("任务 " + current.taskId() + " / " + current.type()
                 + " / " + current.state() + " / " + current.completed() + "/" + current.requested()
                 + " / 已交付 " + current.delivered() + " / " + current.message()));
@@ -336,6 +480,7 @@ public final class ActionRuntime {
         }
         ServerState serverState = state(owner.server);
         OwnerState ownerState = ownerState(serverState, owner, entry.identity().companionId());
+        serverState.planner.cancel(owner.getUUID());
         ownerState.area = area;
         ownerState.areaDimension = level.dimension();
         ownerState.areaExpiresAt = owner.server.getTickCount() + 20L * 60L * 5L;
@@ -349,6 +494,10 @@ public final class ActionRuntime {
     }
 
     private static int collectForOwner(ServerPlayer owner, int count) throws CommandSyntaxException {
+        return collectForOwner(owner, count, UUID.randomUUID());
+    }
+
+    private static int collectForOwner(ServerPlayer owner, int count, UUID taskId) throws CommandSyntaxException {
         CompanionData.Entry entry = requireLiveCompanion(owner);
         ServerState serverState = state(owner.server);
         OwnerState ownerState = ownerState(serverState, owner, entry.identity().companionId());
@@ -366,7 +515,7 @@ public final class ActionRuntime {
             throw commandError("区域加载状态或距离已变化；请重新授权。", null);
         }
         ActionRequest request = ActionRequest.collectOakLogs(
-                UUID.randomUUID(), owner.getUUID(), ownerState.area, count);
+                taskId, owner.getUUID(), ownerState.area, count);
         ownerState.area = null;
         ownerState.areaDimension = null;
         cancelOwner(owner.server, serverState, owner.getUUID(), ownerState);
@@ -1019,6 +1168,7 @@ public final class ActionRuntime {
             return;
         }
         OwnerState ownerState = knownOwnerState != null ? knownOwnerState : state.owners.get(ownerId);
+        state.planner.cancel(ownerId);
         state.scheduler.stop(ownerId);
         state.requests.entrySet().removeIf(entry -> entry.getValue().ownerId().equals(ownerId));
         if (ownerState != null) {
@@ -1112,7 +1262,7 @@ public final class ActionRuntime {
 
     private static ServerState state(MinecraftServer server) {
         synchronized (SERVERS) {
-            return SERVERS.computeIfAbsent(server, ignored -> new ServerState());
+            return SERVERS.computeIfAbsent(server, ignored -> new ServerState(server));
         }
     }
 
@@ -1123,6 +1273,11 @@ public final class ActionRuntime {
     }
 
     private static final class ServerState {
+        private final UUID worldSession = UUID.randomUUID();
+        private final ActionPlanner planner;
+        private ServerState(MinecraftServer server) {
+            planner = new ActionPlanner(server::execute, System::nanoTime);
+        }
         private final ActionScheduler scheduler = new ActionScheduler();
         private final Map<UUID, ActionRequest> requests = new HashMap<>();
         private final Map<UUID, OwnerState> owners = new HashMap<>();
@@ -1138,6 +1293,7 @@ public final class ActionRuntime {
         private BlockArea area;
         private net.minecraft.resources.ResourceKey<Level> areaDimension;
         private long areaExpiresAt;
+        private long nextPlanTick;
         private Execution execution;
     }
 
