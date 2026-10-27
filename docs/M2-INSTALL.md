@@ -20,11 +20,11 @@
 在自己的测试世界中输入：
 
 ```text
-/mf companion create Friend
-@Friend 跟着我
-@Friend 在这里等我
+/mf companion create MF_Friend
+@MF_Friend 跟着我
+@MF_Friend 在这里等我
 /mf task area x1 y1 z1 x2 y2 z2
-@Friend 帮我收集 8 个橡木原木并交给我
+@MF_Friend 帮我收集 8 个橡木原木并交给我
 /mf task status
 /mf task stop
 ```

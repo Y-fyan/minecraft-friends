@@ -23,6 +23,8 @@ public final class ActionsScenario {
     private Vec3 last, stopped;
     private boolean finished;
     private boolean respawned;
+    private int protectedBreaks;
+    public static void protectedBreakDenied(MinecraftServer server) { var run=RUNS.get(server); if(run!=null)run.protectedBreaks++; }
     private ServerPlayer killed;
     private double maxStep;
     private final List<Long> baseline = new ArrayList<>(), active = new ArrayList<>();
@@ -200,7 +202,18 @@ public final class ActionsScenario {
                 case 26 -> {if(age>=20){command("mf task collect oak_log 8");next(27);}}
                 case 27 -> {if(logs()<8){command("mf task stop");next(28);}}
                 case 28 -> {if("CANCELLED".equals(ActionRuntime.status(server,owner.getUUID()).state().name())){stoppedCount=logs();next(29);}}
-                case 29 -> {if(age>=40){check(logs()==stoppedCount && inventory(owner)==0,"mining_cancel_stops_world_changes_and_delivery");complete();}}
+                case 29 -> {if(age>=40){check(logs()==stoppedCount && inventory(owner)==0,"mining_cancel_stops_world_changes_and_delivery");
+                    if (!"forge".equals(System.getProperty("mf.acceptance.loader"))) { complete(); return; }
+                    bot.getInventory().clearContent(); bot.teleportTo(10.5,-60,6.5); owner.teleportTo(10.5,-60,3.5);
+                    owner.serverLevel().setBlock(new BlockPos(14,-60,6),Blocks.OAK_LOG.defaultBlockState(),3);
+                    command("mf task area 14 -60 6 14 -60 6"); next(30);}}
+                case 30 -> {if(age>=20){command("mf task collect oak_log 1");next(31);}}
+                case 31 -> {
+                    if(age>20 && "FAILED".equals(ActionRuntime.status(server,owner.getUUID()).state().name())) {
+                        check(protectedBreaks>0 && owner.serverLevel().getBlockState(new BlockPos(14,-60,6)).is(Blocks.OAK_LOG)
+                            && inventory(owner)==0 && inventory(bot)==0,"forge_break_event_cancellation_preserves_block");complete();
+                    }
+                }
                 default -> fail("invalid_phase");
             }
         } catch(Exception failure) { fail("exception_"+failure.getClass().getSimpleName()); }
