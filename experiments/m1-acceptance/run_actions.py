@@ -38,7 +38,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('target', choices=('fabric-integrated','forge-integrated','fabric-dedicated','forge-dedicated'))
     p.add_argument('--natural',action='store_true')
-    p.add_argument('--scope', choices=('navigation','unreachable','full'), default='full')
+    p.add_argument('--scope', choices=('navigation','unreachable','planning','full'), default='full')
     p.add_argument('--server')
     p.add_argument('--server-log', type=Path)
     p.add_argument('--server-mod', type=Path)
@@ -63,6 +63,12 @@ def main():
     run=HERE/loader/'build/run/client';(run/'config').mkdir(parents=True,exist_ok=True)
     files={run/'config/minecraft-friends.properties':b'enabled=true\ndiagnostics.enabled=true\nmodel.provider=mock\n',
            run/'options.txt':b'onboardAccessibility:false\npauseOnLostFocus:false\nsimulationDistance:5\nrenderDistance:4\nmaxFps:30\nsoundCategory_master:0.0\n'}
+    fixture=None
+    if args.scope=='planning':
+        if dedicated:p.error('planning fixture currently requires integrated target')
+        from actions_fixture import ActionsFixture
+        fixture=ActionsFixture(d/'model-fixture.json').start()
+        files[run/'config/minecraft-friends.properties']=fixture.configuration.encode()
     prior={f:f.read_bytes() if f.exists() else None for f in files}
     command=[str(ROOT/'experiments/player-control/gradlew'),'-p',str(HERE),':fabric:runAcceptance' if loader=='fabric' else ':forge:runClient',
              '--no-daemon','--console=plain','--offline','-Dnet.minecraftforge.gradle.check.certs=false','-PacceptanceActions=true','-PacceptanceUsername=MF_M2Owner']
@@ -87,11 +93,13 @@ def main():
             except subprocess.TimeoutExpired:os.killpg(process.pid,signal.SIGKILL);code=process.wait()
         thread.join(timeout=5)
     finally:
+        if fixture:fixture.close()
         for f,data in prior.items():
             if data is None:f.unlink(missing_ok=True)
             else:f.write_bytes(data)
     text='\n'.join(lines)
     scenario_checks=(CHECKS if args.scope=='full' else CHECKS[:4]+('result',) if args.scope=='navigation'
+                     else ('isolated_survival_map','structured_model_plan_moves_companion','invalid_model_action_rejected','planning_inflight_before_stop','late_model_plan_cannot_resume_after_stop','result') if args.scope=='planning'
                      else ('isolated_survival_map','unreachable_fails_within_budget','failed_path_leaves_bot_still','result'))
     required=scenario_checks+('natural_commands_enabled' if args.natural else 'explicit_commands_enabled',)+('dedicated_server_instance' if dedicated else 'integrated_server_instance',)
     missing=[tag for tag in required if not re.search(r'MF_M2_SERVER \S+ '+re.escape(tag)+r' PASS',text)]
@@ -102,8 +110,9 @@ def main():
         after=args.server_log.read_bytes();tail=after[len(before_server):]
         server_ok=after.startswith(before_server) and b'MF_M2_SERVER ' in tail and b'result PASS' in tail and sha(args.server_mod)==proof
         server_hash=hashlib.sha256(tail).hexdigest()
-    passed=(code==0 and not timed_out and not missing and unchanged and source_unchanged and server_ok and 'MF_M2_CLIENT PASS M2_PASS' in text and ' FAIL' not in text)
-    result=dict(target=args.target,natural_commands=args.natural,scope=args.scope,passed=passed,source_commit=commit,source_diff_sha256=hashlib.sha256(diff).hexdigest(),production_jar_sha256=proof,artifact_unchanged=unchanged,source_unchanged=source_unchanged,exit_code=code,timed_out=timed_out,missing_checks=missing,server_log_verified=server_ok,server_log_tail_sha256=server_hash,elapsed_seconds=round(time.monotonic()-started,2),m2_complete=False,limitations=['Smoke test only; two-player, unreachable, full-backpack, model planning, full baseline percentiles and new-member walkthrough remain separate gates'])
+    fixture_ok=(fixture is None or fixture.failures==0 and all(fixture.counts.get(k)==1 for k in ('follow','bad','late','late_write_attempt')))
+    passed=(fixture_ok and code==0 and not timed_out and not missing and unchanged and source_unchanged and server_ok and 'MF_M2_CLIENT PASS M2_PASS' in text and ' FAIL' not in text)
+    result=dict(target=args.target,natural_commands=args.natural,scope=args.scope,model_fixture_verified=fixture_ok,passed=passed,source_commit=commit,source_diff_sha256=hashlib.sha256(diff).hexdigest(),production_jar_sha256=proof,artifact_unchanged=unchanged,source_unchanged=source_unchanged,exit_code=code,timed_out=timed_out,missing_checks=missing,server_log_verified=server_ok,server_log_tail_sha256=server_hash,elapsed_seconds=round(time.monotonic()-started,2),m2_complete=False,limitations=['Smoke test only; two-player, unreachable, full-backpack, model planning, full baseline percentiles and new-member walkthrough remain separate gates'])
     (d/'summary.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps({'passed':passed,'summary':str(d/'summary.json'),'missing_checks':missing}));return 0 if passed else 1
 if __name__=='__main__':raise SystemExit(main())

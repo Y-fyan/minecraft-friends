@@ -63,6 +63,9 @@ public final class ActionsScenario {
                 case 1 -> {
                     // One-time fixture placement before any navigation input.
                     bot.teleportTo(2.5,-60,2.5);
+                    if ("planning".equals(System.getProperty("mf.acceptance.actions.scope"))) {
+                        command("mf task plan 请跟着我");next(13);return;
+                    }
                     if ("unreachable".equals(System.getProperty("mf.acceptance.actions.scope"))) {
                         for (int x=1;x<=3;x++) for(int z=1;z<=3;z++) if(x!=2 || z!=2)
                             for(int y=-60;y<=-59;y++) owner.serverLevel().setBlock(new BlockPos(x,y,z),Blocks.STONE.defaultBlockState(),3);
@@ -133,6 +136,23 @@ public final class ActionsScenario {
                     } else if(age>200) {fail("unreachable_kept_running");}
                 }
                 case 12 -> {if(age>=40){check(bot.position().distanceTo(stopped)<0.4,"failed_path_leaves_bot_still");complete();}}
+                case 13 -> {
+                    if(bot.distanceTo(owner)<4.5 && "DISPATCHED".equals(ActionRuntime.planningStatus(server,owner.getUUID()).state().name())) {
+                        check(true,"structured_model_plan_moves_companion");command("mf task stop");next(14);
+                    }
+                }
+                case 14 -> {if(age>=25){stopped=bot.position();command("mf task plan 非法动作测试");next(15);}}
+                case 15 -> {
+                    if("FAILED".equals(ActionRuntime.planningStatus(server,owner.getUUID()).state().name())) {
+                        check(bot.position().distanceTo(stopped)<0.4,"invalid_model_action_rejected");next(16);
+                    }
+                }
+                case 16 -> {if(age>=25){command("mf task plan 延迟后跟随");next(17);}}
+                case 17 -> {if(age>=20){check("PLANNING".equals(ActionRuntime.planningStatus(server,owner.getUUID()).state().name()),"planning_inflight_before_stop");command("mf task stop");owner.teleportTo(23.5,-60,2.5);next(18);}}
+                case 18 -> {
+                    if(age==4)stopped=bot.position();
+                    if(age>=100){check(bot.position().distanceTo(stopped)<0.4 && "CANCELLED".equals(ActionRuntime.planningStatus(server,owner.getUUID()).state().name()),"late_model_plan_cannot_resume_after_stop");complete();}
+                }
                 default -> fail("invalid_phase");
             }
         } catch(Exception failure) { fail("exception_"+failure.getClass().getSimpleName()); }
