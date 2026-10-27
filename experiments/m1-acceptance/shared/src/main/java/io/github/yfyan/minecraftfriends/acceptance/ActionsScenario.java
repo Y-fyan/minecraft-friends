@@ -22,6 +22,8 @@ public final class ActionsScenario {
     private int phase, age, ticks;
     private Vec3 last, stopped;
     private boolean finished;
+    private boolean respawned;
+    private ServerPlayer killed;
     private double maxStep;
     private final List<Long> baseline = new ArrayList<>(), active = new ArrayList<>();
     private ActionsScenario(MinecraftServer server) { this.server = server; }
@@ -62,6 +64,9 @@ public final class ActionsScenario {
             switch(phase) {
                 case 1 -> {
                     // One-time fixture placement before any navigation input.
+                    if("respawn".equals(System.getProperty("mf.acceptance.actions.scope")) && !respawned) {
+                        killed=bot;bot.invulnerableTime=0;bot.hurt(server.overworld().damageSources().genericKill(),Float.MAX_VALUE);next(21);return;
+                    }
                     bot.teleportTo(2.5,-60,2.5);
                     if ("planning".equals(System.getProperty("mf.acceptance.actions.scope"))) {
                         command("mf task plan 请跟着我");next(13);return;
@@ -160,6 +165,13 @@ public final class ActionsScenario {
                 case 18 -> {
                     if(age==4)stopped=bot.position();
                     if(age>=100){check(bot.position().distanceTo(stopped)<0.4 && "CANCELLED".equals(ActionRuntime.planningStatus(server,owner.getUUID()).state().name()),"late_model_plan_cannot_resume_after_stop");complete();}
+                }
+                case 21 -> {
+                    var entry=CompanionRuntime.data(server).find(owner.getUUID()).orElse(null);
+                    var live=entry==null?null:server.getPlayerList().getPlayer(entry.identity().companionId());
+                    if(live!=null && live!=killed && live.isAlive()) {
+                        bot=live;respawned=true;check(true,"respawn_restored_live_instance");next(1);
+                    }
                 }
                 default -> fail("invalid_phase");
             }
