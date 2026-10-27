@@ -60,7 +60,7 @@ final class SurfacePathfinder {
         return List.of();
     }
 
-    private static boolean canStand(ServerLevel level, BlockPos feet) {
+    static boolean canStand(ServerLevel level, BlockPos feet) {
         BlockPos head = feet.above();
         BlockPos floor = feet.below();
         if (!level.hasChunkAt(feet) || !level.hasChunkAt(head) || !level.hasChunkAt(floor)) {
@@ -80,7 +80,7 @@ final class SurfacePathfinder {
         int dx = position.getX() - target.getX();
         int dz = position.getZ() - target.getZ();
         return dx * dx + dz * dz <= radius * radius
-                && Math.abs(position.getY() - target.getY()) <= 2;
+                && Math.abs(position.getY() - target.getY()) <= (radius == 0 ? 0 : 2);
     }
 
     private static int heuristic(BlockPos position, BlockPos target, int goalRadius) {

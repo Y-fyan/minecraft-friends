@@ -496,8 +496,19 @@ public final class ActionRuntime {
             refreshMergedDropAliases(companion.serverLevel(), execution);
             ItemEntity item = nearestTaskDrop(companion, execution.pickupAnchor, execution);
             if (item != null) {
-                // An adjacent grid node can still be outside vanilla item-contact bounds.
-                navigate(server, state, ownerState, owner, companion, item.blockPosition(), 0);
+                BlockPos approach = pickupApproach(companion, item);
+                if (approach == null) {
+                    applyTravel(companion, 0.0F, false);
+                } else if (companion.blockPosition().equals(approach)) {
+                    // Items may lie under a low overhang: remain in a standable cell and
+                    // approach its edge using vanilla collision, never enter the solid cell.
+                    double dx = item.getX() - companion.getX(), dz = item.getZ() - companion.getZ();
+                    companion.setYRot((float)(Math.atan2(dz, dx) * 180.0 / Math.PI - 90.0));
+                    companion.setYHeadRot(companion.getYRot());
+                    applyTravel(companion, dx*dx+dz*dz > 0.09 ? 1.0F : 0.0F, false);
+                } else {
+                    navigate(server, state, ownerState, owner, companion, approach, 0);
+                }
             } else {
                 applyTravel(companion, 0.0F, false);
             }
@@ -717,6 +728,22 @@ public final class ActionRuntime {
                 return;
             }
         }
+    }
+
+    private static BlockPos pickupApproach(ServerPlayer companion, ItemEntity item) {
+        BlockPos origin = item.blockPosition();
+        BlockPos best = null;
+        double score = Double.POSITIVE_INFINITY;
+        for (int dx=-1;dx<=1;dx++) for(int dz=-1;dz<=1;dz++) for(int dy=-2;dy<=1;dy++) {
+            BlockPos pos = origin.offset(dx,dy,dz);
+            if (!SurfacePathfinder.canStand(companion.serverLevel(),pos)) continue;
+            AABB playerBox = new AABB(pos.getX()+0.2,pos.getY(),pos.getZ()+0.2,
+                    pos.getX()+0.8,pos.getY()+1.8,pos.getZ()+0.8).inflate(1.0,0.5,1.0);
+            if (!playerBox.intersects(item.getBoundingBox())) continue;
+            double distance = companion.distanceToSqr(pos.getX()+0.5,pos.getY(),pos.getZ()+0.5);
+            if(distance<score){score=distance;best=pos;}
+        }
+        return best;
     }
 
     private static ItemEntity nearestTaskDrop(ServerPlayer companion, BlockPos anchor, Execution execution) {
