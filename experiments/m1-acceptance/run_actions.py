@@ -37,6 +37,7 @@ def marker(raw):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('target', choices=('fabric-integrated','forge-integrated','fabric-dedicated','forge-dedicated'))
+    p.add_argument('--natural',action='store_true')
     p.add_argument('--scope', choices=('navigation','unreachable','full'), default='full')
     p.add_argument('--server')
     p.add_argument('--server-log', type=Path)
@@ -66,6 +67,7 @@ def main():
     command=[str(ROOT/'experiments/player-control/gradlew'),'-p',str(HERE),':fabric:runAcceptance' if loader=='fabric' else ':forge:runClient',
              '--no-daemon','--console=plain','--offline','-Dnet.minecraftforge.gradle.check.certs=false','-PacceptanceActions=true','-PacceptanceUsername=MF_M2Owner']
     command+=['-PacceptanceActionsScope='+args.scope]
+    if args.natural:command+=['-PacceptanceActionsNatural=true']
     if dedicated:command+=['-PacceptanceServer='+args.server]
     environment=dict(os.environ);environment.update(JAVA_HOME='/tmp/codex-mf-jdk21-213',LIBGL_ALWAYS_SOFTWARE='true',__GLX_VENDOR_LIBRARY_NAME='mesa',ALSOFT_DRIVERS='null')
     started=time.monotonic();timed_out=False;code=None;process=None;lines=[]
@@ -91,7 +93,7 @@ def main():
     text='\n'.join(lines)
     scenario_checks=(CHECKS if args.scope=='full' else CHECKS[:4]+('result',) if args.scope=='navigation'
                      else ('isolated_survival_map','unreachable_fails_within_budget','failed_path_leaves_bot_still','result'))
-    required=scenario_checks+('dedicated_server_instance' if dedicated else 'integrated_server_instance',)
+    required=scenario_checks+('natural_commands_enabled' if args.natural else 'explicit_commands_enabled',)+('dedicated_server_instance' if dedicated else 'integrated_server_instance',)
     missing=[tag for tag in required if not re.search(r'MF_M2_SERVER \S+ '+re.escape(tag)+r' PASS',text)]
     unchanged=artifact.is_file() and sha(artifact)==proof
     source_unchanged=(subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()==commit and subprocess.check_output(['git','diff','HEAD','--'],cwd=ROOT)==diff)
@@ -101,7 +103,7 @@ def main():
         server_ok=after.startswith(before_server) and b'MF_M2_SERVER ' in tail and b'result PASS' in tail and sha(args.server_mod)==proof
         server_hash=hashlib.sha256(tail).hexdigest()
     passed=(code==0 and not timed_out and not missing and unchanged and source_unchanged and server_ok and 'MF_M2_CLIENT PASS M2_PASS' in text and ' FAIL' not in text)
-    result=dict(target=args.target,scope=args.scope,passed=passed,source_commit=commit,source_diff_sha256=hashlib.sha256(diff).hexdigest(),production_jar_sha256=proof,artifact_unchanged=unchanged,source_unchanged=source_unchanged,exit_code=code,timed_out=timed_out,missing_checks=missing,server_log_verified=server_ok,server_log_tail_sha256=server_hash,elapsed_seconds=round(time.monotonic()-started,2),m2_complete=False,limitations=['Smoke test only; two-player, unreachable, full-backpack, model planning, full baseline percentiles and new-member walkthrough remain separate gates'])
+    result=dict(target=args.target,natural_commands=args.natural,scope=args.scope,passed=passed,source_commit=commit,source_diff_sha256=hashlib.sha256(diff).hexdigest(),production_jar_sha256=proof,artifact_unchanged=unchanged,source_unchanged=source_unchanged,exit_code=code,timed_out=timed_out,missing_checks=missing,server_log_verified=server_ok,server_log_tail_sha256=server_hash,elapsed_seconds=round(time.monotonic()-started,2),m2_complete=False,limitations=['Smoke test only; two-player, unreachable, full-backpack, model planning, full baseline percentiles and new-member walkthrough remain separate gates'])
     (d/'summary.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps({'passed':passed,'summary':str(d/'summary.json'),'missing_checks':missing}));return 0 if passed else 1
 if __name__=='__main__':raise SystemExit(main())

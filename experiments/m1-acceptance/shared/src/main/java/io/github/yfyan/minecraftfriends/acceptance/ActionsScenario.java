@@ -44,6 +44,7 @@ public final class ActionsScenario {
                 }
                 owner.getInventory().clearContent(); owner.teleportTo(15.5,-60,2.5);
                 age=0; emit("isolated_survival_map",true);
+                emit(Boolean.getBoolean("mf.acceptance.actions.natural") ? "natural_commands_enabled" : "explicit_commands_enabled",true);
                 emit(server instanceof net.minecraft.server.dedicated.DedicatedServer ? "dedicated_server_instance" : "integrated_server_instance",true); return;
             }
             if (phase==0) {
@@ -144,7 +145,16 @@ public final class ActionsScenario {
     private static int inventory(ServerPlayer p){int n=0;for(int i=0;i<p.getInventory().getContainerSize();i++){var s=p.getInventory().getItem(i);if(s.is(Items.OAK_LOG))n+=s.getCount();}return n;}
     private static long mean(List<Long> samples){return samples.isEmpty()?0:(long)samples.stream().mapToLong(Long::longValue).average().orElse(0);}
     private void next(int p){phase=p;age=0;}
-    private void command(String command){owner.sendSystemMessage(Component.literal("MF_M2 COMMAND "+command));}
+    private void command(String command){
+        if(Boolean.getBoolean("mf.acceptance.actions.natural")) command=switch(command){
+            case "mf task follow" -> "mf chat 跟着我";
+            case "mf task wait" -> "mf chat 在这里等我";
+            case "mf task stop" -> "mf chat 停下来";
+            case "mf task collect oak_log 8" -> "mf chat 帮我收集8个橡木原木并交给我";
+            default -> command;
+        };
+        owner.sendSystemMessage(Component.literal("MF_M2 COMMAND "+command));
+    }
     private void check(boolean ok,String tag){if(!ok){emit(tag,false);throw new IllegalStateException(tag);}emit(tag,true);}
     private void emit(String tag,boolean ok){System.out.println("MF_M2_SERVER "+server.getClass().getName()+" "+tag+" "+(ok?"PASS":"FAIL"));}
     private void fail(String reason){finished=true;emit(reason,false);if(owner!=null)owner.sendSystemMessage(Component.literal("MF_M2 FAIL "+reason));}
