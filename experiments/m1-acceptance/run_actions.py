@@ -24,8 +24,9 @@ ANSI = re.compile(r'\x1b\[[0-9;]*m')
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
-def marker(raw):
+def marker(raw, server_console=False):
     text = ANSI.sub('', raw.strip())
+    if server_console:text=re.sub(r'^>\s*','',text)
     i = text.find('MF_M2_')
     if i < 0:
         return None
@@ -112,9 +113,14 @@ def main():
         after=args.server_log.read_bytes();tail=after[len(before_server):]
         server_ok=after.startswith(before_server) and b'MF_M2_SERVER ' in tail and b'result PASS' in tail and sha(args.server_mod)==proof and sha(args.server_helper)==helper_hash
         server_hash=hashlib.sha256(tail).hexdigest()
+        server_lines=[x for raw in tail.decode('utf-8',errors='replace').splitlines() if (x:=marker(raw,True))]
+        (d/'server-checks.log').write_text('\n'.join(server_lines)+'\n')
+        (d/'server-tail.log').write_bytes(tail)
+        text+='\n'+'\n'.join(server_lines)
+        missing=[tag for tag in required if not re.search(r'MF_M2_SERVER \S+ '+re.escape(tag)+r' PASS',text)]
     fixture_ok=(fixture is None or fixture.failures==0 and all(fixture.counts.get(k)==1 for k in ('follow','bad','late','late_write_attempt')))
     passed=(fixture_ok and code==0 and not timed_out and not missing and unchanged and source_unchanged and server_ok and 'MF_M2_CLIENT PASS M2_PASS' in text and ' FAIL' not in text)
-    result=dict(target=args.target,natural_commands=args.natural,scope=args.scope,model_fixture_verified=fixture_ok,passed=passed,source_commit=commit,source_diff_sha256=hashlib.sha256(diff).hexdigest(),production_jar_sha256=proof,artifact_unchanged=unchanged,source_unchanged=source_unchanged,exit_code=code,timed_out=timed_out,missing_checks=missing,server_log_verified=server_ok,server_log_tail_sha256=server_hash,installed_helper_sha256=helper_hash,elapsed_seconds=round(time.monotonic()-started,2),m2_complete=False,limitations=['Smoke test only; two-player, unreachable, full-backpack, model planning, full baseline percentiles and new-member walkthrough remain separate gates'])
+    result=dict(target=args.target,natural_commands=args.natural,scope=args.scope,model_fixture_verified=fixture_ok,passed=passed,source_commit=commit,source_diff_sha256=hashlib.sha256(diff).hexdigest(),production_jar_sha256=proof,artifact_unchanged=unchanged,source_unchanged=source_unchanged,exit_code=code,timed_out=timed_out,missing_checks=missing,server_log_verified=server_ok,server_log_tail_sha256=server_hash,server_log_start_offset=len(before_server),server_log_prefix_sha256=hashlib.sha256(before_server).hexdigest(),installed_helper_sha256=helper_hash,elapsed_seconds=round(time.monotonic()-started,2),m2_complete=False,limitations=['Smoke test only; two-player, unreachable, full-backpack, model planning, full baseline percentiles and new-member walkthrough remain separate gates'])
     (d/'summary.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps({'passed':passed,'summary':str(d/'summary.json'),'missing_checks':missing}));return 0 if passed else 1
 if __name__=='__main__':raise SystemExit(main())

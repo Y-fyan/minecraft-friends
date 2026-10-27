@@ -4,7 +4,7 @@ from pathlib import Path
 import json,threading,time,math
 class ActionsFixture:
  def __init__(self,path):
-  self.path=Path(path);self.lock=threading.Lock();self.counts={};self.failures=0;fixture=self
+  self.path=Path(path);self.lock=threading.Lock();self.write_lock=threading.Lock();self.counts={};self.failures=0;fixture=self
   class Handler(BaseHTTPRequestHandler):
    def log_message(self,*_):pass
    def do_POST(self):
@@ -35,8 +35,9 @@ class ActionsFixture:
   pos=s['companionPosition'];x,y,z=(math.floor(pos[k]) for k in ('x','y','z'))
   return all(abs(b['x']-x)<=3 and abs(b['z']-z)<=3 and -2<=b['y']-y<=2 for b in s['blocks'])
  def save(self):
-  with self.lock:j={'kind':'M2 protocol simulation; not real model','counts':dict(self.counts),'failures':self.failures,'bodies_stored':False}
-  self.path.write_text(json.dumps(j,ensure_ascii=False,indent=2)+'\n')
+  with self.write_lock:
+   with self.lock:j={'kind':'M2 protocol simulation; not real model','counts':dict(self.counts),'failures':self.failures,'bodies_stored':False}
+   temp=self.path.with_suffix('.tmp');temp.write_text(json.dumps(j,ensure_ascii=False,indent=2)+'\n');temp.replace(self.path)
  def record(self,label):
   with self.lock:self.counts[label]=self.counts.get(label,0)+1
   self.save()

@@ -25,3 +25,10 @@ class SnapshotContractTests(unittest.TestCase):
             value['blocks']=[{'x':0,'y':-62,'z':0}]*65
             self.assertFalse(fixture.valid(value))
             fixture.server.server_close()
+
+class DedicatedMarkerTests(unittest.TestCase):
+    def test_trusted_console_prompt_only(self):
+        x='MF_M2_SERVER net.minecraft.server.dedicated.DedicatedServer result PASS'
+        self.assertEqual(x,marker('> '+x,True))
+        self.assertIsNone(marker('> '+x))
+        self.assertIsNone(marker('[CHAT] > '+x,True))
