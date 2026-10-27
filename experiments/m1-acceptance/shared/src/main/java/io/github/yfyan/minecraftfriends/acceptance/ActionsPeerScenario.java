@@ -138,7 +138,7 @@ public final class ActionsPeerScenario {
         taskA = status(a).taskId(); taskB = status(b).taskId();
         if (taskA.equals(taskB)) { fail("task_ids_not_distinct"); return; }
         emit("both_follow_physical_displacement",true);
-        a.teleportTo(32.5,-60,2.5); command(b,"mf task stop"); next(3);
+        a.teleportTo(24.5,-60,2.5); command(b,"mf task stop"); next(3);
     }
     private void bStopped() {
         if (!sameRunning(a,taskA)) { fail("b_stop_changed_a_task"); return; }
@@ -149,7 +149,7 @@ public final class ActionsPeerScenario {
         if (observed < 40) return;
         if (botA.position().distanceTo(sampleA) < 2) { fail("a_did_not_keep_following_after_b_stop"); return; }
         emit("b_stop_isolated_a_keeps_moving",true);
-        b.teleportTo(32.5,-60,14.5); command(a,"mf task stop"); command(b,"mf task follow"); next(4);
+        b.teleportTo(24.5,-60,14.5); command(a,"mf task stop"); command(b,"mf task follow"); next(4);
     }
     private void aStopped() {
         if (!sent() || status(a).state() != TaskState.CANCELLED || !running(b)) return;
