@@ -10,3 +10,18 @@ class ActionsMarkerTests(unittest.TestCase):
         self.assertIsNone(marker('[STDOUT]: [CHAT] '+x))
         self.assertIsNone(marker('someone said '+x))
         self.assertIsNone(marker(x+' injected'))
+
+class SnapshotContractTests(unittest.TestCase):
+    def test_documented_vertical_range_and_retained_budget(self):
+        from actions_fixture import ActionsFixture
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as d:
+            fixture=ActionsFixture(Path(d)/'summary.json')
+            value={'ownerId':'a','companionId':'b','companionPosition':{'x':0,'y':-60,'z':0},'blocks':[{'x':0,'y':-62,'z':0}], 'inventory':[]}
+            self.assertTrue(fixture.valid(value))
+            value['blocks'][0]['y']=-57
+            self.assertFalse(fixture.valid(value))
+            value['blocks']=[{'x':0,'y':-62,'z':0}]*65
+            self.assertFalse(fixture.valid(value))
+            fixture.server.server_close()

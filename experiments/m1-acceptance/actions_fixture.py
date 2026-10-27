@@ -31,9 +31,9 @@ class ActionsFixture:
   self.server=ThreadingHTTPServer(('127.0.0.1',0),Handler);self.server.daemon_threads=True
  def valid(self,s):
   if not isinstance(s,dict) or s.get('ownerId')==s.get('companionId'):return False
-  if len(s.get('blocks',[]))>245 or len(s.get('inventory',[]))>41:return False
+  if len(s.get('blocks',[]))>64 or len(s.get('inventory',[]))>41:return False
   pos=s['companionPosition'];x,y,z=(math.floor(pos[k]) for k in ('x','y','z'))
-  return all(abs(b['x']-x)<=3 and abs(b['z']-z)<=3 and -1<=b['y']-y<=3 for b in s['blocks'])
+  return all(abs(b['x']-x)<=3 and abs(b['z']-z)<=3 and -2<=b['y']-y<=2 for b in s['blocks'])
  def save(self):
   with self.lock:j={'kind':'M2 protocol simulation; not real model','counts':dict(self.counts),'failures':self.failures,'bodies_stored':False}
   self.path.write_text(json.dumps(j,ensure_ascii=False,indent=2)+'\n')
