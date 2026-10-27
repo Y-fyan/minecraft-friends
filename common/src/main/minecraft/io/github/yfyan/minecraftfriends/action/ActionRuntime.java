@@ -210,6 +210,10 @@ public final class ActionRuntime {
                         @Override
                         public void apply(ActionPlanner.Ticket ticket, ActionPerception captured, ActionPlan result) {
                             try {
+                                if(result.type()==ActionType.WAIT && ActionPhraseParser.needsClarification(instruction)) {
+                                    owner.sendSystemMessage(Component.literal("采集请求还不明确：你要多少个橡木原木？请先明确数量和区域；本次没有启动采集。"));
+                                    return;
+                                }
                                 switch (result.type()) {
                                     case STOP -> stopFor(owner);
                                     case FOLLOW, WAIT -> startFor(owner, result.type(), ticket.requestId());
@@ -401,6 +405,10 @@ public final class ActionRuntime {
     public static boolean handleDeterministicIntent(ServerPlayer owner, String message) {
         ActionPlan plan = ActionPhraseParser.parse(message).orElse(null);
         if (plan == null) {
+            if(ActionPhraseParser.needsClarification(message)) {
+                owner.sendSystemMessage(Component.literal("你要收集多少个橡木原木？请明确1至64的数量并先选择区域；本次没有启动新的采集任务。"));
+                return true;
+            }
             return false;
         }
         try {

@@ -22,4 +22,10 @@ class ActionPhraseParserTest {
         org.junit.jupiter.api.Assertions.assertEquals(12,ActionPhraseParser.parse("帮我收集12个橡木原木并交给我").orElseThrow().count());
         org.junit.jupiter.api.Assertions.assertTrue(ActionPhraseParser.parse("帮我收集65个橡木原木并交给我").isEmpty());
     }
+    @org.junit.jupiter.api.Test void ambiguousCollectionAsksWithoutHijackingOrdinaryChat() {
+        org.junit.jupiter.api.Assertions.assertTrue(ActionPhraseParser.needsClarification("帮我收集一些木头"));
+        org.junit.jupiter.api.Assertions.assertTrue(ActionPhraseParser.needsClarification("请采集8个钻石"));
+        org.junit.jupiter.api.Assertions.assertFalse(ActionPhraseParser.needsClarification("我们聊聊树林吧"));
+        org.junit.jupiter.api.Assertions.assertFalse(ActionPhraseParser.needsClarification("帮我收集 8 个橡木原木并交给我"));
+    }
 }

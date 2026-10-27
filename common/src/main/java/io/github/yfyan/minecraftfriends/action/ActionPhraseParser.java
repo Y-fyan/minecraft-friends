@@ -26,4 +26,9 @@ public final class ActionPhraseParser {
             default -> Optional.empty();
         };
     }
+    public static boolean needsClarification(String message) {
+        if(message==null || parse(message).isPresent())return false;
+        String text=message.strip();
+        return text.startsWith("帮我收集") || text.startsWith("帮我采集") || text.startsWith("请收集") || text.startsWith("请采集");
+    }
 }
