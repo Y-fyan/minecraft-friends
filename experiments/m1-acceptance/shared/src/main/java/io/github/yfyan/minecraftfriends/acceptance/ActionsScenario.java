@@ -146,13 +146,16 @@ public final class ActionsScenario {
     private static long mean(List<Long> samples){return samples.isEmpty()?0:(long)samples.stream().mapToLong(Long::longValue).average().orElse(0);}
     private void next(int p){phase=p;age=0;}
     private void command(String command){
-        if(Boolean.getBoolean("mf.acceptance.actions.natural")) command=switch(command){
-            case "mf task follow" -> "mf chat 跟着我";
-            case "mf task wait" -> "mf chat 在这里等我";
-            case "mf task stop" -> "mf chat 停下来";
-            case "mf task collect oak_log 8" -> "mf chat 帮我收集8个橡木原木并交给我";
-            default -> command;
-        };
+        if(Boolean.getBoolean("mf.acceptance.actions.natural")) {
+            String phrase=switch(command){
+                case "mf task follow" -> "跟着我";
+                case "mf task wait" -> "在这里等我";
+                case "mf task stop" -> "停下来";
+                case "mf task collect oak_log 8" -> "帮我收集8个橡木原木并交给我";
+                default -> null;
+            };
+            if(phrase!=null){owner.sendSystemMessage(Component.literal("MF_M2 CHAT @MF_M2Bot "+phrase));return;}
+        }
         owner.sendSystemMessage(Component.literal("MF_M2 COMMAND "+command));
     }
     private void check(boolean ok,String tag){if(!ok){emit(tag,false);throw new IllegalStateException(tag);}emit(tag,true);}

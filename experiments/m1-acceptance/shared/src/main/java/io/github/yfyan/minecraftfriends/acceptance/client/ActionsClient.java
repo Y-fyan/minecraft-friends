@@ -34,7 +34,12 @@ public final class ActionsClient {
         if (finished) { return; }
         String text;
         while ((text = MESSAGES.poll()) != null) {
-            if (text.startsWith("MF_M2 COMMAND ")) {
+            if (text.startsWith("MF_M2 CHAT ")) {
+                String chat=text.substring("MF_M2 CHAT ".length());
+                if(client.player==null || !chat.startsWith("@MF_M2Bot ") || chat.length()>256) {fail(client,"invalid_addressed_chat");return;}
+                client.player.connection.sendChat(chat);
+                System.out.println("MF_M2_CLIENT COMMAND_SENT");
+            } else if (text.startsWith("MF_M2 COMMAND ")) {
                 String command = text.substring("MF_M2 COMMAND ".length());
                 if (command.length() > 256 || !(command.startsWith("mf task ")
                         || command.equals("mf companion create MF_M2Bot")
