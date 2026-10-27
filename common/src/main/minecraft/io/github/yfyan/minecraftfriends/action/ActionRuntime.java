@@ -496,7 +496,8 @@ public final class ActionRuntime {
             refreshMergedDropAliases(companion.serverLevel(), execution);
             ItemEntity item = nearestTaskDrop(companion, execution.pickupAnchor, execution);
             if (item != null) {
-                navigate(server, state, ownerState, owner, companion, item.blockPosition(), 1);
+                // An adjacent grid node can still be outside vanilla item-contact bounds.
+                navigate(server, state, ownerState, owner, companion, item.blockPosition(), 0);
             } else {
                 applyTravel(companion, 0.0F, false);
             }
