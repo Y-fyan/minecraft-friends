@@ -72,9 +72,14 @@ final class DoorInteractions {
                     ClipContext.Fluid.NONE, companion));
             if (hit.getType() != HitResult.Type.BLOCK
                     || !(hit.getBlockPos().equals(lower) || hit.getBlockPos().equals(upper))) return Result.DENIED;
-            InteractionHand hand = companion.getOffhandItem().isEmpty() ? InteractionHand.OFF_HAND
-                    : companion.getMainHandItem().isEmpty() ? InteractionHand.MAIN_HAND : null;
-            if (hand == null || !companion.canInteractWithBlock(hit.getBlockPos(), 0.0)
+            // In 1.21.1 useItemOn only invokes default useWithoutItem for MAIN_HAND.
+            // Select a real empty hotbar slot; never pass a fabricated empty stack while holding an item.
+            int previousSlot = companion.getInventory().selected;
+            int emptySlot = companion.getMainHandItem().isEmpty() ? previousSlot : -1;
+            for (int slot = 0; emptySlot < 0 && slot < 9; slot++) {
+                if (companion.getInventory().getItem(slot).isEmpty()) emptySlot = slot;
+            }
+            if (emptySlot < 0 || !companion.canInteractWithBlock(hit.getBlockPos(), 0.0)
                     || !companion.mayUseItemAt(hit.getBlockPos(), hit.getDirection(), ItemStack.EMPTY)) return Result.DENIED;
             if (tick < nextAttemptTick) return Result.WAITING;
             if (!lower.equals(lastDoor)) {
@@ -84,11 +89,14 @@ final class DoorInteractions {
             if (attempts >= MAX_ATTEMPTS) return Result.DENIED;
             attempts++;
             nextAttemptTick = tick + COOLDOWN_TICKS;
-            // Empty hand avoids item placement/use fallback when a mod denies block interaction.
+            // Empty main hand avoids item placement/use fallback when a mod denies block interaction.
             try {
-                companion.gameMode.useItemOn(companion, level, companion.getItemInHand(hand), hand, hit);
+                companion.getInventory().selected = emptySlot;
+                companion.gameMode.useItemOn(companion, level, companion.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
             } catch (RuntimeException refused) {
                 return Result.DENIED;
+            } finally {
+                companion.getInventory().selected = previousSlot;
             }
             if (companion.serverLevel() != level || owner.serverLevel() != level
                     || !owner.isAlive() || !companion.isAlive()
