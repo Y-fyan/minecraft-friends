@@ -130,6 +130,18 @@ class ActionPlannerTest {
         drainMain(); assertEquals("PROVIDER_FAILED", status().reason()); assertTrue(applied.isEmpty());
     }
 
+    @Test void queuedRequestAtDeadlineNeverInvokesProviderEvenBeforeExpiryTick() {
+        request(snapshot, provider(nonCancellable()));
+        now.set(Duration.ofSeconds(30).toNanos());
+        // No expire() call: the worker must enforce its own admission deadline.
+        workers.remove().run();
+        assertTrue(requests.isEmpty());
+        assertEquals(ActionPlanner.State.PLANNING, status().state());
+        drainMain();
+        assertEquals(ActionPlanner.State.TIMED_OUT, status().state());
+        assertTrue(applied.isEmpty());
+    }
+
     @Test void deadlineIsRecheckedEvenWhenAResponseIsAlreadyQueued() {
         request(snapshot, provider(CompletableFuture.completedFuture(new ModelResponse("{\"action\":\"follow\"}"))));
         workers.remove().run(); now.set(Duration.ofSeconds(30).toNanos()); drainMain();

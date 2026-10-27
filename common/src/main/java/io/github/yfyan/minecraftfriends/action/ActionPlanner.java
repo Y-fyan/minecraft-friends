@@ -79,6 +79,10 @@ public final class ActionPlanner implements AutoCloseable {
         if (!current(entry)) {
             return;
         }
+        if (clock.getAsLong() >= entry.deadline) {
+            dispatch(entry, null, "TIMED_OUT");
+            return;
+        }
         try {
             CompletableFuture<ModelResponse> call = provider.complete(request).toCompletableFuture();
             synchronized (this) {

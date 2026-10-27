@@ -56,6 +56,8 @@ ActionRuntime.perception(server, ownerId);     // Optional<ActionPerception>；�
 
 规划状态仅有 `IDLE / PLANNING / DISPATCHED / FAILED / CANCELLED / TIMED_OUT`。`DISPATCHED` 表示已提交动作，实际成功/数量仍只由 `ActionRuntime.status` 返回。规划失败返回固定原因（例如 `BAD_JSON / UNAUTHORIZED / STALE_CONTEXT / PROVIDER_FAILED`），不会把原始模型输出当作消息或指令执行。默认离线 `MockModelProvider` 返回普通演示文本，因此显式规划会安全反馈 `BAD_JSON`；它不伪造规划或采集成功。单测使用专门的受控 Provider 返回 JSON，未调用真实远端服务，也不需要凭据。
 
+`handler.apply` 抛出运行时异常时，规划状态记为 `FAILED / EXECUTION_REFUSED`，规划器不会回滚 apply 已产生的副作用。`FAILED` 不保证没有动作被提交或执行；执行器必须在副作用前完成复验，并自行保证事务性，或在部分提交后负责清理和真实结果结算。实际动作仍应查询 `ActionRuntime.status`，不能仅根据规划失败推断世界未变化。
+
 ## 验证边界
 
 类型化调度、正常移动、一次性区域授权、采集执行器与上述规划链已接入。规划核心单测覆盖工作池/主线程分离、严格坏 JSON、真实离线 mock、安全拒绝无授权采集、服务器上下文失效、无视取消的迟到 Provider、回包已排队后取消、请求代际、超时、关闭和队列/提示预算。common 单测与 Fabric/Forge Java 编译通过；这些不能替代真实客户端、世界方块和实际库存验收。
