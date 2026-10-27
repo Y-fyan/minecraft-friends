@@ -22,5 +22,16 @@ public final class ForgeAcceptance {
     @SubscribeEvent
     public void tick(TickEvent.ServerTickEvent.Post event) { ServerAcceptanceDispatch.tick(event.getServer()); }
     @SubscribeEvent
+    public void protectedBlock(net.minecraftforge.event.level.BlockEvent.BreakEvent event) {
+        if (Boolean.getBoolean("mf.acceptance.actions")
+                && "failures".equals(System.getProperty("mf.acceptance.actions.scope"))
+                && event.getPos().equals(new net.minecraft.core.BlockPos(14,-60,6))
+                && event.getPlayer().getGameProfile().getName().equals("MF_M2Bot")
+                && event.getLevel() instanceof net.minecraft.server.level.ServerLevel level) {
+            event.setCanceled(true);
+            io.github.yfyan.minecraftfriends.acceptance.ActionsScenario.protectedBreakDenied(level.getServer());
+        }
+    }
+    @SubscribeEvent
     public void stopped(ServerStoppedEvent event) { ServerAcceptanceDispatch.stopped(event.getServer()); }
 }

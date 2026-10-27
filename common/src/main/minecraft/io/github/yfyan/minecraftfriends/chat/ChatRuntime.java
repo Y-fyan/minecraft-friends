@@ -7,6 +7,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.yfyan.minecraftfriends.companion.CompanionData;
 import io.github.yfyan.minecraftfriends.companion.CompanionIdentity;
 import io.github.yfyan.minecraftfriends.companion.CompanionRuntime;
+import io.github.yfyan.minecraftfriends.action.ActionRuntime;
 import io.github.yfyan.minecraftfriends.config.ConfigLoader;
 import io.github.yfyan.minecraftfriends.config.ModConfig;
 import io.github.yfyan.minecraftfriends.config.ProviderMode;
@@ -102,6 +103,7 @@ public final class ChatRuntime {
         try {
             CompanionRuntime.data(server);
         } catch (RuntimeException failure) {
+            ActionRuntime.cancelAllPlanning(server);
             companionDataAvailable = false;
             disabledReason = COMPANION_DATA_DISABLED_REASON;
             LOGGER.warn("Chat and memory disabled because companion data could not be loaded ({})",
@@ -158,7 +160,23 @@ public final class ChatRuntime {
         providerFactory = Objects.requireNonNull(factory, "factory");
     }
 
+    /** Borrow the existing bounded provider worker; callers must never close either resource. */
+    public static PlanningAccess planningAccess(MinecraftServer server) {
+        RuntimeState state = state(server);
+        if (state == null || !state.globalEnabled || !state.chatEnabled || state.worldId == null
+                || state.provider == null || state.modelExecutor == null || state.modelExecutor.isShutdown()) {
+            return null;
+        }
+        return new PlanningAccess(state.provider, state.modelExecutor,
+                java.time.Duration.ofSeconds(Math.min(30, state.config.requestTimeoutSeconds())),
+                state.config.modelMaxContextCharacters());
+    }
+
+    public record PlanningAccess(ModelProvider provider, java.util.concurrent.Executor worker,
+                                 java.time.Duration timeout, int contextBudget) { }
+
     public static void stop(MinecraftServer server) {
+        ActionRuntime.cancelAllPlanning(server);
         RuntimeState state;
         synchronized (STATES) {
             state = STATES.remove(server);
@@ -216,6 +234,7 @@ public final class ChatRuntime {
     }
 
     public static void onLogout(ServerPlayer player) {
+        ActionRuntime.cancelPlanning(player.server, player.getUUID());
         RuntimeState state = state(player.server);
         if (state == null) {
             return;
@@ -310,6 +329,9 @@ public final class ChatRuntime {
         if (state.worldId == null) {
             CompanionData.Entry owned = data.find(player.getUUID()).orElse(null);
             if (owned != null && sameName(owned.identity().name(), address.companionName())) {
+                if (ActionRuntime.handleDeterministicIntent(player, address.message())) {
+                    return true;
+                }
                 player.sendSystemMessage(Component.literal("聊天功能当前已关闭：" + state.disabledReason + "。"));
                 return true;
             }
@@ -324,6 +346,11 @@ public final class ChatRuntime {
             return true;
         }
         Target target = matches.getFirst();
+        if (target.conversation() instanceof ChatSessionService.PrivateConversation
+                && target.entry().identity().ownerId().equals(player.getUUID())
+                && ActionRuntime.handleDeterministicIntent(player, address.message())) {
+            return true;
+        }
         if (!state.chatEnabled || state.sessions == null) {
             player.sendSystemMessage(Component.literal("聊天功能当前已关闭：" + state.disabledReason + "。"));
             return true;
@@ -547,6 +574,7 @@ public final class ChatRuntime {
 
     private static int clearChatCommand(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
+        ActionRuntime.cancelPlanning(player.server, player.getUUID());
         RuntimeState state = state(player.server);
         CompanionData data = companionData(state);
         if (data == null) {
@@ -1363,6 +1391,7 @@ public final class ChatRuntime {
             if (!companionDataAvailable) {
                 return false;
             }
+            ActionRuntime.cancelAllPlanning(server);
             companionDataAvailable = false;
             chatEnabled = false;
             disabledReason = COMPANION_DATA_DISABLED_REASON;
@@ -1410,6 +1439,7 @@ public final class ChatRuntime {
         }
 
         private void cancelOwnerWork(CompanionData.Entry entry) {
+            ActionRuntime.cancelPlanning(server, entry.identity().ownerId());
             if (sessions != null) {
                 sessions.cancelOwnerWork(entry.identity().ownerId(), entry.identity().companionId());
             }

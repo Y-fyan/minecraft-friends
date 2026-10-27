@@ -20,6 +20,7 @@ public final class TaskStateMachine {
     public synchronized boolean canTransitionTo(TaskState next) {
         Objects.requireNonNull(next, "next");
         return switch (state) {
+            case IDLE -> false;
             case QUEUED -> next == TaskState.RUNNING
                     || next == TaskState.FAILED
                     || next == TaskState.CANCELLED;

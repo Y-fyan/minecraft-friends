@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-26",
+  "m2_complete": false,
+  "navigation_integrated_runs": [
+    {
+      "target": "fabric-integrated",
+      "scope": "navigation",
+      "passed": true,
+      "source_commit": "ecac1a7fcdbedece2fd83ee6cff56793017fa87d",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "production_jar_sha256": "48cb61b5c3d7953e6167f730f2cc6305c3b547873b2837601a394e701b20bad4",
+      "artifact_unchanged": true,
+      "source_unchanged": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "missing_checks": [],
+      "server_log_verified": true,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 27.89,
+      "m2_complete": false,
+      "limitations": [
+        "Smoke test only; two-player, unreachable, full-backpack, model planning, full baseline percentiles and new-member walkthrough remain separate gates"
+      ],
+      "local_evidence_id": "fabric-integrated-actions-1793056457166615567",
+      "checks_sha256": "974e7bb098805fd04f7abe7572fde0de4bb5f46b246f09a2b54ca5ba8d3f7b99"
+    },
+    {
+      "target": "forge-integrated",
+      "scope": "navigation",
+      "passed": true,
+      "source_commit": "ecac1a7fcdbedece2fd83ee6cff56793017fa87d",
+      "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "production_jar_sha256": "33684a9630fdfbc4b3c2e4faf10b0f1c49f30e24bb66f9d4bdac22241561f3c4",
+      "artifact_unchanged": true,
+      "source_unchanged": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "missing_checks": [],
+      "server_log_verified": true,
+      "server_log_tail_sha256": null,
+      "elapsed_seconds": 32.96,
+      "m2_complete": false,
+      "limitations": [
+        "Smoke test only; two-player, unreachable, full-backpack, model planning, full baseline percentiles and new-member walkthrough remain separate gates"
+      ],
+      "local_evidence_id": "forge-integrated-actions-1793056550779892591",
+      "checks_sha256": "88636aef471a012c585e1a77b2810c96c67a9a5fc2103a3b242ccb7797d95fce"
+    }
+  ],
+  "common_tests": 69,
+  "python_tool_tests": 19,
+  "status": "Stopped at creator budget boundary; draft only; collection pickup and planning/Alpha gates incomplete",
+  "latest_candidate_common_tests": 70,
+  "latest_collection_run": {
+    "target": "fabric-integrated",
+    "scope": "full",
+    "passed": false,
+    "source_commit": "7c182f4cb70187b95eea5b610a2c2ff073d35cf9",
+    "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "production_jar_sha256": "e788cb64395b6b527b56ecd68da5a88e3d8ef317845502c5d203ff99dde9e48b",
+    "artifact_unchanged": true,
+    "source_unchanged": true,
+    "exit_code": 0,
+    "timed_out": false,
+    "missing_checks": [
+      "eight_real_logs_delivered_without_duplication",
+      "outside_area_resource_untouched",
+      "repeat_request_does_not_create_items",
+      "result"
+    ],
+    "server_log_verified": true,
+    "server_log_tail_sha256": null,
+    "elapsed_seconds": 154.01,
+    "m2_complete": false,
+    "limitations": [
+      "Smoke test only; two-player, unreachable, full-backpack, model planning, full baseline percentiles and new-member walkthrough remain separate gates"
+    ],
+    "local_evidence_id": "fabric-integrated-actions-1793057110438464861",
+    "checks_sha256": "87a158ddbb5cac20300ec08d6887e2cc84e1e3791af6b63f4cba0061120d6e2a",
+    "actual_delivery": "0/8; production reported dropped logs were not normally picked up"
+  },
+  "unreachable_fabric_run": {
+    "target": "fabric-integrated",
+    "scope": "unreachable",
+    "passed": true,
+    "source_commit": "1c0a5af7c555738a72316d24e0240b5ef70aa538",
+    "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "production_jar_sha256": "48cb61b5c3d7953e6167f730f2cc6305c3b547873b2837601a394e701b20bad4",
+    "artifact_unchanged": true,
+    "source_unchanged": true,
+    "exit_code": 0,
+    "timed_out": false,
+    "missing_checks": [],
+    "server_log_verified": true,
+    "server_log_tail_sha256": null,
+    "elapsed_seconds": 25.48,
+    "m2_complete": false,
+    "limitations": [
+      "Smoke test only; two-player, unreachable, full-backpack, model planning, full baseline percentiles and new-member walkthrough remain separate gates"
+    ]
+  },
+  "remaining_quota_percent_at_stop": 84
+}
