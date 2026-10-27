@@ -63,17 +63,25 @@ final class SurfacePathfinder {
     static boolean canStand(ServerLevel level, BlockPos feet) {
         BlockPos head = feet.above();
         BlockPos floor = feet.below();
-        if (!level.hasChunkAt(feet) || !level.hasChunkAt(head) || !level.hasChunkAt(floor)) {
+        if (!level.hasChunkAt(feet) || !level.hasChunkAt(head) || !level.hasChunkAt(floor)
+                || !level.getWorldBorder().isWithinBounds(feet) || !level.getWorldBorder().isWithinBounds(head)) {
             return false;
         }
         BlockState feetState = level.getBlockState(feet);
         BlockState headState = level.getBlockState(head);
         BlockState floorState = level.getBlockState(floor);
-        return feetState.getCollisionShape(level, feet).isEmpty()
-                && headState.getCollisionShape(level, head).isEmpty()
+        return bodyPassable(level, feet, feetState)
+                && bodyPassable(level, head, headState)
                 && floorState.isFaceSturdy(level, floor, Direction.UP)
                 && level.getFluidState(feet).isEmpty()
                 && level.getFluidState(head).isEmpty();
+    }
+
+    private static boolean bodyPassable(ServerLevel level, BlockPos pos, BlockState state) {
+        if (state.getBlock() instanceof net.minecraft.world.level.block.DoorBlock) {
+            return DoorInteractions.canPlanThrough(level, pos, state);
+        }
+        return state.getCollisionShape(level, pos).isEmpty();
     }
 
     static boolean isGoal(BlockPos position, BlockPos target, int radius) {

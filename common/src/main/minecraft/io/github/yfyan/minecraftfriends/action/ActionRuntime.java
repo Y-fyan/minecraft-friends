@@ -1104,6 +1104,15 @@ public final class ActionRuntime {
             dx = waypoint.getX() + 0.5 - companion.getX();
             dz = waypoint.getZ() + 0.5 - companion.getZ();
         }
+        DoorInteractions.Result door = execution.doors.approach(owner, companion, waypoint, server.getTickCount());
+        if (door != DoorInteractions.Result.CLEAR) {
+            applyTravel(companion, 0.0F, false);
+            if (door == DoorInteractions.Result.DENIED) {
+                failCurrentAction(server, state, ownerState, owner, companion,
+                        "木门交互被拒绝、不可接近或重试已用尽；未绕过门权限。" );
+            }
+            return;
+        }
         float yaw = (float) (Math.atan2(dz, dx) * (180.0 / Math.PI) - 90.0);
         companion.setYRot(yaw);
         companion.setYHeadRot(yaw);
@@ -1321,6 +1330,7 @@ public final class ActionRuntime {
         private TaskState returnState;
         private String returnMessage;
         private long returnDeadlineTick;
+        private final DoorInteractions doors = new DoorInteractions();
         private List<BlockPos> path = List.of();
         private BlockPos miningPos;
         private net.minecraft.core.Direction miningDirection = net.minecraft.core.Direction.UP;
