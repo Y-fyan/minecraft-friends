@@ -107,6 +107,14 @@ public final class ActionsScenario {
                 }
                 case 7 -> {if(age>=20){command("mf task collect oak_log 8");next(8);}}
                 case 8 -> {
+                    if (age%20==0) {
+                        var task=ActionRuntime.status(server,owner.getUUID());
+                        var drops=owner.serverLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                            bot.getBoundingBox().inflate(32), e->e.isAlive() && e.getItem().is(Items.OAK_LOG));
+                        var drop=drops.stream().min(java.util.Comparator.comparingDouble(e->e.distanceToSqr(bot))).orElse(null);
+                        System.out.println("MF_M2_METRIC phase=8 bot_logs="+inventory(bot)+" source_logs="+logs()+" bot_x_milli="+Math.round(bot.getX()*1000)+" bot_z_milli="+Math.round(bot.getZ()*1000)+" drop_distance_milli="+(drop==null?-1:Math.round(drop.distanceTo(bot)*1000))+" drop_delayed="+(drop!=null&&drop.hasPickUpDelay()?1:0)+" custom_companion="+(bot instanceof io.github.yfyan.minecraftfriends.companion.CompanionServerPlayer?1:0));
+                        if(Set.of("FAILED","TIMED_OUT","CANCELLED").contains(task.state().name())) {fail("collection_"+task.state().name().toLowerCase(Locale.ROOT));return;}
+                    }
                     if(inventory(owner)>=8) {
                         check(inventory(owner)==8 && logs()==0 && inventory(bot)==0,"eight_real_logs_delivered_without_duplication");
                         check(owner.serverLevel().getBlockState(new BlockPos(12,-60,6)).is(Blocks.OAK_LOG),"outside_area_resource_untouched");
