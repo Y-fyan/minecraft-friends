@@ -6,8 +6,8 @@ import java.util.Objects;
 public record ActionPlan(ActionType type, int count) {
     public ActionPlan {
         Objects.requireNonNull(type, "type");
-        if (type == ActionType.NONE) {
-            throw new IllegalArgumentException("NONE is not a model action.");
+        if (type == ActionType.NONE || type == ActionType.FELL_TREE) {
+            throw new IllegalArgumentException("This action requires a separate validated executor request.");
         }
         if (type == ActionType.COLLECT_OAK_LOGS) {
             if (count < 1 || count > 64) {

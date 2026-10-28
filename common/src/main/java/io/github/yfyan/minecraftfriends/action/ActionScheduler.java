@@ -20,6 +20,15 @@ public final class ActionScheduler {
     private final Map<UUID, OwnerQueue> owners = new LinkedHashMap<>();
     private final LinkedHashMap<UUID, TaskRecord> retained = new LinkedHashMap<>();
 
+    /** Bounded replay guard shared with explicit preview/confirm entrypoints. */
+    public synchronized boolean knownTask(UUID taskId) {
+        return retained.containsKey(Objects.requireNonNull(taskId, "taskId"));
+    }
+
+    private static boolean isCollection(ActionType type) {
+        return type == ActionType.COLLECT_OAK_LOGS || type == ActionType.FELL_TREE;
+    }
+
     public synchronized SubmitResult submit(ActionRequest request) {
         Objects.requireNonNull(request, "request");
         if (retained.containsKey(request.taskId())) {
@@ -60,7 +69,7 @@ public final class ActionScheduler {
         if (task == null || task.machine.state() != TaskState.RUNNING
                 || completed < task.completed || delivered < task.delivered
                 || delivered > completed || completed > task.request.requestedCount()
-                && task.request.type() == ActionType.COLLECT_OAK_LOGS) {
+                && isCollection(task.request.type())) {
             return false;
         }
         task.completed = completed;
@@ -79,7 +88,7 @@ public final class ActionScheduler {
         TaskRecord task = retained.get(taskId);
         if (task == null || !task.machine.canTransitionTo(terminalState)
                 || completed < task.completed || delivered < task.delivered
-                || delivered > completed || (task.request.type() == ActionType.COLLECT_OAK_LOGS
+                || delivered > completed || (isCollection(task.request.type())
                 && completed > task.request.requestedCount())) {
             return false;
         }
@@ -169,7 +178,7 @@ public final class ActionScheduler {
         }
 
         private ActionStatus snapshot() {
-            int requested = request.type() == ActionType.COLLECT_OAK_LOGS ? request.requestedCount() : 0;
+            int requested = isCollection(request.type()) ? request.requestedCount() : 0;
             return new ActionStatus(request.taskId(), request.type(), machine.state(),
                     completed, requested, delivered, message);
         }

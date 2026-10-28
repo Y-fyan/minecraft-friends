@@ -5,5 +5,6 @@ public enum ActionType {
     FOLLOW,
     WAIT,
     STOP,
-    COLLECT_OAK_LOGS
+    COLLECT_OAK_LOGS,
+    FELL_TREE
 }
