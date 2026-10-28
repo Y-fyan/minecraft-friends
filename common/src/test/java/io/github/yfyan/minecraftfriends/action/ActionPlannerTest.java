@@ -1,5 +1,6 @@
 package io.github.yfyan.minecraftfriends.action;
 
+import io.github.yfyan.minecraftfriends.capability.CapabilityCall;
 import io.github.yfyan.minecraftfriends.model.*;
 import org.junit.jupiter.api.Test;
 import java.time.Duration;
@@ -13,13 +14,13 @@ class ActionPlannerTest {
     private final Queue<Runnable> main = new ArrayDeque<>();
     private final AtomicLong now = new AtomicLong();
     private final ActionPlanner planner = new ActionPlanner(main::add, now::get);
-    private final List<ActionPlan> applied = new ArrayList<>();
+    private final List<CapabilityCall> applied = new ArrayList<>();
     private final List<ModelRequest> requests = new ArrayList<>();
     private boolean valid = true;
     private final ActionPerception snapshot = snapshot(UUID.randomUUID(), null);
     private final ActionPlanner.Handler handler = new ActionPlanner.Handler() {
-        public boolean revalidate(ActionPlanner.Ticket ticket, ActionPerception seen, ActionPlan plan) { return valid; }
-        public void apply(ActionPlanner.Ticket ticket, ActionPerception seen, ActionPlan plan) { applied.add(plan); }
+        public boolean revalidate(ActionPlanner.Ticket ticket, ActionPerception seen, CapabilityCall call) { return valid; }
+        public void apply(ActionPlanner.Ticket ticket, ActionPerception seen, CapabilityCall call) { applied.add(call); }
         public void onOutcome(ActionPlanner.Status status) { }
     };
 
@@ -30,10 +31,11 @@ class ActionPlannerTest {
         workers.remove().run();
         assertEquals(2, requests.getFirst().messages().size());
         assertTrue(requests.getFirst().messages().get(1).content().contains(snapshot.ownerId().toString()));
-        response.complete(new ModelResponse("{\"action\":\"follow\"}"));
+        assertTrue(requests.getFirst().messages().getFirst().content().contains("collect_oak_logs"));
+        response.complete(new ModelResponse("{\"capability\":\"follow\"}"));
         assertTrue(applied.isEmpty());
         drainMain();
-        assertEquals(List.of(new ActionPlan(ActionType.FOLLOW, 0)), applied);
+        assertEquals(List.of(new CapabilityCall("follow", Map.of())), applied);
         assertEquals(ActionPlanner.State.DISPATCHED, status().state());
     }
 
@@ -41,14 +43,14 @@ class ActionPlannerTest {
         var response = nonCancellable();
         request(snapshot, provider(response)); workers.remove().run();
         planner.cancel(snapshot.ownerId());
-        response.complete(new ModelResponse("{\"action\":\"follow\"}")); drainMain();
+        response.complete(new ModelResponse("{\"capability\":\"follow\"}")); drainMain();
         assertTrue(applied.isEmpty()); assertEquals(ActionPlanner.State.CANCELLED, status().state());
     }
 
     @Test void stopAfterResponseButBeforeMainDispatchWins() {
         var response = new CompletableFuture<ModelResponse>();
         request(snapshot, provider(response)); workers.remove().run();
-        response.complete(new ModelResponse("{\"action\":\"follow\"}"));
+        response.complete(new ModelResponse("{\"capability\":\"follow\"}"));
         planner.cancel(snapshot.ownerId()); drainMain();
         assertTrue(applied.isEmpty());
     }
@@ -58,19 +60,28 @@ class ActionPlannerTest {
         var first = request(snapshot, provider(old)); workers.remove().run();
         var second = request(snapshot, provider(current)); workers.remove().run();
         assertTrue(second.generation() > first.generation());
-        old.complete(new ModelResponse("{\"action\":\"follow\"}"));
-        current.complete(new ModelResponse("{\"action\":\"wait\"}")); drainMain();
-        assertEquals(List.of(new ActionPlan(ActionType.WAIT, 0)), applied);
+        old.complete(new ModelResponse("{\"capability\":\"follow\"}"));
+        current.complete(new ModelResponse("{\"capability\":\"wait\"}")); drainMain();
+        assertEquals(List.of(new CapabilityCall("wait", Map.of())), applied);
         assertEquals(second.requestId(), status().requestId());
     }
 
     @Test void malformedResponsesAndForgedSuccessNeverDispatch() {
-        for (String json : List.of("[]", "null", "{\"action\":\"wait\",\"success\":true}",
-                "{\"action\":\"collect_oak_logs\",\"count\":1.5}",
-                "{\"action\":\"collect_oak_logs\",\"count\":2147483648}", "执行成功")) {
-            request(snapshot, provider(CompletableFuture.completedFuture(new ModelResponse(json))));
+        record Case(String json, String reason) { }
+        for (Case bad : List.of(
+                new Case("[]", "BAD_JSON"),
+                new Case("null", "BAD_JSON"),
+                new Case("执行成功", "BAD_JSON"),
+                new Case("{\"action\":\"follow\"}", "BAD_ARGUMENT"),
+                new Case("{\"capability\":\"wait\",\"success\":true}", "BAD_ARGUMENT"),
+                new Case("{\"capability\":\"execute_code\"}", "UNKNOWN_CAPABILITY"),
+                new Case("{\"capability\":\"collect_oak_logs\",\"arguments\":{\"count\":1.5}}", "BAD_ARGUMENT"),
+                new Case("{\"capability\":\"collect_oak_logs\",\"arguments\":{\"count\":2147483648}}", "BAD_ARGUMENT"),
+                new Case("{\"capability\":\"collect_oak_logs\",\"arguments\":{\"count\":65}}", "OUT_OF_RANGE"),
+                new Case("{\"capability\":\"follow\",\"arguments\":{\"count\":1}}", "BAD_ARGUMENT"))) {
+            request(snapshot, provider(CompletableFuture.completedFuture(new ModelResponse(bad.json()))));
             workers.remove().run(); drainMain();
-            assertEquals("BAD_JSON", status().reason());
+            assertEquals(bad.reason(), status().reason(), bad.json());
         }
         assertTrue(applied.isEmpty());
     }
@@ -81,7 +92,8 @@ class ActionPlannerTest {
     }
 
     @Test void collectionRequiresExplicitAreaAndMainThreadRevalidation() {
-        var response = CompletableFuture.completedFuture(new ModelResponse("{\"action\":\"collect_oak_logs\",\"count\":8}"));
+        var response = CompletableFuture.completedFuture(
+                new ModelResponse("{\"capability\":\"collect_oak_logs\",\"arguments\":{\"count\":8}}"));
         request(snapshot, provider(response)); workers.remove().run(); drainMain();
         assertEquals("UNAUTHORIZED", status().reason()); assertTrue(applied.isEmpty());
         var authorized = snapshot(snapshot.ownerId(), new BlockArea(0,0,0,1,1,1));
@@ -89,7 +101,7 @@ class ActionPlannerTest {
         assertEquals("STALE_CONTEXT", status().reason()); assertTrue(applied.isEmpty());
         valid = true;
         request(authorized, provider(response)); workers.remove().run(); drainMain();
-        assertEquals(List.of(new ActionPlan(ActionType.COLLECT_OAK_LOGS,8)), applied);
+        assertEquals(List.of(new CapabilityCall("collect_oak_logs", Map.of("count", 8))), applied);
     }
 
     @Test void timeoutAndCloseInvalidateLateResponses() {
@@ -97,7 +109,7 @@ class ActionPlannerTest {
         request(snapshot, provider(response)); workers.remove().run();
         now.set(Duration.ofSeconds(31).toNanos()); planner.expire(); drainMain();
         assertEquals(ActionPlanner.State.TIMED_OUT, status().state());
-        response.complete(new ModelResponse("{\"action\":\"follow\"}")); drainMain();
+        response.complete(new ModelResponse("{\"capability\":\"follow\"}")); drainMain();
         assertTrue(applied.isEmpty());
         request(snapshot, provider(nonCancellable())); planner.close(); workers.remove().run();
         assertEquals(ActionPlanner.State.CANCELLED, status().state());
@@ -143,7 +155,7 @@ class ActionPlannerTest {
     }
 
     @Test void deadlineIsRecheckedEvenWhenAResponseIsAlreadyQueued() {
-        request(snapshot, provider(CompletableFuture.completedFuture(new ModelResponse("{\"action\":\"follow\"}"))));
+        request(snapshot, provider(CompletableFuture.completedFuture(new ModelResponse("{\"capability\":\"follow\"}"))));
         workers.remove().run(); now.set(Duration.ofSeconds(30).toNanos()); drainMain();
         assertEquals(ActionPlanner.State.TIMED_OUT, status().state()); assertTrue(applied.isEmpty());
     }

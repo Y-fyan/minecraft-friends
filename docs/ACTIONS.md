@@ -9,7 +9,8 @@
 | `/mf task follow` | 让当前主人的伙伴以正常实体移动跟随主人。 |
 | `/mf task wait` | 停止当前动作并等待；清除该任务留下的移动和交互输入。 |
 | `/mf task stop` | 优先取消当前任务并清除输入。 |
-| `/mf task status` | 返回实际动作和独立规划状态。 |
+| `/mf task status` | 返回实际动作、规划状态与最近一次能力调用结果。 |
+| `/mf task capabilities` | 只读列出模型可调用的能力注册表，不创建任务。 |
 | `/mf task plan <自然语言>` | 显式请求现有 Provider 生成白名单动作；复验通过后才提交执行。 |
 | `/mf task clear` | 等同 stop：取消动作、规划和一次性区域授权。 |
 | `/mf task area x1 y1 z1 x2 y2 z2` | 主人明确选定一次采集区域；设置本身不改变方块。 |
@@ -43,7 +44,7 @@ ActionRuntime.status(MinecraftServer server, UUID ownerId)
 
 服务端在请求时捕获不可变 `ActionPerception`：世界运行会话 UUID、主人/伙伴 UUID、维度、tick、双方位置/生命、伙伴最多 41 个库存槽的物品 ID/数量，以及已选区域。围绕伙伴只检查 x/z ±3、y ±2 的 245 个位置，每次读取前检查区块已加载及高度；最多保留 64 个非空气方块 ID/坐标以限制提示长度。不加载区块、不扫描箱子内容、不发送 NBT、其他玩家背包或聊天历史。未观测位置不能推断为可通行或可破坏。
 
-后台通过现有 `ModelProvider.complete` 获取响应，使用 `ActionPlanParser` 严格解析一个最多 1024 字符的对象；仅允许 `follow`、`wait`、`stop`、`collect_oak_logs`（count 为 1–64 整数）。额外字段、代码、成功声明、数组/null、非整数、溢出数字等均失败。通过 `server.execute` 回到服务器线程后重新检查请求代际、服务器世界会话、同一在线主人/伙伴实例、伙伴归属、生命、维度、48 格距离、配置和最多 600 tick 快照年龄；采集额外检查当前授权区域完全一致、有效期、边界、已加载和双方 32 格距离。执行器继续逐次复核采集权限。规划 request ID 直接作为提交的任务 ID，复用任务去重。
+后台通过现有 `ModelProvider.complete` 获取响应，使用 `CapabilityCallParser` 按注册表严格解析一个最多 1024 字符的对象；只允许 `CapabilityRegistry` 中实际实现的能力，参数类型与范围由注册表约束（当前 `collect_oak_logs` 的 count 为 1–64 整数）。未知能力、额外字段、额外参数、重复字段、代码、成功声明、数组/null、非整数、溢出数字等均失败，并返回 `UNKNOWN_CAPABILITY`、`BAD_ARGUMENT`、`OUT_OF_RANGE` 或 `BAD_JSON`。通过 `server.execute` 回到服务器线程后重新检查请求代际、服务器世界会话、同一在线主人/伙伴实例、伙伴归属、生命、维度、48 格距离、配置和最多 600 tick 快照年龄；需要区域授权的能力（当前仅 `collect_oak_logs`）额外检查当前授权区域完全一致、有效期、边界、已加载和双方 32 格距离。执行器继续逐次复核采集权限。规划 request ID 直接作为 call id 与提交的任务 ID，复用任务去重。能力列表、调用格式、错误码与结果关联见 [能力接口](CAPABILITIES.md)。
 
 `stop`、`clear`、直接 follow/wait/collect、新规划、主人离线、伙伴死亡、tick 检出的死亡/维度变化或距离失效，以及聊天 clear、Provider/服务器关闭均使旧规划失效；修改区域也使旧规划失效。取消先移除有效令牌，再尽力取消 Provider future；即使 Provider 忽略取消或回包已排入服务器队列，也不能恢复旧动作。停止命令直接在服务器线程处理，不等待模型。超时由服务器 tick 检查，不创建额外计时线程。
 
@@ -68,7 +69,7 @@ ActionRuntime.perception(server, ownerId);     // Optional<ActionPerception>；�
 
 ## 验证边界
 
-类型化调度、正常移动、一次性区域授权、采集执行器与上述规划链已接入。规划核心单测覆盖工作池/主线程分离、严格坏 JSON、真实离线 mock、安全拒绝无授权采集、服务器上下文失效、无视取消的迟到 Provider、回包已排队后取消、请求代际、超时、关闭和队列/提示预算。common 单测与 Fabric/Forge Java 编译通过；这些不能替代真实客户端、世界方块和实际库存验收。
+类型化调度、正常移动、一次性区域授权、采集执行器与上述规划链已接入。规划核心单测覆盖工作池/主线程分离、严格坏 JSON、真实离线 mock、安全拒绝无授权采集、服务器上下文失效、无视取消的迟到 Provider、回包已排队后取消、请求代际、超时、关闭和队列/提示预算。能力层单测另外覆盖注册表条目、提示预算、未知能力、额外/重复字段、错误类型、越界数量、小数与溢出、JSON 体积上限。common 单测与 Fabric Java 编译通过；Forge 编译和真实客户端、世界方块、实际库存验收仍需单独执行。
 
 统筹验收已覆盖双加载器导航和采集交付、实际重生、满背包/资源不足/取消、木门与双玩家隔离，逐轮版本和限制见 [0012](validation/0012-m2-core-acceptance.md)。最终生产候选的完整矩阵、保护事件、退出清理和六组性能对照见 [0014](validation/0014-m2-acceptance.md)；历史记录不替代最终证据。
 

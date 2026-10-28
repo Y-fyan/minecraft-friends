@@ -7,6 +7,10 @@ import io.github.yfyan.minecraftfriends.chat.ChatRuntime;
 import net.minecraft.core.registries.BuiltInRegistries;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import io.github.yfyan.minecraftfriends.capability.CapabilityCall;
+import io.github.yfyan.minecraftfriends.capability.CapabilityRegistry;
+import io.github.yfyan.minecraftfriends.capability.CapabilityResult;
+import io.github.yfyan.minecraftfriends.capability.CapabilitySpec;
 import io.github.yfyan.minecraftfriends.companion.CompanionData;
 import io.github.yfyan.minecraftfriends.companion.CompanionRuntime;
 import io.github.yfyan.minecraftfriends.task.TaskState;
@@ -31,6 +35,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -70,6 +75,7 @@ public final class ActionRuntime {
                 .then(literal("wait").executes(context -> start(context.getSource(), ActionType.WAIT)))
                 .then(literal("stop").executes(context -> stop(context.getSource())))
                 .then(literal("status").executes(context -> sendStatus(context.getSource())))
+                .then(literal("capabilities").executes(context -> sendCapabilities(context.getSource())))
                 .then(literal("clear").executes(context -> stop(context.getSource())))
                 .then(literal("plan").then(argument("instruction", StringArgumentType.greedyString())
                         .executes(context -> plan(context.getSource(),
@@ -102,6 +108,31 @@ public final class ActionRuntime {
             return idleStatus();
         }
         return state.scheduler.status(ownerId).orElseGet(ActionRuntime::idleStatus);
+    }
+
+    /** Capabilities exposed to the model; the same list the planner prompt is generated from. */
+    public static List<CapabilitySpec> capabilities() {
+        return CapabilityRegistry.builtin().all();
+    }
+
+    /**
+     * Read-only correlation between a server-assigned call id and the executor's real result.
+     * Never advances a task or touches the world; callers must use the server thread.
+     */
+    public static CapabilityResult capabilityResult(MinecraftServer server, UUID ownerId) {
+        ServerState state = stateIfStarted(server);
+        if (state == null) {
+            return CapabilityResult.idle();
+        }
+        ActionStatus current = state.scheduler.status(ownerId).orElse(null);
+        if (current != null) {
+            String capability = state.capabilityByTask.get(current.taskId());
+            if (capability != null) {
+                return new CapabilityResult(current.taskId(), current.taskId(), capability, current.state(),
+                        current.completed(), current.requested(), current.delivered(), current.message());
+            }
+        }
+        return state.lastResults.getOrDefault(ownerId, CapabilityResult.idle());
     }
 
     public static void cancelPlanning(MinecraftServer server, UUID ownerId) {
@@ -188,7 +219,7 @@ public final class ActionRuntime {
             state.planner.request(snapshot, instruction, access.provider(), access.worker(), access.timeout(),
                     access.contextBudget(), new ActionPlanner.Handler() {
                         @Override
-                        public boolean revalidate(ActionPlanner.Ticket ticket, ActionPerception captured, ActionPlan plan) {
+                        public boolean revalidate(ActionPlanner.Ticket ticket, ActionPerception captured, CapabilityCall call) {
                             if (stateIfStarted(owner.server) != state || !state.worldSession.equals(captured.worldSession())
                                     || owner.server.getPlayerList().getPlayer(owner.getUUID()) != owner
                                     || owner.server.getPlayerList().getPlayer(companion.getUUID()) != companion
@@ -200,7 +231,9 @@ public final class ActionRuntime {
                             try {
                                 if (!requireLiveCompanion(owner).identity().companionId().equals(captured.companionId())) return false;
                             } catch (CommandSyntaxException unavailable) { return false; }
-                            if (plan.type() != ActionType.COLLECT_OAK_LOGS) return true;
+                            CapabilitySpec spec = CapabilityRegistry.builtin().find(call.capability()).orElse(null);
+                            if (spec == null) return false;
+                            if (!spec.requiresAreaAuthorization()) return true;
                             return captured.authorizedArea() != null && captured.authorizedArea().equals(os.area)
                                     && owner.server.getTickCount() <= os.areaExpiresAt
                                     && owner.serverLevel().dimension().equals(os.areaDimension)
@@ -208,17 +241,47 @@ public final class ActionRuntime {
                                     && areaNear(owner, os.area, MAX_AREA_DISTANCE) && areaNear(companion, os.area, MAX_AREA_DISTANCE);
                         }
                         @Override
-                        public void apply(ActionPlanner.Ticket ticket, ActionPerception captured, ActionPlan result) {
+                        public void apply(ActionPlanner.Ticket ticket, ActionPerception captured, CapabilityCall call) {
+                            if (state.executedCalls.putIfAbsent(ticket.requestId(), Boolean.TRUE) != null) {
+                                owner.sendSystemMessage(Component.literal("重复的能力调用已被拒绝。"));
+                                return;
+                            }
+                            while (state.executedCalls.size() > 256) {
+                                state.executedCalls.remove(state.executedCalls.keySet().iterator().next());
+                            }
                             try {
-                                if(result.type()==ActionType.WAIT && ActionPhraseParser.needsClarification(instruction)) {
+                                if (call.capability().equals("wait") && ActionPhraseParser.needsClarification(instruction)) {
                                     owner.sendSystemMessage(Component.literal("采集请求还不明确：你要多少个橡木原木？请先明确数量和区域；本次没有启动采集。"));
                                     return;
                                 }
-                                switch (result.type()) {
-                                    case STOP -> stopFor(owner);
-                                    case FOLLOW, WAIT -> startFor(owner, result.type(), ticket.requestId());
-                                    case COLLECT_OAK_LOGS -> collectForOwner(owner, result.count(), ticket.requestId());
-                                    default -> throw new IllegalArgumentException("Unsupported action");
+                                switch (call.capability()) {
+                                    case "stop" -> {
+                                        stopFor(owner);
+                                        rememberResult(state, owner.getUUID(), new CapabilityResult(
+                                                ticket.requestId(), CapabilityResult.NO_TASK, "stop",
+                                                TaskState.CANCELLED, 0, 0, 0, "stopped"));
+                                    }
+                                    case "observe" -> {
+                                        ActionPerception observed = perception(owner.server, owner.getUUID())
+                                                .orElseThrow(() -> new IllegalStateException("observation unavailable"));
+                                        CapabilityResult result = new CapabilityResult(ticket.requestId(),
+                                                CapabilityResult.NO_TASK, "observe", TaskState.SUCCEEDED,
+                                                0, 0, 0, describe(observed));
+                                        rememberResult(state, owner.getUUID(), result);
+                                        owner.sendSystemMessage(Component.literal("能力 observe 结果：" + result.detail()));
+                                    }
+                                    case "follow", "wait" -> {
+                                        ActionType type = call.capability().equals("follow") ? ActionType.FOLLOW : ActionType.WAIT;
+                                        startFor(owner, type, ticket.requestId());
+                                        rememberCapability(state, ticket.requestId(), call.capability());
+                                    }
+                                    case "collect_oak_logs" -> {
+                                        int count = call.integer("count").orElseThrow(
+                                                () -> new IllegalStateException("count was validated before dispatch"));
+                                        collectForOwner(owner, count, ticket.requestId());
+                                        rememberCapability(state, ticket.requestId(), call.capability());
+                                    }
+                                    default -> throw new IllegalArgumentException("Unsupported capability");
                                 }
                             } catch (CommandSyntaxException refused) { throw new IllegalStateException(refused); }
                         }
@@ -464,11 +527,87 @@ public final class ActionRuntime {
     private static int sendStatus(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer owner = source.getPlayerOrException();
         ActionStatus current = status(owner.server, owner.getUUID());
+        CapabilityResult result = capabilityResult(owner.server, owner.getUUID());
         owner.sendSystemMessage(Component.literal("规划 " + planningStatus(owner.server, owner.getUUID())));
         owner.sendSystemMessage(Component.literal("任务 " + current.taskId() + " / " + current.type()
                 + " / " + current.state() + " / " + current.completed() + "/" + current.requested()
                 + " / 已交付 " + current.delivered() + " / " + current.message()));
+        owner.sendSystemMessage(Component.literal("能力 " + result.capability() + " / 调用 " + result.callId()
+                + " / " + result.state() + " / " + result.completed() + "/" + result.requested()
+                + " / 已交付 " + result.delivered() + " / " + result.detail()));
         return 1;
+    }
+
+    private static int sendCapabilities(CommandSourceStack source) {
+        source.sendSuccess(() -> Component.literal("可用能力（模型与命令共用同一注册表）："), false);
+        source.sendSuccess(() -> Component.literal(CapabilityRegistry.builtin().describe()), false);
+        source.sendSuccess(() -> Component.literal("模型只能返回 capability/arguments JSON；未知能力、额外字段和越界数值会被拒绝。"), false);
+        return 1;
+    }
+
+    private static void rememberCapability(ServerState state, UUID taskId, String capability) {
+        state.capabilityByTask.put(taskId, capability);
+        while (state.capabilityByTask.size() > 256) {
+            state.capabilityByTask.remove(state.capabilityByTask.keySet().iterator().next());
+        }
+    }
+
+    private static void rememberResult(ServerState state, UUID ownerId, CapabilityResult result) {
+        state.lastResults.put(ownerId, result);
+        while (state.lastResults.size() > 256) {
+            state.lastResults.remove(state.lastResults.keySet().iterator().next());
+        }
+    }
+
+    private static String describe(ActionPerception perception) {
+        StringBuilder text = new StringBuilder("dimension=").append(perception.dimension())
+                .append("; owner=").append(describe(perception.ownerPosition()))
+                .append("; companion=").append(describe(perception.companionPosition()))
+                .append("; health=").append(perception.ownerHealth()).append('/').append(perception.companionHealth())
+                .append("; area=").append(perception.authorizedArea() == null ? "none"
+                        : perception.authorizedArea().minX() + "," + perception.authorizedArea().minY() + ","
+                        + perception.authorizedArea().minZ() + ".." + perception.authorizedArea().maxX() + ","
+                        + perception.authorizedArea().maxY() + "," + perception.authorizedArea().maxZ())
+                .append("; inventory=");
+        int used = 0;
+        for (ActionPerception.InventorySlot slot : perception.inventory()) {
+            String item = slot.itemId() + ':' + slot.count();
+            if (used + item.length() > 160) {
+                text.append('…');
+                break;
+            }
+            if (used > 0) {
+                text.append(',');
+            }
+            text.append(item);
+            used += item.length();
+        }
+        if (perception.inventory().isEmpty()) {
+            text.append("empty");
+        }
+        text.append("; blocks=");
+        int blocks = 0;
+        for (ActionPerception.Block block : perception.blocks()) {
+            if (blocks == 12) {
+                text.append('…');
+                break;
+            }
+            if (blocks > 0) {
+                text.append(';');
+            }
+            text.append(block.blockId()).append('@').append(block.x()).append(',').append(block.y())
+                    .append(',').append(block.z());
+            blocks++;
+        }
+        if (perception.blocks().isEmpty()) {
+            text.append("none");
+        }
+        return text.length() <= CapabilityResult.MAX_DETAIL_CHARS ? text.toString()
+                : text.substring(0, CapabilityResult.MAX_DETAIL_CHARS - 1) + "…";
+    }
+
+    private static String describe(ActionPerception.Position position) {
+        return String.format(java.util.Locale.ROOT, "%.1f,%.1f,%.1f", position.x(), position.y(), position.z());
     }
 
     private static int setArea(CommandSourceStack source, int x1, int y1, int z1,
@@ -1307,6 +1446,10 @@ public final class ActionRuntime {
         private final ActionScheduler scheduler = new ActionScheduler();
         private final Map<UUID, ActionRequest> requests = new HashMap<>();
         private final Map<UUID, OwnerState> owners = new HashMap<>();
+        /** Bounded callId -> capability and per-owner last result; used only for read-only correlation. */
+        private final LinkedHashMap<UUID, String> capabilityByTask = new LinkedHashMap<>();
+        private final Map<UUID, CapabilityResult> lastResults = new HashMap<>();
+        private final LinkedHashMap<UUID, Boolean> executedCalls = new LinkedHashMap<>();
         private int nextOwnerCursor;
         private int pathSearchesRemaining;
         private int areaScansRemaining;
