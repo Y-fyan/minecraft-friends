@@ -1,11 +1,13 @@
 package io.github.yfyan.minecraftfriends.fabric;
 
 import io.github.yfyan.minecraftfriends.MinecraftFriends;
+import io.github.yfyan.minecraftfriends.action.ActionRuntime;
 import io.github.yfyan.minecraftfriends.bootstrap.Bootstrap;
 import io.github.yfyan.minecraftfriends.companion.CompanionRuntime;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -26,8 +28,11 @@ public final class MinecraftFriendsFabric implements ModInitializer {
                 CompanionRuntime.onOwnerLogin(handler.player));
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 CompanionRuntime.onOwnerLogout(handler.player));
+        ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) ->
+                ActionRuntime.onPlayerLifecycleChange(player));
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
             if (entity instanceof ServerPlayer player) {
+                ActionRuntime.onPlayerLifecycleChange(player);
                 CompanionRuntime.onCompanionDeath(player);
             }
         });

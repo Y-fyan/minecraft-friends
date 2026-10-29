@@ -73,3 +73,7 @@ ActionRuntime.perception(server, ownerId);     // Optional<ActionPerception>；�
 统筹验收已覆盖双加载器导航和采集交付、实际重生、满背包/资源不足/取消、木门与双玩家隔离，逐轮版本和限制见 [0012](validation/0012-m2-core-acceptance.md)。最终生产候选的完整矩阵、保护事件、退出清理和六组性能对照见 [0014](validation/0014-m2-acceptance.md)；历史记录不替代最终证据。
 
 高级跟随距离使用 JVM 参数 `-Dminecraftfriends.actions.follow-distance=3`，默认3格，接受2至8格（含小数）；非法值采用安全默认3格。它是游戏/专服启动参数，不是 properties 键。实际值显示在跟随反馈中。普通命令默认启用，停止不经过模型。中文采集支持明确1至64数量及数字周围空格；其他任务请使用显式 plan 入口，不保证任意普通聊天自动执行。
+
+## 普通树执行技能（#31 增量，未完成聊天验收）
+
+新增 `/mf task tree preview x y z` 和 `/mf task tree confirm <预览编号> [replant]`，先选区、预览精确目标，再确认一棵普通橡树/白桦。命令、真实物资计数、补种、严格掉落归属、生命周期与验证限制详见 [树木技能](TREES.md)。这不是旧 `collect oak_log` 的别名，也没有接入普通聊天或新增 #28 注册表；旧 M2 编译/实机记录不能替代新增技能验收。
