@@ -170,6 +170,7 @@ public final class CompanionRuntime {
         CompanionData store = data(owner.server);
         CompanionData.Entry entry = store.find(owner.getUUID())
                 .orElseThrow(() -> new IllegalStateException("No companion is registered for this owner."));
+        ActionRuntime.onOwnerLogout(owner);
         ChatRuntime.onCompanionRemoved(owner.server, owner.getUUID());
         if (!removeLive(owner.server, entry.identity())) {
             throw new IllegalStateException("Refused to remove a player that is not a local companion.");

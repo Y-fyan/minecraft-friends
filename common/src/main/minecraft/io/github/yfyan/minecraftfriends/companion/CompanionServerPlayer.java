@@ -34,22 +34,24 @@ public final class CompanionServerPlayer extends ServerPlayer {
         for(ItemEntity item:nearby) {
             java.util.UUID id=item.getUUID();
             int stackBefore=item.getItem().getCount();
-            boolean fallback=!(player instanceof CompanionServerPlayer)
-                    && item.getItem().is(net.minecraft.world.item.Items.OAK_LOG);
-            int inventoryBefore=fallback?oakCount(player):0;
+            net.minecraft.world.item.Item material = item.getItem().getItem();
+            boolean fallback = !(player instanceof CompanionServerPlayer)
+                    && (material == net.minecraft.world.item.Items.OAK_LOG
+                    || material == net.minecraft.world.item.Items.BIRCH_LOG);
+            int inventoryBefore = fallback ? countMaterial(player, material) : 0;
             item.playerTouch(player);
             if(fallback) {
-                int accepted=Math.min(stackBefore,Math.max(0,oakCount(player)-inventoryBefore));
+                int accepted=Math.min(stackBefore,Math.max(0,countMaterial(player, material)-inventoryBefore));
                 if(accepted>0)ActionRuntime.onItemPickedUp(player,id,accepted,stackBefore);
             }
         }
     }
 
-    private static int oakCount(ServerPlayer player) {
+    private static int countMaterial(ServerPlayer player, net.minecraft.world.item.Item material) {
         int result=0;
         for(int slot=0;slot<player.getInventory().getContainerSize();slot++) {
             var stack=player.getInventory().getItem(slot);
-            if(stack.is(net.minecraft.world.item.Items.OAK_LOG))result+=stack.getCount();
+            if(stack.is(material))result+=stack.getCount();
         }
         return result;
     }
@@ -57,7 +59,7 @@ public final class CompanionServerPlayer extends ServerPlayer {
     @Override
     public void take(Entity entity, int amount) {
         // Inventory.add may already have emptied the stack before vanilla invokes take.
-        // The runtime validates the UUID against this task's source-bound oak-drop ledger.
+        // The runtime validates the UUID against this task's source-bound log-drop ledger.
         boolean itemPickup = entity instanceof ItemEntity;
         int stackCountBeforePickup = entity instanceof ItemEntity item ? item.getItem().getCount() + amount : 0;
         java.util.UUID itemEntityId = entity.getUUID();
