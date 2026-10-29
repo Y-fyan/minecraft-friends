@@ -87,6 +87,8 @@ Minecraft Friends 计划为 **Minecraft Java 1.21.1** 提供 **Fabric** 和 **Mi
 | [模型配置](docs/MODEL.md) | 异步协议、凭据、预算、取消和失败反馈 |
 | [M1 真实模型验收](docs/validation/0010-m1-real-model.md) | DeepSeek 官方 API、双加载器三类事件、故障恢复及最终审阅 |
 | [聊天入口](docs/CHAT.md) | 私聊、共享会话、命令和数据范围 |
+| [动作与命令](docs/ACTIONS.md) | M2 动作契约、规划入口与导航边界 |
+| [能力接口](docs/CAPABILITIES.md) | 能力注册表、调用协议、授权、错误码与结果关联 |
 | [记忆核心](docs/MEMORY.md) | 来源、持久化、删除、隔离和冷却 |
 | [项目统筹](docs/COORDINATION.md) | 近期交付、依赖、职责、状态与推进节奏 |
 | [开发规范](docs/DEVELOPMENT.md) | 编码、线程、动作、配置、日志与依赖约定 |
