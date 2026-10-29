@@ -1,6 +1,7 @@
 package io.github.yfyan.minecraftfriends.action;
 
 import io.github.yfyan.minecraftfriends.task.TaskState;
+import io.github.yfyan.minecraftfriends.capability.CapabilityResult;
 import io.github.yfyan.minecraftfriends.task.TaskStateMachine;
 
 import java.util.ArrayDeque;
@@ -19,6 +20,44 @@ public final class ActionScheduler {
 
     private final Map<UUID, OwnerQueue> owners = new LinkedHashMap<>();
     private final LinkedHashMap<UUID, TaskRecord> retained = new LinkedHashMap<>();
+    private final LinkedHashMap<UUID, CapabilityResult> immediateResults = new LinkedHashMap<>();
+
+    /** Task correlation shares exactly the scheduler's retention lifetime, including active work. */
+    public synchronized void rememberCapability(UUID taskId, String capability) {
+        TaskRecord task = retained.get(taskId);
+        if (task == null) throw new IllegalArgumentException("Unknown capability task");
+        Objects.requireNonNull(capability, "capability");
+        clearCapabilityAssociations(task.request.ownerId());
+        task.capability = capability;
+        immediateResults.remove(task.request.ownerId());
+    }
+
+    /** A newer immediate call supersedes older task results without changing task execution. */
+    public synchronized void rememberResult(UUID ownerId, CapabilityResult result) {
+        Objects.requireNonNull(result, "result");
+        clearCapabilityAssociations(ownerId);
+        immediateResults.remove(ownerId);
+        immediateResults.put(ownerId, result);
+        while (immediateResults.size() > MAX_RETAINED_TASK_IDS) {
+            immediateResults.remove(immediateResults.keySet().iterator().next());
+        }
+    }
+
+    public synchronized CapabilityResult capabilityResult(UUID ownerId) {
+        CapabilityResult immediate = immediateResults.get(ownerId);
+        if (immediate != null) return immediate;
+        ActionStatus status = status(ownerId).orElse(null);
+        TaskRecord task = status == null ? null : retained.get(status.taskId());
+        if (task == null || task.capability == null) return CapabilityResult.idle();
+        return new CapabilityResult(status.taskId(), status.taskId(), task.capability, status.state(),
+                status.completed(), status.requested(), status.delivered(), status.message());
+    }
+
+    private void clearCapabilityAssociations(UUID ownerId) {
+        retained.values().stream().filter(task -> task.request.ownerId().equals(ownerId))
+                .forEach(task -> task.capability = null);
+    }
+
 
     public synchronized SubmitResult submit(ActionRequest request) {
         Objects.requireNonNull(request, "request");
@@ -163,6 +202,7 @@ public final class ActionScheduler {
         private int completed;
         private int delivered;
         private String message = "queued";
+        private String capability;
 
         private TaskRecord(ActionRequest request) {
             this.request = request;

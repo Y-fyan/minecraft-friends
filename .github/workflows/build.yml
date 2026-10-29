@@ -41,6 +41,9 @@ jobs:
           ./gradlew checkAll -Pproject_version=0.1.0-incremental-check --no-daemon --stacktrace
           ./gradlew checkAll --no-daemon --stacktrace
 
+      - name: Compile shared acceptance fixtures for both loaders (no game launch)
+        run: ./gradlew -p experiments/m1-acceptance :fabric:compileJava :forge:compileJava --no-daemon --stacktrace
+
       - name: Upload installable JARs
         uses: actions/upload-artifact@v7
         with:

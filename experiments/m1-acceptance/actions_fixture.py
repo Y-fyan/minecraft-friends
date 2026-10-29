@@ -19,7 +19,7 @@ class ActionsFixture:
       instruction,raw=last['content'].split('\n服务端观测快照：',1);snapshot=json.loads(raw)
       if not fixture.valid(snapshot):raise ValueError()
       label={'显式任务请求：请跟着我':'follow','显式任务请求：非法动作测试':'bad','显式任务请求：延迟后跟随':'late'}[instruction]
-      reply=json.dumps({'action':'op' if label=='bad' else 'follow'})
+      reply=json.dumps({'capability':'op' if label=='bad' else 'follow','arguments':{}})
      fixture.record(label)
      if label=='late':time.sleep(3);fixture.record('late_write_attempt')
      body=json.dumps({'choices':[{'message':{'role':'assistant','content':reply}}]},ensure_ascii=False).encode()

@@ -124,15 +124,7 @@ public final class ActionRuntime {
         if (state == null) {
             return CapabilityResult.idle();
         }
-        ActionStatus current = state.scheduler.status(ownerId).orElse(null);
-        if (current != null) {
-            String capability = state.capabilityByTask.get(current.taskId());
-            if (capability != null) {
-                return new CapabilityResult(current.taskId(), current.taskId(), capability, current.state(),
-                        current.completed(), current.requested(), current.delivered(), current.message());
-            }
-        }
-        return state.lastResults.getOrDefault(ownerId, CapabilityResult.idle());
+        return state.scheduler.capabilityResult(ownerId);
     }
 
     public static void cancelPlanning(MinecraftServer server, UUID ownerId) {
@@ -546,17 +538,11 @@ public final class ActionRuntime {
     }
 
     private static void rememberCapability(ServerState state, UUID taskId, String capability) {
-        state.capabilityByTask.put(taskId, capability);
-        while (state.capabilityByTask.size() > 256) {
-            state.capabilityByTask.remove(state.capabilityByTask.keySet().iterator().next());
-        }
+        state.scheduler.rememberCapability(taskId, capability);
     }
 
     private static void rememberResult(ServerState state, UUID ownerId, CapabilityResult result) {
-        state.lastResults.put(ownerId, result);
-        while (state.lastResults.size() > 256) {
-            state.lastResults.remove(state.lastResults.keySet().iterator().next());
-        }
+        state.scheduler.rememberResult(ownerId, result);
     }
 
     private static String describe(ActionPerception perception) {
@@ -1446,9 +1432,6 @@ public final class ActionRuntime {
         private final ActionScheduler scheduler = new ActionScheduler();
         private final Map<UUID, ActionRequest> requests = new HashMap<>();
         private final Map<UUID, OwnerState> owners = new HashMap<>();
-        /** Bounded callId -> capability and per-owner last result; used only for read-only correlation. */
-        private final LinkedHashMap<UUID, String> capabilityByTask = new LinkedHashMap<>();
-        private final Map<UUID, CapabilityResult> lastResults = new HashMap<>();
         private final LinkedHashMap<UUID, Boolean> executedCalls = new LinkedHashMap<>();
         private int nextOwnerCursor;
         private int pathSearchesRemaining;
