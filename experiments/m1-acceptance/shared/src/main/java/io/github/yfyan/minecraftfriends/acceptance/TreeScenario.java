@@ -93,6 +93,14 @@ public final class TreeScenario {
                     fail("tree_fixture_requires_explicit_api_mode");
                     return;
                 }
+                // Forge needs a fully initialized loader for Item components. Verify here,
+                // rather than bootstrapping its patched classes in a plain JavaExec process.
+                try {
+                    TreeDropRegression.verify();
+                } catch (AssertionError failure) {
+                    fail("tree_drop_regression");
+                    return;
+                }
                 emit("isolated_survival_map", true);
                 emit("explicit_commands_enabled", true);
                 emit(server instanceof net.minecraft.server.dedicated.DedicatedServer

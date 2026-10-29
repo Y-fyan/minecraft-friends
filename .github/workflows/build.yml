@@ -45,7 +45,7 @@ jobs:
         run: ./gradlew -p experiments/m1-acceptance :fabric:compileJava :forge:compileJava --no-daemon --stacktrace
 
       - name: Verify vanilla tree-drop accounting (no game launch)
-        run: ./gradlew -p experiments/m1-acceptance :fabric:verifyTreeDropAccounting :forge:verifyTreeDropAccounting --no-daemon --stacktrace
+        run: ./gradlew -p experiments/m1-acceptance :fabric:verifyTreeDropAccounting --no-daemon --stacktrace
 
       - name: Upload installable JARs
         uses: actions/upload-artifact@v7

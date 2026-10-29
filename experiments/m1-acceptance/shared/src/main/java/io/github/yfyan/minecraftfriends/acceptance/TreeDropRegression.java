@@ -15,6 +15,11 @@ public final class TreeDropRegression {
     public static void main(String[] args) {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
+        verify();
+    }
+
+    /** Also runs from TreeScenario after the actual loader has initialized its game registries. */
+    public static void verify() {
         for (var material : new net.minecraft.world.item.Item[]{Items.OAK_LOG, Items.BIRCH_LOG}) {
             ItemStack original = new ItemStack(material, 1);
             ItemStack unrelated = new ItemStack(material, 1);

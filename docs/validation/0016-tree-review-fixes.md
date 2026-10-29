@@ -27,11 +27,11 @@
 
 ```bash
 ./gradlew checkAll --no-daemon
-./gradlew -p experiments/m1-acceptance :fabric:verifyTreeDropAccounting :forge:verifyTreeDropAccounting --no-daemon
+./gradlew -p experiments/m1-acceptance :fabric:verifyTreeDropAccounting --no-daemon
 python3 -m unittest discover -s experiments/m1-acceptance -p 'test_*.py'
 ```
 
-新增 CI 步骤运行两个加载器 classpath 下的原版合并回归；结果须查看修复提交对应的 Actions，不能沿用原始候选的 CI 结果。
+新增 CI 步骤在 Fabric 开发 classpath 下执行原版合并回归，同时继续编译两个加载器的完整夹具。首次 CI 中测试、双端构建、夹具编译和 Fabric 合并回归通过，但尝试以普通 `JavaExec` 初始化 Forge 注册表失败：Forge 的物品组件需要已初始化 FML，不能把裸 Java 进程当作 Forge 游戏。现在独立任务仅用于原版回归，`TreeScenario` 在真实加载器初始化之后调用同一 `verify()`；Forge 游戏回归仍待实际运行，不通过伪造 FML 或跳过断言将其标为通过。完整 CI 结果须查看修复提交对应的 Actions，不能沿用原始候选的结果。
 
 ## 仍待游戏验收
 

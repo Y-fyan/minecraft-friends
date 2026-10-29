@@ -14,14 +14,15 @@ subprojects {
         tasks.withType(Jar).configureEach {
             from(rootProject.file('../../LICENSE')) { into 'META-INF' }
         }
-        tasks.register('verifyTreeDropAccounting', JavaExec) {
+        // Forge's patched Item.components requires initialized FML. Its real-runtime check is
+        // invoked by TreeScenario; a plain JavaExec must not pretend to be a Forge game launch.
+        if (project.name == 'fabric') tasks.register('verifyTreeDropAccounting', JavaExec) {
             group = 'verification'
             description = 'Checks vanilla tree-drop merging without launching a game or model.'
             dependsOn tasks.named('classes')
             javaLauncher = javaToolchains.launcherFor {
                 languageVersion = JavaLanguageVersion.of(21)
             }
-            // Forge declares the production mod compileOnly; this standalone check needs it too.
             classpath = sourceSets.main.runtimeClasspath + sourceSets.main.compileClasspath
             mainClass = 'io.github.yfyan.minecraftfriends.acceptance.TreeDropRegression'
             def regressionDirectory = layout.buildDirectory.dir('tree-drop-regression')
