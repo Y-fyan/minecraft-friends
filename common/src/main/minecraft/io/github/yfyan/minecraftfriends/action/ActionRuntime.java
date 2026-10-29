@@ -2,6 +2,7 @@ package io.github.yfyan.minecraftfriends.action;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.github.yfyan.minecraftfriends.chat.ChatRuntime;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -10,6 +11,9 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import io.github.yfyan.minecraftfriends.companion.CompanionData;
 import io.github.yfyan.minecraftfriends.companion.CompanionRuntime;
 import io.github.yfyan.minecraftfriends.task.TaskState;
+import io.github.yfyan.minecraftfriends.tree.TreePlan;
+import io.github.yfyan.minecraftfriends.tree.TreePlanner;
+import io.github.yfyan.minecraftfriends.tree.TreePosition;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -20,6 +24,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
@@ -31,6 +36,8 @@ import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Optional;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -65,6 +72,20 @@ public final class ActionRuntime {
     }
 
     public static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
+        var preview = literal("preview").then(argument("x", IntegerArgumentType.integer(-29999997, 29999997))
+                .then(argument("y", IntegerArgumentType.integer(-2047, 2037))
+                        .then(argument("z", IntegerArgumentType.integer(-29999997, 29999997))
+                                .executes(context -> previewTreeCommand(context.getSource(), new TreePosition(
+                                        IntegerArgumentType.getInteger(context, "x"),
+                                        IntegerArgumentType.getInteger(context, "y"),
+                                        IntegerArgumentType.getInteger(context, "z")))))));
+        var confirm = literal("confirm").then(argument("selection", StringArgumentType.word())
+                .executes(context -> confirmTreeCommand(context.getSource(),
+                        StringArgumentType.getString(context, "selection"), true))
+                .then(argument("replant", BoolArgumentType.bool()).executes(context -> confirmTreeCommand(
+                        context.getSource(), StringArgumentType.getString(context, "selection"),
+                        BoolArgumentType.getBool(context, "replant")))));
+        dispatcher.register(literal("mf").then(literal("task").then(literal("tree").then(preview).then(confirm))));
         dispatcher.register(literal("mf").then(literal("task")
                 .then(literal("follow").executes(context -> start(context.getSource(), ActionType.FOLLOW)))
                 .then(literal("wait").executes(context -> start(context.getSource(), ActionType.WAIT)))
@@ -93,6 +114,254 @@ public final class ActionRuntime {
                         .then(argument("count", IntegerArgumentType.integer(1, 64))
                                 .executes(context -> collect(context.getSource(),
                                         IntegerArgumentType.getInteger(context, "count"))))))));
+    }
+
+    /** Read-only exact target preview. Not an AI capability registry; callers must use explicit owner input.
+     * Must run on the server thread. A preview grants no destructive authority until confirmed. */
+    public record TreePreview(UUID selectionId, TreePlan plan, long expiresAtTick) { }
+
+    private record PendingTree(TreePreview preview, ServerPlayer owner, ServerPlayer companion,
+                               ServerLevel level, Map<BlockPos, BlockState> observed, int createdAtTick) { }
+
+    public static Optional<TreeTaskStatus> treeStatus(MinecraftServer server, UUID ownerId) {
+        if (!server.isSameThread()) throw new IllegalStateException("Tree status must be read on the server thread.");
+        ServerState state = stateIfStarted(server);
+        return state == null ? Optional.empty() : Optional.ofNullable(state.treeOutcomes.get(ownerId));
+    }
+
+    public static TreePreview previewTree(ServerPlayer owner, TreePosition base) throws CommandSyntaxException {
+        requireServerThread(owner);
+        CompanionData.Entry entry = requireLiveCompanion(owner);
+        ServerState state = state(owner.server);
+        OwnerState os = ownerState(state, owner, entry.identity().companionId());
+        os.pendingTree = null;
+        if (os.treePreviewed && tickAge(owner.server.getTickCount(), os.lastTreePreviewTick) < 20L) {
+            throw commandError("树木观测过于频繁，请稍后重试。", null);
+        }
+        os.treePreviewed = true;
+        os.lastTreePreviewTick = owner.server.getTickCount();
+        if (os.area == null || tickAge(owner.server.getTickCount(), os.areaSelectedTick) > 20L * 60L * 5L
+                || !owner.serverLevel().dimension().equals(os.areaDimension)) {
+            throw commandError("请先用 /mf task area 明确包含整棵树干的区域；选区不是拆除所有原木的授权。", null);
+        }
+        ServerPlayer companion = owner.server.getPlayerList().getPlayer(entry.identity().companionId());
+        if (!validAreaBounds(owner.serverLevel(), os.area) || !loaded(owner.serverLevel(), os.area)
+                || !areaNear(owner, os.area, MAX_AREA_DISTANCE)
+                || !areaNear(companion, os.area, MAX_AREA_DISTANCE)) {
+            throw commandError("选区已卸载、越界或距离过远，请重新选择。", null);
+        }
+        ServerLevel level = owner.serverLevel();
+        Map<BlockPos, BlockState> observed = new HashMap<>();
+        TreePlanner.Inspection inspection;
+        try {
+            inspection = TreePlanner.inspect(os.area, base, position -> {
+                BlockPos pos = TreeHarvestSupport.pos(position);
+                if (pos.getY() < level.getMinBuildHeight() || pos.getY() >= level.getMaxBuildHeight()
+                        || !level.hasChunkAt(pos) || !level.getWorldBorder().isWithinBounds(pos)) {
+                    return TreePlanner.Cell.UNLOADED;
+                }
+                BlockState block = level.getBlockState(pos);
+                observed.put(pos, block);
+                return TreeHarvestSupport.cell(block);
+            });
+        } catch (IllegalArgumentException invalid) {
+            throw commandError("树木坐标或观测边界无效。", invalid);
+        }
+        if (inspection.plan().isEmpty()) {
+            throw commandError("不能安全确定普通树目标：" + inspection.reason() + " / " + inspection.message()
+                    + " 请明确另一棵独立树的树干底部和范围；没有执行破坏。", null);
+        }
+        TreePreview preview = new TreePreview(UUID.randomUUID(), inspection.plan().orElseThrow(),
+                Math.min(os.areaExpiresAt, owner.server.getTickCount() + 20L * 30L));
+        os.pendingTree = new PendingTree(preview, owner, companion, level, Map.copyOf(observed), owner.server.getTickCount());
+        return preview;
+    }
+
+    /** One-shot confirmation of a server-issued exact preview, bound to live player instances and dimension.
+     * Stops old work only AFTER all validation. Duplicate/stale requests never replace current work. */
+    public static int confirmTree(ServerPlayer owner, UUID selectionId, UUID taskId, boolean replant)
+            throws CommandSyntaxException {
+        requireServerThread(owner);
+        CompanionData.Entry entry = requireLiveCompanion(owner);
+        ServerState state = state(owner.server);
+        OwnerState os = state.owners.get(owner.getUUID());
+        PendingTree pending = os == null ? null : os.pendingTree;
+        if (state.scheduler.knownTask(taskId)) throw commandError("任务 ID 重复；未重新执行。", null);
+        ServerPlayer companion = owner.server.getPlayerList().getPlayer(entry.identity().companionId());
+        if (pending == null || !pending.preview().selectionId().equals(selectionId)
+                || pending.owner() != owner || pending.companion() != companion
+                || pending.level() != owner.serverLevel() || companion.serverLevel() != pending.level()
+                || tickAge(owner.server.getTickCount(), pending.createdAtTick()) > 20L * 30L
+                || tickAge(owner.server.getTickCount(), os.areaSelectedTick) > 20L * 60L * 5L
+                || !pending.preview().plan().authorizedArea().equals(os.area)
+                || !owner.serverLevel().dimension().equals(os.areaDimension)
+                || !areaNear(owner, os.area, MAX_AREA_DISTANCE)
+                || !areaNear(companion, os.area, MAX_AREA_DISTANCE)) {
+            throw commandError("树木预览已过期、归属/维度变化或选择已用过，请重新预览。", null);
+        }
+        for (Map.Entry<BlockPos, BlockState> block : pending.observed().entrySet()) {
+            if (!pending.level().hasChunkAt(block.getKey())
+                    || !pending.level().getWorldBorder().isWithinBounds(block.getKey())
+                    || !pending.level().getBlockState(block.getKey()).equals(block.getValue())) {
+                os.pendingTree = null;
+                throw commandError("预览后的树木或周边方块已改变，请重新预览；未砍伐。", null);
+            }
+        }
+        ActionRequest request = ActionRequest.fellTree(taskId, owner.getUUID(), pending.preview().plan(), replant);
+        cancelOwner(owner.server, state, owner.getUUID(), os);
+        submit(state, os, request);
+        state.treeRequests.put(taskId, pending);
+        putTreeStatus(state, owner.getUUID(), new TreeTaskStatus(taskId, TaskState.QUEUED,
+                request.requestedCount(), 0, 0, 0,
+                replant ? TreeTaskStatus.Replant.PENDING : TreeTaskStatus.Replant.DISABLED, "已确认精确树干目标。"));
+        owner.sendSystemMessage(Component.literal("已确认 " + request.treePlan().species() + " 的 "
+                + request.requestedCount() + " 个精确原木；只处理可达目标，补种=" + replant + "。"));
+        return 1;
+    }
+
+    private static int previewTreeCommand(CommandSourceStack source, TreePosition base) throws CommandSyntaxException {
+        ServerPlayer owner = source.getPlayerOrException();
+        TreePreview preview = previewTree(owner, base);
+        owner.sendSystemMessage(Component.literal("候选 " + preview.plan().species() + "，精确原木 "
+                + preview.plan().logs() + "。这是保守树形判断，不保证天然来源；请核对没有房屋/装饰。"
+                + " 可达部分才会执行，高处可能保留。30 秒内确认：/mf task tree confirm "
+                + preview.selectionId() + " [true|false]（默认真实树苗补种）。未确认不会砍伐。"));
+        return 1;
+    }
+
+    private static int confirmTreeCommand(CommandSourceStack source, String selection, boolean replant)
+            throws CommandSyntaxException {
+        UUID id;
+        try {
+            id = UUID.fromString(selection);
+        } catch (IllegalArgumentException invalid) {
+            throw commandError("预览编号无效；请复制本次 preview 返回的编号。", invalid);
+        }
+        return confirmTree(source.getPlayerOrException(), id, UUID.randomUUID(), replant);
+    }
+
+    private static void requireServerThread(ServerPlayer owner) throws CommandSyntaxException {
+        if (!owner.server.isSameThread() || owner.server.getPlayerList().getPlayer(owner.getUUID()) != owner
+                || !owner.isAlive() || CompanionRuntime.isCompanion(owner)) {
+            throw commandError("仅当前在线主人可在服务端线程选择并确认树木。", null);
+        }
+    }
+
+    // Unsigned tick differences remain correct across Minecraft's signed int tick rollover.
+    private static long tickAge(int now, int then) {
+        return Integer.toUnsignedLong(now - then);
+    }
+
+    private static boolean isCollection(ActionRequest request) {
+        return request.type() == ActionType.COLLECT_OAK_LOGS || request.type() == ActionType.FELL_TREE;
+    }
+
+    private static Item logItem(Execution execution) {
+        return execution.request.treePlan() == null ? Items.OAK_LOG
+                : TreeHarvestSupport.logItem(execution.request.treePlan().species());
+    }
+
+    private static net.minecraft.world.level.block.Block logBlock(Execution execution) {
+        return execution.request.treePlan() == null ? Blocks.OAK_LOG
+                : TreeHarvestSupport.log(execution.request.treePlan().species());
+    }
+
+    private static AreaScan nextTreeLog(ServerLevel level, Execution execution) {
+        List<TreePosition> logs = execution.request.treePlan().logs();
+        if (execution.logsDestroyed >= logs.size()) return new AreaScan(null, true);
+        BlockPos target = TreeHarvestSupport.pos(logs.get(execution.logsDestroyed));
+        return new AreaScan(target, level.hasChunkAt(target));
+    }
+
+    private static boolean treeTargetsUnchanged(ServerLevel level, Execution execution) {
+        if (execution.tree == null || execution.tree.level() != level) return false;
+        List<TreePosition> logs = execution.request.treePlan().logs();
+        for (int i = execution.logsDestroyed; i < logs.size(); i++) {
+            BlockPos pos = TreeHarvestSupport.pos(logs.get(i));
+            if (!level.hasChunkAt(pos) || !level.getWorldBorder().isWithinBounds(pos)
+                    || !level.getBlockState(pos).equals(execution.tree.observed().get(pos))) return false;
+        }
+        return true;
+    }
+
+    /** Recheck the bounded original observation before each break, allowing natural leaf decay only. */
+    private static boolean treeStructureUnchanged(ServerLevel level, Execution execution) {
+        List<TreePosition> logs = execution.request.treePlan().logs();
+        for (Map.Entry<BlockPos, BlockState> observed : execution.tree.observed().entrySet()) {
+            BlockPos pos = observed.getKey();
+            if (!level.hasChunkAt(pos) || !level.getWorldBorder().isWithinBounds(pos)) return false;
+            BlockState current = level.getBlockState(pos);
+            boolean harvested = false;
+            for (int i = 0; i < execution.logsDestroyed; i++) {
+                if (pos.equals(TreeHarvestSupport.pos(logs.get(i)))) {
+                    harvested = true;
+                    break;
+                }
+            }
+            if (harvested) {
+                if (!current.isAir()) return false;
+            } else {
+                TreePlanner.Cell original = TreeHarvestSupport.cell(observed.getValue());
+                if (original == TreePlanner.Cell.OAK_LEAVES || original == TreePlanner.Cell.BIRCH_LEAVES) {
+                    // Vanilla distance/waterlogging updates need not abort; placed persistent leaves do.
+                    if (!current.isAir() && TreeHarvestSupport.cell(current) != original) return false;
+                } else if (!current.equals(observed.getValue())) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private static void tickReplant(MinecraftServer server, ServerState state, OwnerState os,
+                                    ServerPlayer owner, ServerPlayer companion) {
+        Execution execution = os.execution;
+        TreePlan plan = execution.request.treePlan();
+        BlockPos base = TreeHarvestSupport.pos(plan.base());
+        if (!collectPermissionStillValid(os, owner, companion, execution.request.area())) {
+            execution.replant = TreeTaskStatus.Replant.BLOCKED;
+        } else if (!TreeHarvestSupport.hasSapling(companion, plan.species())) {
+            execution.replant = TreeTaskStatus.Replant.NO_SAPLING;
+        } else if (tickAge(server.getTickCount(), execution.replantStartedAtTick) > 200L) {
+            execution.replant = TreeTaskStatus.Replant.UNREACHABLE;
+        } else {
+            BlockPos approach = TreeHarvestSupport.approach(companion, base, base.below(), true);
+            if (approach == null) {
+                execution.replant = TreeTaskStatus.Replant.UNREACHABLE;
+            } else if (!companion.blockPosition().equals(approach)) {
+                navigate(server, state, os, owner, companion, approach, 0);
+                return;
+            } else {
+                execution.replant = TreeHarvestSupport.plant(owner, companion, base,
+                        execution.tree.observed().get(base.below()), plan.species());
+            }
+        }
+        execution.replanting = false;
+        completeCollection(server, state, os, owner, companion, execution.returnState, execution.returnMessage);
+    }
+
+    private static void updateTreeStatus(ServerState state, Execution execution, TaskState taskState, String message) {
+        if (execution.tree == null) return;
+        putTreeStatus(state, execution.request.ownerId(), new TreeTaskStatus(execution.request.taskId(), taskState,
+                execution.request.requestedCount(), execution.logsDestroyed, execution.logsPicked,
+                execution.delivered, execution.replant, message));
+    }
+
+    private static void putTreeStatus(ServerState state, UUID ownerId, TreeTaskStatus status) {
+        state.treeOutcomes.put(ownerId, status);
+        while (state.treeOutcomes.size() > 256) {
+            state.treeOutcomes.remove(state.treeOutcomes.keySet().iterator().next());
+        }
+    }
+
+    /** Loader dimension/death hooks invalidate even a rapid leave-and-return between action ticks. */
+    public static void onPlayerLifecycleChange(ServerPlayer player) {
+        ServerState state = stateIfStarted(player.server);
+        if (state == null) return;
+        CompanionData.Entry entry = CompanionRuntime.data(player.server).findByCompanion(player.getUUID()).orElse(null);
+        UUID ownerId = entry == null ? player.getUUID() : entry.identity().ownerId();
+        cancelOwner(player.server, state, ownerId, state.owners.get(ownerId));
+        state.owners.remove(ownerId);
     }
 
     /** Read-only snapshot for diagnostics and acceptance polling. Must be called on the server thread. */
@@ -267,15 +536,17 @@ public final class ActionRuntime {
             }
             ServerPlayer owner = server.getPlayerList().getPlayer(ownerId);
             ServerPlayer companion = server.getPlayerList().getPlayer(ownerState.companionId);
-            if (owner == null || companion == null || !CompanionRuntime.isCompanion(companion)
+            if (owner == null || owner != ownerState.owner || companion == null
+                    || ownerState.execution != null && companion != ownerState.execution.companion
+                    || !CompanionRuntime.isCompanion(companion)
                     || !owner.isAlive() || !companion.isAlive()
                     || !owner.serverLevel().dimension().equals(ownerState.dimension)
                     || !companion.serverLevel().dimension().equals(ownerState.dimension)
                     || owner.distanceToSqr(companion) > (double) MAX_OWNER_DISTANCE * MAX_OWNER_DISTANCE) {
                 if (owner != null && ownerState.execution != null
-                        && ownerState.execution.request.type() == ActionType.COLLECT_OAK_LOGS
+                        && isCollection(ownerState.execution.request)
                         && ownerState.execution.logsPicked > 0) {
-                    owner.sendSystemMessage(Component.literal("采集任务已取消；伙伴已拾取的橡木原木仍留在伙伴背包，未远距离转移。"));
+                    owner.sendSystemMessage(Component.literal("采集任务已取消；伙伴已拾取的任务原木仍留在伙伴背包，未远距离转移。"));
                 }
                 cancelOwner(server, state, ownerId, ownerState);
                 state.owners.remove(ownerId);
@@ -295,7 +566,13 @@ public final class ActionRuntime {
                     state.scheduler.finish(next.taskId(), TaskState.FAILED, 0, 0, "missing request");
                     continue;
                 }
-                ownerState.execution = new Execution(request, server.getTickCount(), companion);
+                PendingTree tree = state.treeRequests.get(request.taskId());
+                if (request.type() == ActionType.FELL_TREE && (tree == null || tree.owner() != owner
+                        || tree.companion() != companion || tree.level() != companion.serverLevel())) {
+                    cancelOwner(server, state, ownerId, ownerState);
+                    continue;
+                }
+                ownerState.execution = new Execution(request, server.getTickCount(), companion, tree);
             }
             tickAction(server, state, ownerState, owner, companion);
         }
@@ -334,11 +611,12 @@ public final class ActionRuntime {
                 .findByCompanion(companion.getUUID()).orElse(null);
         OwnerState ownerState = owner == null ? null : state.owners.get(owner.identity().ownerId());
         Execution execution = ownerState == null ? null : ownerState.execution;
-        if (execution == null || execution.request.type() != ActionType.COLLECT_OAK_LOGS) {
+        if (execution == null || !isCollection(execution.request)) {
             return;
         }
         int expected = execution.pendingDrops.getOrDefault(itemEntityId, 0);
         boolean directDrop = expected > 0;
+        if (execution.tree != null && (!directDrop || stackCountBeforePickup != expected)) return; // Fail closed on unprovable merged provenance.
         if (!directDrop) {
             int baseline = execution.dropCountsBefore.getOrDefault(itemEntityId, 0);
             if (baseline > 0) {
@@ -348,11 +626,14 @@ public final class ActionRuntime {
         }
         int eligible = Math.max(0, Math.min(execution.logsDestroyed,
                 execution.request.requestedCount()) - execution.logsPicked);
-        int credited = Math.min(Math.min(expected, amount), eligible);
+        int credited = execution.tree == null ? Math.min(Math.min(expected, amount), eligible)
+                : TreeDropAccounting.credit(expected, stackCountBeforePickup, amount,
+                        execution.logsDestroyed, execution.logsPicked, execution.request.requestedCount());
         if (credited <= 0) {
             return;
         }
         execution.logsPicked += credited;
+        updateTreeStatus(state, execution, TaskState.RUNNING, "已实际拾取任务掉落物。");
         consumePendingDrop(execution, itemEntityId, directDrop, credited);
         state.scheduler.updateProgress(execution.request.taskId(), execution.logsPicked, 0,
                 "伙伴已正常拾取 " + execution.logsPicked + "/" + execution.request.requestedCount());
@@ -416,7 +697,7 @@ public final class ActionRuntime {
                 case STOP -> stopFor(owner);
                 case COLLECT_OAK_LOGS -> collectForOwner(owner, plan.count());
                 case FOLLOW, WAIT -> startFor(owner, plan.type());
-                case NONE -> { return false; }
+                case NONE, FELL_TREE -> { return false; }
             }
         } catch (CommandSyntaxException refused) {
             owner.sendSystemMessage(Component.literal(refused.getMessage()));
@@ -468,6 +749,10 @@ public final class ActionRuntime {
         owner.sendSystemMessage(Component.literal("任务 " + current.taskId() + " / " + current.type()
                 + " / " + current.state() + " / " + current.completed() + "/" + current.requested()
                 + " / 已交付 " + current.delivered() + " / " + current.message()));
+        treeStatus(owner.server, owner.getUUID()).ifPresent(tree -> owner.sendSystemMessage(Component.literal(
+                "树木 " + tree.taskId() + " / " + tree.state() + " / 已砍 " + tree.harvested() + "/" + tree.planned()
+                        + " / 已收 " + tree.pickedUp() + " / 已交 " + tree.delivered()
+                        + " / 补种 " + tree.replant() + " / " + tree.message())));
         return 1;
     }
 
@@ -493,8 +778,10 @@ public final class ActionRuntime {
         ServerState serverState = state(owner.server);
         OwnerState ownerState = ownerState(serverState, owner, entry.identity().companionId());
         serverState.planner.cancel(owner.getUUID());
+        ownerState.pendingTree = null;
         ownerState.area = area;
         ownerState.areaDimension = level.dimension();
+        ownerState.areaSelectedTick = owner.server.getTickCount();
         ownerState.areaExpiresAt = owner.server.getTickCount() + 20L * 60L * 5L;
         owner.sendSystemMessage(Component.literal("已授权一次性采集区域：" + area.minX() + " " + area.minY()
                 + " " + area.minZ() + " 到 " + area.maxX() + " " + area.maxY() + " " + area.maxZ()));
@@ -595,7 +882,11 @@ public final class ActionRuntime {
             }
             return;
         }
-        if (execution.request.type() == ActionType.COLLECT_OAK_LOGS) {
+        if (execution.request.type() == ActionType.FELL_TREE && execution.tree == null) {
+            finish(server, state, ownerState, TaskState.FAILED, "树木确认上下文已失效，未执行。");
+            return;
+        }
+        if (isCollection(execution.request)) {
             tickCollect(server, state, ownerState, owner, companion);
             return;
         }
@@ -622,14 +913,21 @@ public final class ActionRuntime {
         BlockArea area = request.area();
         ServerLevel level = companion.serverLevel();
         state.scheduler.updateProgress(request.taskId(), execution.logsPicked, 0,
-                "已正常拾取 " + execution.logsPicked + "/" + request.requestedCount());
+                "已砍 " + execution.logsDestroyed + "，已正常拾取 " + execution.logsPicked + "/" + request.requestedCount());
+        updateTreeStatus(state, execution, TaskState.RUNNING, "执行中。");
 
         if (execution.returning) {
             tickReturnToOwner(server, state, ownerState, owner, companion);
             return;
         }
 
-        if (execution.elapsedTicks > COLLECTION_TIMEOUT_TICKS) {
+        if (execution.replanting) {
+            tickReplant(server, state, ownerState, owner, companion);
+            return;
+        }
+
+        if (execution.tree == null ? execution.elapsedTicks > COLLECTION_TIMEOUT_TICKS
+                : tickAge(server.getTickCount(), execution.startedAtTick) > COLLECTION_TIMEOUT_TICKS) {
             completeCollection(server, state, ownerState, owner, companion, TaskState.TIMED_OUT,
                     "采集超时，按实际拾取数量结算。");
             return;
@@ -639,7 +937,7 @@ public final class ActionRuntime {
                     "维度、距离或授权状态变化，已停止采集。");
             return;
         }
-        if (execution.logsPicked < request.requestedCount() && oakLogCapacity(companion) == 0) {
+        if (execution.logsPicked < request.requestedCount() && logCapacity(companion, logItem(execution)) == 0) {
             completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
                     "伙伴背包已满，已停止挖掘并按实际数量返回。");
             return;
@@ -654,7 +952,8 @@ public final class ActionRuntime {
             return;
         }
         if (execution.pickupAnchor != null && execution.logsPicked < execution.logsDestroyed) {
-            if (server.getTickCount() > execution.pickupDeadlineTick) {
+            if (execution.tree == null ? server.getTickCount() > execution.pickupDeadlineTick
+                    : tickAge(server.getTickCount(), execution.pickupStartedAtTick) > PICKUP_TIMEOUT_TICKS) {
                 completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
                         "掉落物未被伙伴正常拾取；按实际数量结算。");
                 return;
@@ -691,7 +990,8 @@ public final class ActionRuntime {
                 return;
             }
             state.areaScansRemaining--;
-            AreaScan scan = findOakLog(level, area);
+            AreaScan scan = execution.tree == null ? findOakLog(level, area)
+                    : nextTreeLog(level, execution);
             if (!scan.allVisitedChunksLoaded()) {
                 completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
                         "授权区域出现未加载区块；已停止采集。");
@@ -700,7 +1000,7 @@ public final class ActionRuntime {
             execution.targetLog = scan.target();
             if (execution.targetLog == null) {
                 completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
-                        "授权区域内没有更多橡木原木；按实际数量结算。");
+                        "授权目标内没有更多可处理原木；按实际数量结算。");
                 return;
             }
         }
@@ -713,7 +1013,12 @@ public final class ActionRuntime {
                     "目标位置已变化或离开加载区域；已停止采集。");
             return;
         }
-        if (!level.getBlockState(target).is(Blocks.OAK_LOG)) {
+        if (!level.getBlockState(target).is(logBlock(execution))) {
+            if (execution.tree != null) {
+                completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
+                        "已确认的树木目标已改变；没有扩展到其他原木。");
+                return;
+            }
             execution.targetLog = null;
             execution.path = List.of();
             return;
@@ -723,8 +1028,27 @@ public final class ActionRuntime {
                     "采集只允许生存模式伙伴执行。");
             return;
         }
+        if (execution.tree != null) {
+            if (!treeTargetsUnchanged(level, execution) || !treeStructureUnchanged(level, execution)
+                    || !TreeHarvestSupport.equipAxe(companion)) {
+                completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
+                        "目标树已改变或缺少可用斧头；已停止伐木。");
+                return;
+            }
+            if (!TreeHarvestSupport.canMine(owner, companion, target)) {
+                BlockPos approach = TreeHarvestSupport.approach(companion,
+                        TreeHarvestSupport.pos(request.treePlan().base()), target, false);
+                if (approach == null || companion.blockPosition().equals(approach)) {
+                    completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
+                            "剩余原木不可达、被遮挡或权限拒绝；未使用攀升、垫块、飞行或传送。");
+                } else {
+                    navigate(server, state, ownerState, owner, companion, approach, 0);
+                }
+                return;
+            }
+        }
         double distance = companion.distanceToSqr(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5);
-        if (distance > 25.0) {
+        if (execution.tree == null && distance > 25.0) {
             navigate(server, state, ownerState, owner, companion, target, 2);
             return;
         }
@@ -733,14 +1057,14 @@ public final class ActionRuntime {
         float progressPerTick = block.getDestroyProgress(companion, level, target);
         if (progressPerTick <= 0.0F) {
             completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
-                    "橡木原木无法在当前生存规则下挖掘。");
+                    "目标原木无法在当前生存规则下挖掘。");
             return;
         }
         execution.miningPos = target.immutable();
         execution.miningDirection = Direction.UP;
         execution.miningProgress = 0.0F;
         execution.miningTicks = 0;
-        execution.dropCountsBefore = oakDropCounts(level, target);
+        execution.dropCountsBefore = logDropCounts(level, target, logItem(execution));
         companion.gameMode.handleBlockBreakAction(target, ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
                 execution.miningDirection, level.getMaxBuildHeight(), execution.nextSequence++);
         if (level.getBlockState(target).isAir()) {
@@ -769,7 +1093,9 @@ public final class ActionRuntime {
             return;
         }
         BlockState block = level.getBlockState(target);
-        if (!block.is(Blocks.OAK_LOG)) {
+        if (!block.is(logBlock(execution)) || execution.tree != null
+                && (!treeTargetsUnchanged(level, execution) || !TreeHarvestSupport.equipAxe(companion)
+                || !TreeHarvestSupport.canMine(owner, companion, target) || !companion.gameMode.isSurvival())) {
             completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
                     "挖掘目标已变化；未计入本任务采集。");
             return;
@@ -777,7 +1103,7 @@ public final class ActionRuntime {
         float currentProgress = block.getDestroyProgress(companion, level, target);
         if (currentProgress <= 0.0F) {
             completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
-                    "当前生存工具无法继续挖掘该橡木原木。");
+                    "当前生存工具无法继续挖掘目标原木。");
             return;
         }
         execution.miningProgress += currentProgress;
@@ -785,6 +1111,14 @@ public final class ActionRuntime {
         if (execution.miningProgress < 1.0F) {
             return;
         }
+        if (execution.tree != null && !treeStructureUnchanged(level, execution)) {
+            completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED,
+                    "树木周围新增结构、方块改变或区块卸载；已中止且没有扩展目标。");
+            return;
+        }
+        // Snapshot immediately before the destructive call, not seconds earlier at mining start.
+        // An unrelated player drop during mining must never become this tree's harvested resource.
+        if (execution.tree != null) execution.dropCountsBefore = logDropCounts(level, target, logItem(execution));
         companion.gameMode.handleBlockBreakAction(target, ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
                 execution.miningDirection, level.getMaxBuildHeight(), execution.nextSequence++);
         if (level.getBlockState(target).isAir()) {
@@ -799,18 +1133,23 @@ public final class ActionRuntime {
                                        ServerLevel level, BlockPos target) {
         Execution execution = ownerState.execution;
         execution.logsDestroyed++;
+        updateTreeStatus(state, execution, TaskState.RUNNING, "已生存挖掘，等待实际拾取。");
         execution.pickupAnchor = target.immutable();
         execution.pickupDeadlineTick = server.getTickCount() + PICKUP_TIMEOUT_TICKS;
+        execution.pickupStartedAtTick = server.getTickCount();
         execution.pendingDrops.clear();
         int eligible = Math.max(0, Math.min(execution.logsDestroyed,
                 execution.request.requestedCount()) - execution.logsPicked);
-        Map<UUID, Integer> afterBreak = oakDropCounts(level, target);
+        Map<UUID, Integer> afterBreak = logDropCounts(level, target, logItem(execution));
         for (Map.Entry<UUID, Integer> drop : afterBreak.entrySet()) {
             if (eligible <= 0) {
                 break;
             }
             int added = Math.max(0, drop.getValue()
                     - execution.dropCountsBefore.getOrDefault(drop.getKey(), 0));
+            // Tree drops fail closed when provenance is ambiguous: only a new exact log entity is tracked.
+            if (execution.tree != null && !TreeDropAccounting.isNewSingleLog(
+                    execution.dropCountsBefore.getOrDefault(drop.getKey(), 0), drop.getValue())) continue;
             int tracked = Math.min(added, eligible);
             if (tracked > 0) {
                 execution.pendingDrops.put(drop.getKey(), tracked);
@@ -859,19 +1198,20 @@ public final class ActionRuntime {
         return new AreaScan(null, true);
     }
 
-    private static Map<UUID, Integer> oakDropCounts(ServerLevel level, BlockPos center) {
+    private static Map<UUID, Integer> logDropCounts(ServerLevel level, BlockPos center, Item material) {
         AABB bounds = new AABB(center.getX() - 2.0, center.getY() - 2.0, center.getZ() - 2.0,
                 center.getX() + 3.0, center.getY() + 3.0, center.getZ() + 3.0);
         Map<UUID, Integer> counts = new HashMap<>();
         for (ItemEntity entity : level.getEntitiesOfClass(ItemEntity.class, bounds,
-                item -> item.isAlive() && item.getItem().is(Items.OAK_LOG))) {
+                item -> item.isAlive() && item.getItem().is(material))) {
             counts.put(entity.getUUID(), entity.getItem().getCount());
         }
         return counts;
     }
 
     private static void refreshMergedDropAliases(ServerLevel level, Execution execution) {
-        Map<UUID, Integer> current = oakDropCounts(level, execution.pickupAnchor);
+        if (execution.tree != null) return; // Unknown merged UUIDs are not credited as tree drops.
+        Map<UUID, Integer> current = logDropCounts(level, execution.pickupAnchor, logItem(execution));
         int missingExpected = 0;
         for (UUID id : List.copyOf(execution.pendingDrops.keySet())) {
             if (!current.containsKey(id)) {
@@ -885,7 +1225,7 @@ public final class ActionRuntime {
                 execution.pickupAnchor.getZ() - 2.0, execution.pickupAnchor.getX() + 3.0,
                 execution.pickupAnchor.getY() + 3.0, execution.pickupAnchor.getZ() + 3.0);
         for (ItemEntity candidate : level.getEntitiesOfClass(ItemEntity.class, bounds,
-                item -> item.isAlive() && item.getItem().is(Items.OAK_LOG))) {
+                item -> item.isAlive() && item.getItem().is(logItem(execution)))) {
             int before = execution.dropCountsBefore.getOrDefault(candidate.getUUID(), 0);
             int added = Math.max(0, candidate.getItem().getCount() - before);
             if (before > 0 && added == missingExpected
@@ -915,18 +1255,18 @@ public final class ActionRuntime {
     private static ItemEntity nearestTaskDrop(ServerPlayer companion, BlockPos anchor, Execution execution) {
         return companion.serverLevel().getEntitiesOfClass(ItemEntity.class,
                         companion.getBoundingBox().inflate(12.0), entity -> entity.isAlive()
-                                && entity.getItem().is(Items.OAK_LOG)
+                                && entity.getItem().is(logItem(execution))
                                 && execution.pendingDrops.containsKey(entity.getUUID())
                                 && entity.blockPosition().distSqr(anchor) <= 16.0)
                 .stream().min((left, right) -> Double.compare(
                         left.distanceToSqr(companion), right.distanceToSqr(companion))).orElse(null);
     }
 
-    private static int countOakLogs(ServerPlayer player) {
+    private static int countLogs(ServerPlayer player, Item material) {
         int count = 0;
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
-            if (stack.is(Items.OAK_LOG)) {
+            if (stack.is(material)) {
                 count += stack.getCount();
             }
         }
@@ -939,6 +1279,23 @@ public final class ActionRuntime {
         Execution execution = ownerState.execution;
         if (execution == null) {
             return;
+        }
+        if (execution.tree != null && !execution.replantAttempted) {
+            execution.replantAttempted = true;
+            if (!execution.request.replant()) {
+                execution.replant = TreeTaskStatus.Replant.DISABLED;
+            } else if (execution.logsDestroyed != execution.request.requestedCount()) {
+                execution.replant = TreeTaskStatus.Replant.PARTIAL_TREE;
+            } else {
+                execution.replanting = true;
+                execution.returnState = requestedState;
+                execution.returnMessage = message;
+                execution.replantStartedAtTick = server.getTickCount();
+                execution.path = List.of();
+                execution.navigationTarget = null;
+                clearInputs(server, ownerState, execution);
+                return;
+            }
         }
         if (execution.logsPicked == 0) {
             TaskState result = requestedState == TaskState.SUCCEEDED ? TaskState.FAILED : requestedState;
@@ -963,11 +1320,12 @@ public final class ActionRuntime {
             execution.returnState = requestedState;
             execution.returnMessage = message;
             execution.returnDeadlineTick = server.getTickCount() + 20L * 60L;
+            execution.returnStartedAtTick = server.getTickCount();
             execution.path = List.of();
             execution.navigationTarget = null;
             execution.noPathTicks = 0;
             state.scheduler.updateProgress(execution.request.taskId(), execution.logsPicked, 0,
-                    "返回主人附近交付实际拾取的橡木原木。");
+                    "返回主人附近交付实际拾取的任务原木。");
             return;
         }
         settleCollectionAtOwner(server, state, ownerState, owner, companion, requestedState, message);
@@ -976,7 +1334,8 @@ public final class ActionRuntime {
     private static void tickReturnToOwner(MinecraftServer server, ServerState state, OwnerState ownerState,
                                           ServerPlayer owner, ServerPlayer companion) {
         Execution execution = ownerState.execution;
-        if (server.getTickCount() > execution.returnDeadlineTick) {
+        if (execution.tree == null ? server.getTickCount() > execution.returnDeadlineTick
+                : tickAge(server.getTickCount(), execution.returnStartedAtTick) > 20L * 60L) {
             finish(server, state, ownerState, TaskState.FAILED, execution.logsPicked, 0,
                     execution.returnMessage + " 返回主人超时；物品仍留在伙伴背包，交付 0。");
             return;
@@ -1022,27 +1381,32 @@ public final class ActionRuntime {
             return;
         }
         int desired = Math.min(execution.logsPicked, execution.request.requestedCount());
-        int delivered = transferOakLogs(companion, owner, desired);
+        int delivered = transferLogs(companion, owner, desired, logItem(execution));
         execution.delivered = delivered;
         TaskState finalState = delivered == execution.request.requestedCount()
+                && execution.logsDestroyed == execution.request.requestedCount()
+                && requestedState == TaskState.SUCCEEDED
                 ? TaskState.SUCCEEDED
                 : requestedState == TaskState.TIMED_OUT ? TaskState.TIMED_OUT : TaskState.FAILED;
         String finalMessage = delivered < execution.request.requestedCount()
                 ? message + " 实际拾取 " + execution.logsPicked + "，交付 " + delivered + "/"
                 + execution.request.requestedCount() + "。"
-                : message + " 已交付 " + delivered + " 个橡木原木。";
+                : message + " 已交付 " + delivered + " 个任务原木。";
         finish(server, state, ownerState, finalState, execution.logsPicked, delivered, finalMessage);
     }
 
-    private static int transferOakLogs(ServerPlayer companion, ServerPlayer owner, int requested) {
-        int before = countOakLogs(owner);
-        int remaining = Math.min(requested, oakLogCapacity(owner));
+    private static int transferLogs(ServerPlayer companion, ServerPlayer owner, int requested, Item material) {
+        int before = countLogs(owner, material);
+        int remaining = requested;
         for (int slot = 0; slot < companion.getInventory().getContainerSize() && remaining > 0; slot++) {
             ItemStack stack = companion.getInventory().getItem(slot);
-            if (!stack.is(Items.OAK_LOG)) {
+            if (!stack.is(material)) {
                 continue;
             }
-            int movingCount = Math.min(remaining, stack.getCount());
+            // Inventory.add discards an uninsertable remainder for creative players. Bound the
+            // transfer to REAL component-compatible slots before removing anything from the source.
+            int movingCount = Math.min(Math.min(remaining, stack.getCount()), stackCapacity(owner, stack));
+            if (movingCount == 0) continue;
             ItemStack moving = companion.getInventory().removeItem(slot, movingCount);
             owner.getInventory().add(moving);
             int accepted = movingCount - moving.getCount();
@@ -1051,7 +1415,7 @@ public final class ActionRuntime {
                 ItemStack sourceSlot = companion.getInventory().getItem(slot);
                 if (sourceSlot.isEmpty()) {
                     companion.getInventory().setItem(slot, moving);
-                } else if (sourceSlot.is(Items.OAK_LOG)
+                } else if (ItemStack.isSameItemSameComponents(sourceSlot, moving)
                         && sourceSlot.getCount() + moving.getCount() <= sourceSlot.getMaxStackSize()) {
                     sourceSlot.grow(moving.getCount());
                 } else {
@@ -1059,17 +1423,22 @@ public final class ActionRuntime {
                 }
             }
         }
-        return Math.max(0, countOakLogs(owner) - before);
+        return Math.max(0, countLogs(owner, material) - before);
     }
 
-    private static int oakLogCapacity(ServerPlayer owner) {
+    private static int logCapacity(ServerPlayer owner, Item material) {
+        return stackCapacity(owner, new ItemStack(material));
+    }
+
+    private static int stackCapacity(ServerPlayer player, ItemStack moving) {
         int capacity = 0;
-        for (int slot = 0; slot < Math.min(36, owner.getInventory().getContainerSize()); slot++) {
-            ItemStack stack = owner.getInventory().getItem(slot);
+        for (int slot = 0; slot < Math.min(36, player.getInventory().getContainerSize()); slot++) {
+            ItemStack stack = player.getInventory().getItem(slot);
+            int maximum = Math.min(64, moving.getMaxStackSize());
             if (stack.isEmpty()) {
-                capacity += 64;
-            } else if (stack.is(Items.OAK_LOG)) {
-                capacity += Math.max(0, stack.getMaxStackSize() - stack.getCount());
+                capacity += maximum;
+            } else if (ItemStack.isSameItemSameComponents(stack, moving)) {
+                capacity += Math.max(0, maximum - stack.getCount());
             }
         }
         return capacity;
@@ -1149,11 +1518,17 @@ public final class ActionRuntime {
 
     private static void failCurrentAction(MinecraftServer server, ServerState state, OwnerState ownerState,
                                           ServerPlayer owner, ServerPlayer companion, String message) {
-        if (ownerState.execution != null && ownerState.execution.returning) {
+        if (ownerState.execution != null && ownerState.execution.replanting) {
+            Execution execution = ownerState.execution;
+            execution.replanting = false;
+            execution.replant = TreeTaskStatus.Replant.UNREACHABLE;
+            completeCollection(server, state, ownerState, owner, companion, execution.returnState,
+                    execution.returnMessage + " 补种路径不可达；" + message);
+        } else if (ownerState.execution != null && ownerState.execution.returning) {
             finish(server, state, ownerState, TaskState.FAILED, ownerState.execution.logsPicked, 0,
                     ownerState.execution.returnMessage + " 返回路径受阻；物品仍留在伙伴背包，交付 0。 " + message);
         } else if (ownerState.execution != null
-                && ownerState.execution.request.type() == ActionType.COLLECT_OAK_LOGS) {
+                && isCollection(ownerState.execution.request)) {
             completeCollection(server, state, ownerState, owner, companion, TaskState.FAILED, message);
         } else {
             finish(server, state, ownerState, TaskState.FAILED, message);
@@ -1175,8 +1550,16 @@ public final class ActionRuntime {
         if (execution == null) {
             return;
         }
+        if (execution.tree != null) {
+            message += " 已砍 " + execution.logsDestroyed + "/" + execution.request.requestedCount()
+                    + "，剩余 " + (execution.request.requestedCount() - execution.logsDestroyed)
+                    + "，已收 " + execution.logsPicked + "，已交 " + delivered
+                    + "；补种 " + execution.replant + "。";
+            updateTreeStatus(state, execution, result, message);
+        }
         state.scheduler.finish(execution.request.taskId(), result, completed, delivered, message);
         state.requests.remove(execution.request.taskId());
+        state.treeRequests.remove(execution.request.taskId());
         clearInputs(server, ownerState, execution);
         ownerState.execution = null;
         if (result == TaskState.FAILED || result == TaskState.TIMED_OUT || result == TaskState.SUCCEEDED) {
@@ -1195,11 +1578,26 @@ public final class ActionRuntime {
         }
         OwnerState ownerState = knownOwnerState != null ? knownOwnerState : state.owners.get(ownerId);
         state.planner.cancel(ownerId);
+        if (ownerState != null && ownerState.execution != null && ownerState.execution.tree != null) {
+            Execution execution = ownerState.execution;
+            if (execution.replant == TreeTaskStatus.Replant.PENDING) execution.replant = TreeTaskStatus.Replant.CANCELLED;
+            updateTreeStatus(state, execution, TaskState.CANCELLED,
+                    "已停止；未交付物品留在伙伴背包或原世界掉落处，未恢复动作。");
+        }
+        TreeTaskStatus treeStatus = state.treeOutcomes.get(ownerId);
+        if (treeStatus != null && !treeStatus.state().isTerminal()) {
+            putTreeStatus(state, ownerId, new TreeTaskStatus(treeStatus.taskId(), TaskState.CANCELLED,
+                    treeStatus.planned(), treeStatus.harvested(), treeStatus.pickedUp(), treeStatus.delivered(),
+                    treeStatus.replant() == TreeTaskStatus.Replant.PENDING ? TreeTaskStatus.Replant.CANCELLED
+                            : treeStatus.replant(), "已取消；尚未交付物品没有转移给主人。"));
+        }
         state.scheduler.stop(ownerId);
+        state.treeRequests.entrySet().removeIf(entry -> entry.getValue().owner().getUUID().equals(ownerId));
         state.requests.entrySet().removeIf(entry -> entry.getValue().ownerId().equals(ownerId));
         if (ownerState != null) {
             clearInputs(server, ownerState, ownerState.execution);
             ownerState.execution = null;
+            ownerState.pendingTree = null;
             ownerState.area = null;
             ownerState.areaDimension = null;
         }
@@ -1307,6 +1705,8 @@ public final class ActionRuntime {
         private final ActionScheduler scheduler = new ActionScheduler();
         private final Map<UUID, ActionRequest> requests = new HashMap<>();
         private final Map<UUID, OwnerState> owners = new HashMap<>();
+        private final Map<UUID, PendingTree> treeRequests = new HashMap<>();
+        private final LinkedHashMap<UUID, TreeTaskStatus> treeOutcomes = new LinkedHashMap<>();
         private int nextOwnerCursor;
         private int pathSearchesRemaining;
         private int areaScansRemaining;
@@ -1320,11 +1720,23 @@ public final class ActionRuntime {
         private net.minecraft.resources.ResourceKey<Level> areaDimension;
         private long areaExpiresAt;
         private long nextPlanTick;
+        private int lastTreePreviewTick;
+        private boolean treePreviewed;
+        private int areaSelectedTick;
+        private PendingTree pendingTree;
         private Execution execution;
     }
 
     private static final class Execution {
         private final ActionRequest request;
+        private final ServerPlayer companion;
+        private final PendingTree tree;
+        private boolean replantAttempted;
+        private boolean replanting;
+        private int replantStartedAtTick;
+        private int returnStartedAtTick;
+        private final int startedAtTick;
+        private TreeTaskStatus.Replant replant;
         private double lastX;
         private double lastZ;
         private long elapsedTicks;
@@ -1343,6 +1755,7 @@ public final class ActionRuntime {
         private BlockPos targetLog;
         private BlockPos pickupAnchor;
         private long pickupDeadlineTick;
+        private int pickupStartedAtTick;
         private boolean returning;
         private TaskState returnState;
         private String returnMessage;
@@ -1352,8 +1765,12 @@ public final class ActionRuntime {
         private BlockPos miningPos;
         private net.minecraft.core.Direction miningDirection = net.minecraft.core.Direction.UP;
 
-        private Execution(ActionRequest request, int startTick, ServerPlayer companion) {
+        private Execution(ActionRequest request, int startTick, ServerPlayer companion, PendingTree tree) {
             this.request = request;
+            this.startedAtTick = startTick;
+            this.companion = companion;
+            this.tree = tree;
+            this.replant = request.replant() ? TreeTaskStatus.Replant.PENDING : TreeTaskStatus.Replant.DISABLED;
             this.lastRepathTick = startTick - 10L;
             this.lastX = companion.getX();
             this.lastZ = companion.getZ();
