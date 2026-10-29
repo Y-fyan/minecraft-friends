@@ -12,6 +12,16 @@ public final class TreeDropAccounting {
     private TreeDropAccounting() {
     }
 
+    /**
+     * Identity witness for the originally observed mutable stack, not an equality comparison.
+     * Minecraft 1.21.1 ItemEntity.merge installs a copy on the receiving entity; checking only
+     * UUID/count would accept a mixed stack after another player's partial pickup.
+     * The witness lives only for this outstanding drop and is never persisted across reloads.
+     */
+    public static boolean sameSource(Object originalStack, Object currentStack) {
+        return originalStack != null && originalStack == currentStack;
+    }
+
     /** Only a new, single-log entity can establish provenance for one completed break. */
     public static boolean isNewSingleLog(int baselineCount, int afterCount) {
         return baselineCount == 0 && afterCount == 1;

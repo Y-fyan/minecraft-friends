@@ -8,6 +8,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TreeDropAccountingTest {
     @Test
+    void mergeThenOtherPlayersPartialPickupCannotRestoreProvenance() {
+        Object minedStack = new String("log");
+        Object mergedStack = new String("log");
+        assertEquals(minedStack, mergedStack); // Value/material equality cannot establish origin.
+        assertTrue(TreeDropAccounting.sameSource(minedStack, minedStack));
+        assertFalse(TreeDropAccounting.sameSource(minedStack, mergedStack));
+        // The merged entity retains its UUID; after a partial pickup it again contains one log.
+        int countAfterOtherPickup = 1;
+        int credited = TreeDropAccounting.sameSource(minedStack, mergedStack)
+                ? TreeDropAccounting.credit(1, countAfterOtherPickup, 1, 1, 0, 4) : 0;
+        assertEquals(0, credited);
+        assertFalse(TreeDropAccounting.sameSource(null, null));
+        assertFalse(TreeDropAccounting.sameSource(minedStack, null));
+    }
+
+    @Test
     void onlyANewSingleLogEstablishesProvenance() {
         assertTrue(TreeDropAccounting.isNewSingleLog(0, 1));
         assertFalse(TreeDropAccounting.isNewSingleLog(0, 0));

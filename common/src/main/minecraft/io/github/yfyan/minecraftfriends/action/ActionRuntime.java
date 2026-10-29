@@ -358,10 +358,13 @@ public final class ActionRuntime {
     public static void onPlayerLifecycleChange(ServerPlayer player) {
         ServerState state = stateIfStarted(player.server);
         if (state == null) return;
-        CompanionData.Entry entry = CompanionRuntime.data(player.server).findByCompanion(player.getUUID()).orElse(null);
-        UUID ownerId = entry == null ? player.getUUID() : entry.identity().ownerId();
-        cancelOwner(player.server, state, ownerId, state.owners.get(ownerId));
-        state.owners.remove(ownerId);
+        // Event hooks also run for ordinary players when the mod is disabled or saved data is
+        // unreadable. Cancellation needs only live action state; never load companion.dat here.
+        for (UUID ownerId : ActionLifecycle.affectedOwners(state.owners,
+                ownerState -> ownerState.companionId, player.getUUID())) {
+            cancelOwner(player.server, state, ownerId, state.owners.get(ownerId));
+            state.owners.remove(ownerId);
+        }
     }
 
     /** Read-only snapshot for diagnostics and acceptance polling. Must be called on the server thread. */
@@ -599,7 +602,7 @@ public final class ActionRuntime {
 
     /** Called only by the local companion's vanilla Player.take callback after actual item pickup. */
     public static void onItemPickedUp(ServerPlayer companion, UUID itemEntityId, int amount,
-                                      int stackCountBeforePickup) {
+                                      int stackCountBeforePickup, ItemStack sourceStack) {
         if (amount <= 0 || !CompanionRuntime.isCompanion(companion)) {
             return;
         }
@@ -616,7 +619,14 @@ public final class ActionRuntime {
         }
         int expected = execution.pendingDrops.getOrDefault(itemEntityId, 0);
         boolean directDrop = expected > 0;
-        if (execution.tree != null && (!directDrop || stackCountBeforePickup != expected)) return; // Fail closed on unprovable merged provenance.
+        if (execution.tree != null && (!directDrop || stackCountBeforePickup != expected
+                || !TreeDropAccounting.sameSource(execution.treeDropStacks.get(itemEntityId), sourceStack))) {
+            // Vanilla merging replaces the receiving ItemStack. A later partial pickup cannot
+            // make that replacement become the originally observed stack again.
+            execution.pendingDrops.remove(itemEntityId);
+            execution.treeDropStacks.remove(itemEntityId);
+            return;
+        }
         if (!directDrop) {
             int baseline = execution.dropCountsBefore.getOrDefault(itemEntityId, 0);
             if (baseline > 0) {
@@ -635,6 +645,7 @@ public final class ActionRuntime {
         execution.logsPicked += credited;
         updateTreeStatus(state, execution, TaskState.RUNNING, "已实际拾取任务掉落物。");
         consumePendingDrop(execution, itemEntityId, directDrop, credited);
+        execution.treeDropStacks.remove(itemEntityId);
         state.scheduler.updateProgress(execution.request.taskId(), execution.logsPicked, 0,
                 "伙伴已正常拾取 " + execution.logsPicked + "/" + execution.request.requestedCount());
     }
@@ -1138,6 +1149,7 @@ public final class ActionRuntime {
         execution.pickupDeadlineTick = server.getTickCount() + PICKUP_TIMEOUT_TICKS;
         execution.pickupStartedAtTick = server.getTickCount();
         execution.pendingDrops.clear();
+        execution.treeDropStacks.clear();
         int eligible = Math.max(0, Math.min(execution.logsDestroyed,
                 execution.request.requestedCount()) - execution.logsPicked);
         Map<UUID, Integer> afterBreak = logDropCounts(level, target, logItem(execution));
@@ -1152,6 +1164,11 @@ public final class ActionRuntime {
                     execution.dropCountsBefore.getOrDefault(drop.getKey(), 0), drop.getValue())) continue;
             int tracked = Math.min(added, eligible);
             if (tracked > 0) {
+                if (execution.tree != null) {
+                    if (!(level.getEntity(drop.getKey()) instanceof ItemEntity item)
+                            || item.getItem().getCount() != 1) continue;
+                    execution.treeDropStacks.put(drop.getKey(), item.getItem());
+                }
                 execution.pendingDrops.put(drop.getKey(), tracked);
                 eligible -= tracked;
             }
@@ -1750,6 +1767,7 @@ public final class ActionRuntime {
         private int miningTicks;
         private float miningProgress;
         private final Map<UUID, Integer> pendingDrops = new HashMap<>();
+        private final Map<UUID, ItemStack> treeDropStacks = new HashMap<>();
         private Map<UUID, Integer> dropCountsBefore = Map.of();
         private BlockPos navigationTarget;
         private BlockPos targetLog;
