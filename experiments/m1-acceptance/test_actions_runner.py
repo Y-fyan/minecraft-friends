@@ -32,3 +32,29 @@ class DedicatedMarkerTests(unittest.TestCase):
         self.assertEqual(x,marker('> '+x,True))
         self.assertIsNone(marker('> '+x))
         self.assertIsNone(marker('[CHAT] > '+x,True))
+
+
+class TreeScopeTests(unittest.TestCase):
+    def test_requires_both_species_and_distinct_real_outcomes(self):
+        from run_actions import TREE_CHECKS
+        self.assertEqual(len(TREE_CHECKS), len(set(TREE_CHECKS)))
+        for species in ('oak', 'birch'):
+            for outcome in ('harvest_pickup_delivery_are_four', 'real_logs_conserved_and_delivered',
+                            'real_sapling_consumed_and_planted', 'real_axe_durability_consumed',
+                            'house_and_decoration_untouched', 'terminal_does_not_repeat_delivery'):
+                self.assertIn(f'tree_{species}_{outcome}', TREE_CHECKS)
+        self.assertIn('tree_cancelled_preview_cannot_start_or_replay', TREE_CHECKS)
+        self.assertIn('tree_changed_target_causes_no_execution', TREE_CHECKS)
+        self.assertEqual('result', TREE_CHECKS[-1])
+
+    def test_natural_tree_mode_refused_before_artifacts_or_processes(self):
+        import contextlib
+        import io
+        from unittest.mock import patch
+        from run_actions import main
+        stderr = io.StringIO()
+        with patch('sys.argv', ['run_actions.py', 'fabric-integrated', '--scope', 'tree', '--natural']):
+            with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit) as raised:
+                main()
+        self.assertEqual(2, raised.exception.code)
+        self.assertIn('explicit selection/API only', stderr.getvalue())

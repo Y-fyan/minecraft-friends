@@ -19,6 +19,16 @@ CHECKS = ('isolated_survival_map', 'physical_follow_over_obstacle', 'wait_does_n
           'eight_real_logs_delivered_without_duplication', 'outside_area_resource_untouched',
           'repeat_request_does_not_create_items', 'result')
 MARKER = re.compile(r'MF_M2_(?:SERVER [A-Za-z0-9_.$]+ [a-z0-9_]+ (?:PASS|FAIL)|CLIENT (?:COMMAND_SENT|PASS M2_PASS|FAIL [a-z0-9_]+)|METRIC [-a-z0-9_= ]+)')
+TREE_CHECKS = ('isolated_survival_map', 'tree_survival_mode') + tuple(
+    f'tree_{species}_{check}' for species in ('oak', 'birch') for check in (
+        'exact_preview', 'preview_has_no_world_effect', 'duplicate_confirmation_rejected',
+        'runtime_succeeded', 'harvest_pickup_delivery_are_four', 'real_logs_conserved_and_delivered',
+        'real_sapling_consumed_and_planted', 'real_axe_durability_consumed',
+        'house_and_decoration_untouched', 'physical_movement_bounded',
+        'used_selection_replay_rejected', 'terminal_does_not_repeat_delivery')) + (
+    'tree_cancelled_preview_cannot_start_or_replay', 'tree_stop_before_start_preserves_tree_and_stock',
+    'tree_cancel_preserves_protected_samples', 'tree_changed_target_confirmation_rejected',
+    'tree_changed_selection_replay_rejected', 'tree_changed_target_causes_no_execution', 'result')
 ANSI = re.compile(r'\x1b\[[0-9;]*m')
 
 def sha(path):
@@ -39,7 +49,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('target', choices=('fabric-integrated','forge-integrated','fabric-dedicated','forge-dedicated'))
     p.add_argument('--natural',action='store_true')
-    p.add_argument('--scope', choices=('navigation','door','unreachable','planning','respawn','failures','full','performance','return-stop'), default='full')
+    p.add_argument('--scope', choices=('navigation','door','unreachable','planning','respawn','failures','full','performance','return-stop','tree'), default='full')
     p.add_argument('--variant',choices=('disabled','idle','active'))
     p.add_argument('--server')
     p.add_argument('--server-log', type=Path)
@@ -48,6 +58,7 @@ def main():
     p.add_argument('--timeout',type=int,default=480)
     args=p.parse_args()
     if (args.scope=='performance') != bool(args.variant):p.error('performance requires explicit variant; variant is performance-only')
+    if args.scope == 'tree' and args.natural:p.error('tree scope validates explicit selection/API only, not natural-chat acceptance')
     dedicated=args.target.endswith('dedicated');loader=args.target.split('-')[0]
     if not 60<=args.timeout<=1200:p.error('timeout must be 60..1200')
     if dedicated and (not args.server or not re.fullmatch(r'(?:127\.0\.0\.1|localhost):[0-9]{1,5}',args.server) or not args.server_log or not args.server_mod or not args.server_helper):
@@ -81,7 +92,7 @@ def main():
     if args.variant:command+=['-PacceptancePerformanceVariant='+args.variant]
     if args.natural:command+=['-PacceptanceActionsNatural=true']
     if dedicated:command+=['-PacceptanceServer='+args.server]
-    environment=dict(os.environ);environment.update(JAVA_HOME='/tmp/codex-mf-jdk21-213',LIBGL_ALWAYS_SOFTWARE='true',__GLX_VENDOR_LIBRARY_NAME='mesa',ALSOFT_DRIVERS='null')
+    environment=dict(os.environ);environment.update(JAVA_HOME=os.environ.get('JAVA_HOME', '/tmp/codex-mf-jdk21-213'),LIBGL_ALWAYS_SOFTWARE='true',__GLX_VENDOR_LIBRARY_NAME='mesa',ALSOFT_DRIVERS='null')
     started=time.monotonic();timed_out=False;code=None;process=None;lines=[]
     try:
         for f,data in files.items():f.write_bytes(data)
@@ -107,6 +118,7 @@ def main():
     scenario_checks=(('isolated_survival_map','full_companion_backpack_preserves_resources','resource_shortage_reports_actual_partial_delivery','mining_cancel_stops_world_changes_and_delivery','result') if args.scope=='failures' else CHECKS+('respawn_restored_live_instance',) if args.scope=='respawn' else CHECKS if args.scope=='full' else CHECKS[:4]+('result',) if args.scope=='navigation' else CHECKS[:4]+('wooden_door_opened_and_crossed','result') if args.scope=='door'
                      else ('isolated_survival_map','structured_model_plan_moves_companion','invalid_model_action_rejected','planning_inflight_before_stop','late_model_plan_cannot_resume_after_stop','result') if args.scope=='planning'
                      else ('isolated_survival_map','unreachable_fails_within_budget','failed_path_leaves_bot_still','result'))
+    if args.scope=='tree':scenario_checks=TREE_CHECKS
     if args.scope=='return-stop':scenario_checks=CHECKS[:5]+('stop_before_delivery_keeps_real_items_with_companion','result')
     if args.scope=='performance':scenario_checks=('isolated_survival_map','performance_variant_conditions','performance_samples','performance_local_tick_budget','result')
     if args.scope=='performance' and args.variant=='active':scenario_checks+=('performance_readonly_microbenchmarks',)

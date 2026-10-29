@@ -35,3 +35,12 @@ Forge 对应 `forge-dedicated`。专服启动设置 `-Dmf.acceptance=true -Dmf.a
 补充目标：`--scope door` 检查原版木门交互；`--scope planning` 用明确标注的 loopback 协议模拟检查严格计划、非法动作拒绝和 stop 后迟到回复。`--natural` 使用真实原版聊天包 `@MF_M2Bot 跟着我` 等指令；专服同时设置 `-Dmf.acceptance.actions.natural=true`。模型模拟不等同真实模型服务质量验收。
 
 最终补充入口：`--scope return-stop` 验证交付前停止；`run_prepared_dedicated.py fabric|forge --template /已接受EULA的安装 --port 端口 --boot-only` 在全新独立目录中不安装 helper、不预写模组配置，验证普通首次安装。正常专服入口还记录完整停服保存及异常判据。正式六组对照使用 [PERFORMANCE.md](PERFORMANCE.md)。
+
+## #31 树木增量装置（源码已提供，尚未编译/运行）
+
+`JAVA_HOME=/你的/JDK21 python3 experiments/m1-acceptance/run_actions.py fabric-integrated --scope tree`
+（Forge 对应 `forge-integrated`）。运行器现在尊重显式 `JAVA_HOME`，未设置仍沿用旧便携 JDK 默认路径。
+
+`TreeScenario` 在现有隔离世界/固定测试主人保护下，初始化普通形状的橡树和白桦树冠，而不是八格原木堆；通过真实客户端 area 命令和 typed preview/confirm API 执行。独立断言已砍/已收/已交、真实库存守恒、斧头耐久、树苗消耗、周边房屋/装饰不变、重复确认/重放、停止和目标改变。测试树苗库存由初始化提供；测试随机 tick 设为零，仅为避免自然树叶额外掉苗干扰确定性库存断言。生产执行器不设置游戏规则或生成资源。
+
+必须全部通过 runner 的 `TREE_CHECKS`，仅打印结果或旧 M2 检查不算通过。`--natural` 与 tree scope 互斥；当前不验收 #29 聊天理解。专服还必须设置 `-Dmf.acceptance.actions.scope=tree` 并满足前述独立存档、已自行接受 EULA 和同字节产物条件。详细限制及未测试失败场景见 [树木技能](../../docs/TREES.md)。
