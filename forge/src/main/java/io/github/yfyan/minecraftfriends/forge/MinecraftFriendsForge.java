@@ -1,6 +1,7 @@
 package io.github.yfyan.minecraftfriends.forge;
 
 import io.github.yfyan.minecraftfriends.MinecraftFriends;
+import io.github.yfyan.minecraftfriends.action.ActionRuntime;
 import io.github.yfyan.minecraftfriends.bootstrap.Bootstrap;
 import io.github.yfyan.minecraftfriends.companion.CompanionRuntime;
 import net.minecraftforge.common.MinecraftForge;
@@ -47,9 +48,17 @@ public final class MinecraftFriendsForge {
         }
     }
 
+    @SubscribeEvent
+    public void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            ActionRuntime.onPlayerLifecycleChange(player);
+        }
+    }
+
     @SubscribeEvent(priority = EventPriority.MONITOR, receiveCanceled = true)
     public void onDeath(LivingDeathEvent event) {
         if (!event.isCanceled() && event.getEntity() instanceof ServerPlayer player) {
+            ActionRuntime.onPlayerLifecycleChange(player);
             CompanionRuntime.onCompanionDeath(player);
         }
     }
